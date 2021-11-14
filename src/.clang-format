@@ -1,0 +1,9 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+AccessModifierOffset: -2
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+---
+
