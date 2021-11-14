@@ -1,4 +1,5 @@
 #include "VkBootstrap.h"
+#include "Window.h"
 #include "spdlog/spdlog.h"
 
 int main(int argc, char const *argv[]) {
@@ -13,5 +14,10 @@ int main(int argc, char const *argv[]) {
     spdlog::error("Failed to create Vulkan instance: {}",
                   instance_build_success.error().message());
   }
+
+#ifdef _WIN32
+  system("pause");
+#endif
+
   return 0;
 }

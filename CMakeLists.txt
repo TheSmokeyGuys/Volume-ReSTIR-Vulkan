@@ -54,7 +54,7 @@ endfunction(InternalTarget)
 
 # Compiler specific stuff
 IF(MSVC)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX /wd4100 /wd4189 /wd4201")
 ELSE(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-unused-variable")
 ENDIF(MSVC)
