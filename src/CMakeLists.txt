@@ -48,6 +48,7 @@ target_link_libraries(${PROJECT_NAME}
   Vulkan::Vulkan 
   glfw
   spdlog::spdlog_header_only
+  vk-bootstrap::vk-bootstrap
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}

@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.inc": "cpp",
+    "system_error": "cpp"
+  }
+}
