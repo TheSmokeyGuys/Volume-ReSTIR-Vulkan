@@ -1,5 +1,5 @@
+#include "SingtonManager.hpp"
 #include "VkBootstrap.h"
-#include "Window.h"
 #include "spdlog/spdlog.h"
 
 int main(int argc, char const *argv[]) {
@@ -13,6 +13,10 @@ int main(int argc, char const *argv[]) {
   if (!instance_build_success) {
     spdlog::error("Failed to create Vulkan instance: {}",
                   instance_build_success.error().message());
+  }
+
+  while (!volume_restir::SingletonManager::GetWindow().ShouldQuit()) {
+    glfwPollEvents();
   }
 
 #ifdef _WIN32
