@@ -1,5 +1,7 @@
 #include "RenderContext.hpp"
 
+#include <stdexcept>
+
 #include "SingtonManager.hpp"
 #include "spdlog/spdlog.h"
 
@@ -14,7 +16,7 @@ RenderContext::RenderContext() {
   if (!instance_build_success) {
     spdlog::error("Failed to create Vulkan instance: {}",
                   instance_build_success.error().message());
-    return;
+    throw std::runtime_error("Failed to create Vulkan instance");
   }
   instance_ = instance_build_success.value();
   spdlog::debug("Successfully created Vulkan instance");
@@ -24,6 +26,7 @@ RenderContext::RenderContext() {
                               SingletonManager::GetWindow().WindowPtr(),
                               nullptr, &surface_) != VK_SUCCESS) {
     spdlog::error("Failed to create window surface!");
+    throw std::runtime_error("Failed to create window surface");
   }
   spdlog::debug("Successfully created Vulkan window surface");
 
@@ -34,7 +37,7 @@ RenderContext::RenderContext() {
   if (!phys_device_success) {
     spdlog::error("Failed to select physical device: {}",
                   phys_device_success.error().message());
-    return;
+    throw std::runtime_error("Failed to select physical device");
   }
   phys_device_ = phys_device_success.value();
   spdlog::debug("Successfully selected Vulkan physical device");
@@ -45,7 +48,7 @@ RenderContext::RenderContext() {
   if (!device_success) {
     spdlog::error("Failed to create logical device: {}",
                   device_success.error().message());
-    return;
+    throw std::runtime_error("Failed to create logical device");
   }
   device_ = device_success.value();
   spdlog::debug("Successfully created Vulkan logical device");
@@ -57,7 +60,7 @@ RenderContext::RenderContext() {
   if (!swapchain_success) {
     spdlog::error("Failed to create swapchain: {}",
                   swapchain_success.error().message());
-    return;
+    throw std::runtime_error("Failed to create swapchain");
   }
   vkb::destroy_swapchain(swapchain_);
   swapchain_ = swapchain_success.value();
