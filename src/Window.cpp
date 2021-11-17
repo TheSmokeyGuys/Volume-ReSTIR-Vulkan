@@ -2,8 +2,8 @@
 
 #include <cstdlib>
 
+#include "config/static_config.hpp"
 #include "spdlog/spdlog.h"
-#include "static_config.hpp"
 
 namespace volume_restir {
 
