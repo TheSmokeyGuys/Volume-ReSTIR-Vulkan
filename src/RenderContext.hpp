@@ -5,9 +5,7 @@
  * @file RenderContext.hpp
  * @author Zhihao Ruan (ruanzh@seas.upenn.edu)
  *
- * @brief RenderContext should be a singleton that holds all the shared global
- * rendering contexts for this application. Please checkout SingletonManager.hpp
- * for how to use singletons.
+ * @brief RenderContext should be used to initialize a Renderer.
  *
  * @date 2021-11-16
  */
@@ -19,9 +17,16 @@
 namespace volume_restir {
 
 class RenderContext {
+public:
+  RenderContext();
+  ~RenderContext();
+
 private:
   vkb::Instance instance_;
   VkSurfaceKHR surface_;
+  vkb::PhysicalDevice phys_device_;
+  vkb::Device device_;
+  vkb::Swapchain swapchain_;
 };
 
 }  // namespace volume_restir

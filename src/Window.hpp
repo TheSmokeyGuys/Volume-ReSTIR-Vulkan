@@ -21,6 +21,7 @@ public:
   ~Window();
 
   bool ShouldQuit() const { return !!glfwWindowShouldClose(window_); }
+  GLFWwindow* WindowPtr() const noexcept { return window_; }
   int Width() const noexcept { return width_; }
   int Height() const noexcept { return height_; }
   std::string Name() const noexcept { return name_; }
