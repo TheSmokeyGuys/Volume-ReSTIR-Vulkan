@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 if(WIN32)
-  # TODO: fill out this line for Windows
+  # FIXME: how to find OpenVDB on Windows?
+  # set(OpenVDB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\include")
+  # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\lib\\cmake\\OpenVDB")
 else(WIN32)
-  list(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/OpenVDB")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
 endif(WIN32)
 
 project(volume_restir)
@@ -11,7 +13,7 @@ project(volume_restir)
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
 find_package(Vulkan REQUIRED)
-find_package(OpenVDB REQUIRED)
+# find_package(OpenVDB)
 
 IF(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
@@ -58,13 +60,6 @@ function(InternalTarget folder target)
   endif()
 endfunction(InternalTarget)
 
-# Compiler specific stuff
-IF(MSVC)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX /wd4100 /wd4189 /wd4201")
-ELSE(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-unused-variable")
-ENDIF(MSVC)
-
 IF(WIN32)
   # Nothing here (yet)
 ELSE(WIN32)
@@ -80,3 +75,4 @@ endif(WIN32)
 
 add_subdirectory(external)
 add_subdirectory(src)
+# add_subdirectory(test)

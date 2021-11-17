@@ -49,12 +49,24 @@ target_link_libraries(${PROJECT_NAME}
   glfw
   spdlog::spdlog_header_only
   vk-bootstrap::vk-bootstrap
-  OpenVDB::openvdb
+  # OpenVDB::openvdb
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${GLM_INCLUDE_DIR}
   ${STB_INCLUDE_DIR}
 )
+
+IF(MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE
+    /EHsc /W4 /WX
+  )
+ELSE(MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE
+    -Wall -Werror -Wno-unused-variable
+  )
+ENDIF(MSVC)
 
 InternalTarget("" ${PROJECT_NAME})

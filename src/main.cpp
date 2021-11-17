@@ -2,7 +2,7 @@
 #include "VkBootstrap.h"
 #include "spdlog/spdlog.h"
 
-int main(int argc, char const *argv[]) {
+int main() {
   spdlog::info("Hello from Volumetric-ReSTIR project!");
 
   vkb::InstanceBuilder instance_builder;
