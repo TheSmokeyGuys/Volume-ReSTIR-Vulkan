@@ -26,11 +26,7 @@ message(STATUS "Compiling shader sources:")
 foreach(SHADER_SOURCE ${SHADER_SOURCES})
   message(STATUS "\t${SHADER_SOURCE}")
 
-  if (WIN32)
-    set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-  else(WIN32)
-    set(SHADER_DIR ${CMAKE_BINARY_DIR}/shaders)
-  endif(WIN32)
+  set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
   get_filename_component(fname ${SHADER_SOURCE} NAME)
   add_custom_target(${fname}.spv
@@ -55,6 +51,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${GLM_INCLUDE_DIR}
   ${STB_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 IF(MSVC)
@@ -70,3 +67,8 @@ ELSE(MSVC)
 ENDIF(MSVC)
 
 InternalTarget("" ${PROJECT_NAME})
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/build_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/config/build_config.h"
+)
