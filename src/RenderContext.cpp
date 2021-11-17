@@ -54,17 +54,7 @@ RenderContext::RenderContext() {
   spdlog::debug("Successfully created Vulkan logical device");
 
   // create swapchain
-  vkb::SwapchainBuilder swapchain_builder{device_};
-  auto swapchain_success =
-      swapchain_builder.set_old_swapchain(swapchain_).build();
-  if (!swapchain_success) {
-    spdlog::error("Failed to create swapchain: {}",
-                  swapchain_success.error().message());
-    throw std::runtime_error("Failed to create swapchain");
-  }
-  vkb::destroy_swapchain(swapchain_);
-  swapchain_ = swapchain_success.value();
-  spdlog::debug("Successfully created Vulkan swapchain");
+  CreateSwapChain();
 }
 
 RenderContext::~RenderContext() {
@@ -78,6 +68,21 @@ RenderContext::~RenderContext() {
   vkb::destroy_instance(instance_);
   spdlog::debug("Destroyed instance");
   spdlog::info("All RenderContext cleaned up successfully");
+}
+
+void RenderContext::CreateSwapChain() {
+  // create swapchain
+  vkb::SwapchainBuilder swapchain_builder{device_};
+  auto swapchain_success =
+      swapchain_builder.set_old_swapchain(swapchain_).build();
+  if (!swapchain_success) {
+    spdlog::error("Failed to create swapchain: {}",
+                  swapchain_success.error().message());
+    throw std::runtime_error("Failed to create swapchain");
+  }
+  vkb::destroy_swapchain(swapchain_);
+  swapchain_ = swapchain_success.value();
+  spdlog::debug("Successfully created Vulkan swapchain");
 }
 
 }  // namespace volume_restir
