@@ -9,6 +9,7 @@ namespace static_config {
 extern const std::string kApplicationName;
 extern const int kWindowWidth;
 extern const int kWindowHeight;
+extern const int kMaxFrameInFlight;
 
 }  // namespace static_config
 }  // namespace volume_restir
