@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+if(WIN32)
+  # TODO: fill out this line for Windows
+else(WIN32)
+  list(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/OpenVDB")
+endif(WIN32)
 
 project(volume_restir)
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
 find_package(Vulkan REQUIRED)
+find_package(OpenVDB REQUIRED)
 
 IF(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")

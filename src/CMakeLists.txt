@@ -49,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
   glfw
   spdlog::spdlog_header_only
   vk-bootstrap::vk-bootstrap
+  OpenVDB::openvdb
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
