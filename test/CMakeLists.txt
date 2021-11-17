@@ -15,6 +15,5 @@ else(WIN32)
 endif(WIN32)
 
 target_link_libraries(openvdb_test
-  PRIVATE
   OpenVDB::openvdb
 )
