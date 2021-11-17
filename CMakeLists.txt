@@ -1,11 +1,19 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+if(WIN32)
+  # FIXME: how to find OpenVDB on Windows?
+  # set(OpenVDB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\include")
+  # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\lib\\cmake\\OpenVDB")
+else(WIN32)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
+endif(WIN32)
 
 project(volume_restir)
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
 find_package(Vulkan REQUIRED)
+# find_package(OpenVDB)
 
 IF(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
@@ -52,18 +60,19 @@ function(InternalTarget folder target)
   endif()
 endfunction(InternalTarget)
 
-# Compiler specific stuff
-IF(MSVC)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX /wd4100 /wd4189 /wd4201")
-ELSE(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-unused-variable")
-ENDIF(MSVC)
-
 IF(WIN32)
   # Nothing here (yet)
 ELSE(WIN32)
   link_libraries(${XCB_LIBRARIES} ${VULKAN_LIB})
 ENDIF(WIN32)
+
+string(TOLOWER "${CMAKE_BUILD_TYPE}" project_build_type)
+if(project_build_type MATCHES "debug")
+  message(WARNING "Project is built in debug mode!")
+  add_definitions(-DDEBUG)
+else(project_build_type MATCHES "debug")
+  message(STATUS "Building in release mode")
+endif(project_build_type MATCHES "debug")
 
 if(WIN32)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -74,3 +83,4 @@ endif(WIN32)
 
 add_subdirectory(external)
 add_subdirectory(src)
+# add_subdirectory(test)

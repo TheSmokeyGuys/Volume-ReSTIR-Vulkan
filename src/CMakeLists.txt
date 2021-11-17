@@ -1,4 +1,4 @@
-file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VK_SDK_PATH}/Bin/ $ENV{VK_SDK_PATH}/Bin32/)
 
@@ -26,11 +26,7 @@ message(STATUS "Compiling shader sources:")
 foreach(SHADER_SOURCE ${SHADER_SOURCES})
   message(STATUS "\t${SHADER_SOURCE}")
 
-  if (WIN32)
-    set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-  else(WIN32)
-    set(SHADER_DIR ${CMAKE_BINARY_DIR}/shaders)
-  endif(WIN32)
+  set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
   get_filename_component(fname ${SHADER_SOURCE} NAME)
   add_custom_target(${fname}.spv
@@ -49,11 +45,30 @@ target_link_libraries(${PROJECT_NAME}
   glfw
   spdlog::spdlog_header_only
   vk-bootstrap::vk-bootstrap
+  # OpenVDB::openvdb
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${GLM_INCLUDE_DIR}
   ${STB_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+IF(MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE
+    /EHsc /W4 /WX
+  )
+ELSE(MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE
+    -Wall -Werror -Wno-unused-variable
+  )
+ENDIF(MSVC)
+
 InternalTarget("" ${PROJECT_NAME})
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/build_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/config/build_config.h"
+)
