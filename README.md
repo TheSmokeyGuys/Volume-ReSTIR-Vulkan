@@ -30,3 +30,13 @@ If using CMake GUI, add a cache entry "Vcpkg_ROOT" of type `STRING` and type in 
 
 4. On CMake GUI, Configure and generate the project.
 5. Open Visual Studio 2019, select `volume_restir` project as startup project, and run the project.
+
+### Building on Linux (Ubuntu)
+Before building, make sure that a working version of OpenVDB has been installed in the system.
+
+```bash
+mkdir build; cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j
+./bin/volume_restir
+```
