@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 if(WIN32)
-  # FIXME: how to find OpenVDB on Windows?
-  # set(OpenVDB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\include")
-  # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}\\external\\OpenVDB\\lib\\cmake\\OpenVDB")
+  SET(Vcpkg_ROOT "C:\\vcpkg" CACHE STRING "Root dir for Vcpkg")
+  message(STATUS "Using Vcpkg_ROOT: ${Vcpkg_ROOT}")
+  set(CMAKE_TOOLCHAIN_FILE "${Vcpkg_ROOT}\\scripts\\buildsystems\\vcpkg.cmake")
 else(WIN32)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
 endif(WIN32)
@@ -13,7 +13,7 @@ project(volume_restir)
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
 find_package(Vulkan REQUIRED)
-# find_package(OpenVDB)
+find_package(OpenVDB)
 
 IF(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
@@ -79,4 +79,4 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(external)
 add_subdirectory(src)
-# add_subdirectory(test)
+add_subdirectory(test)
