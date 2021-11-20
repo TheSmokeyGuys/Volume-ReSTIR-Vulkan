@@ -27,7 +27,11 @@ else ()
   endif()
 endif()
 
-add_library(vk-bootstrap src/VkBootstrap.h src/VkBootstrap.cpp)
+if (MSVC)
+  add_library(vk-bootstrap STATIC src/VkBootstrap.h src/VkBootstrap.cpp)
+else(MSVC)
+  add_library(vk-bootstrap src/VkBootstrap.h src/VkBootstrap.cpp)
+endif(MSVC)
 add_library(vk-bootstrap::vk-bootstrap ALIAS vk-bootstrap)
 
 add_library(vk-bootstrap-compiler-warnings INTERFACE)
