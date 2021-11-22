@@ -1,4 +1,4 @@
-#include "SwapChain.h"
+#include "SwapChain.hpp"
 
 #include <vector>
 
@@ -75,9 +75,8 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
 }
 
 SwapChain::SwapChain(volume_restir::RenderContext* a_renderContext,
-                     VkSurfaceKHR vkSurface,
-                     unsigned int numBuffers)
-    : renderContext(a_renderContext), vkSurface(vkSurface), numBuffers(numBuffers) {
+                     VkSurfaceKHR vkSurface)
+    : renderContext(a_renderContext), vkSurface(vkSurface) {
   Create();
 
   VkSemaphoreCreateInfo semaphoreInfo = {};

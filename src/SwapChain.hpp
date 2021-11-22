@@ -5,12 +5,15 @@
 #include "VkBootstrap.h"
 
 #include <vector>
-#include "../src/RenderContext.hpp"
+#include "RenderContext.hpp"
 
 namespace volume_restir {
-//class Device;
+class RenderContext;
+}
+
+namespace volume_restir {
 class SwapChain {
-  //friend class Device;
+  friend class RenderContext;
 
 public:
   vkb::Swapchain GetVkBSwapChain() const;
@@ -28,14 +31,16 @@ public:
   ~SwapChain();
 
 private:
-  SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
-            unsigned int numBuffers);
+  //SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
+  //          unsigned int numBuffers);
+  SwapChain();
+  SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface);
   void Create();
   void Destroy();
 
   RenderContext* renderContext;
   VkSurfaceKHR vkSurface;
-  unsigned int numBuffers;
+  //unsigned int numBuffers;
   vkb::Swapchain swapchain_;
   std::vector<VkImage> vkSwapChainImages;
   VkFormat vkSwapChainImageFormat;
