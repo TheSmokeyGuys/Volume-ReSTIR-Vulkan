@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#pragma comment(linker, "/subsystem:console")
+#endif
+
 #include "openvdb/openvdb.h"
 
 #include <iostream>
