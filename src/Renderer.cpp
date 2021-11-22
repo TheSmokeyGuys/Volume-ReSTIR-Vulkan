@@ -15,7 +15,7 @@ Renderer::Renderer() {
   CreateFrameResources();
   CreateCommandPools();
   RecordCommandBuffers();
-  CreateSyncObjects();
+  //CreateSyncObjects();
 }
 
 Renderer::~Renderer() {
@@ -386,34 +386,34 @@ void Renderer::RecordCommandBuffers() {
   }
 }
 
-void Renderer::CreateSyncObjects() {
-  available_semaphores_.resize(static_config::kMaxFrameInFlight);
-  finished_semaphores_.resize(static_config::kMaxFrameInFlight);
-  fences_in_flight_.resize(static_config::kMaxFrameInFlight);
-  images_in_flight_.resize(
-      swapchain_->GetVkBSwapChain().image_count,
-                           VK_NULL_HANDLE);
-
-  VkSemaphoreCreateInfo semaphore_info = {};
-  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  VkFenceCreateInfo fence_info = {};
-  fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fence_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
-
-  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-    if (vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-                          nullptr, &available_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-                          nullptr, &finished_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateFence(render_context_->Device().device, &fence_info, nullptr,
-                      &fences_in_flight_[i]) != VK_SUCCESS) {
-      spdlog::error("Failed to create sync objects {} of {}", i,
-                    static_config::kMaxFrameInFlight);
-      throw std::runtime_error("Failed to create sync objects");
-    }
-  }
-}
+//void Renderer::CreateSyncObjects() {
+//  available_semaphores_.resize(static_config::kMaxFrameInFlight);
+//  finished_semaphores_.resize(static_config::kMaxFrameInFlight);
+//  fences_in_flight_.resize(static_config::kMaxFrameInFlight);
+//  images_in_flight_.resize(
+//      swapchain_->GetVkBSwapChain().image_count,
+//                           VK_NULL_HANDLE);
+//
+//  VkSemaphoreCreateInfo semaphore_info = {};
+//  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+//
+//  VkFenceCreateInfo fence_info = {};
+//  fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+//  fence_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
+//
+//  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
+//    if (vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
+//                          nullptr, &available_semaphores_[i]) != VK_SUCCESS ||
+//        vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
+//                          nullptr, &finished_semaphores_[i]) != VK_SUCCESS ||
+//        vkCreateFence(render_context_->Device().device, &fence_info, nullptr,
+//                      &fences_in_flight_[i]) != VK_SUCCESS) {
+//      spdlog::error("Failed to create sync objects {} of {}", i,
+//                    static_config::kMaxFrameInFlight);
+//      throw std::runtime_error("Failed to create sync objects");
+//    }
+//  }
+//}
 
 void Renderer::RecreateSwapChain() {
   vkDeviceWaitIdle(render_context_->Device().device);

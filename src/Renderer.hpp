@@ -33,7 +33,7 @@ private:
   void CreateFrameResources();
   void CreateCommandPools();
   void RecordCommandBuffers();
-  void CreateSyncObjects();  // FIXME: Move this into Swapchain class
+  //void CreateSyncObjects();  // FIXME: Move this into Swapchain class
   void RecreateSwapChain();  // FIXME: Move this into Swapchain class
 
   void CreateSwapChain(VkSurfaceKHR surface);
