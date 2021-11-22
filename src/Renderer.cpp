@@ -16,7 +16,7 @@ Renderer::Renderer() {
   CreateFrameResources();
   CreateCommandPools();
   RecordCommandBuffers();
-  //CreateSyncObjects();
+  // CreateSyncObjects();
 }
 
 Renderer::~Renderer() {
@@ -150,10 +150,8 @@ void Renderer::CreateGraphicsPipeline() {
   VkViewport viewport = {};
   viewport.x          = 0.0f;
   viewport.y          = 0.0f;
-  viewport.width =
-      (float)swapchain_->GetVkBSwapChain().extent.width;
-  viewport.height =
-      (float)swapchain_->GetVkBSwapChain().extent.height;
+  viewport.width      = (float)swapchain_->GetVkBSwapChain().extent.width;
+  viewport.height     = (float)swapchain_->GetVkBSwapChain().extent.height;
   viewport.minDepth   = 0.0f;
   viewport.maxDepth   = 1.0f;
 
@@ -254,13 +252,12 @@ void Renderer::CreateGraphicsPipeline() {
       "Destroyed unused shader module after creating graphics pipeline");
 }
 
-void Renderer :: CreateSwapChain() {
+void Renderer ::CreateSwapChain() {
   swapchain_ = std::make_unique<SwapChain>(render_context_.get());
 }
 
 void Renderer::CreateFrameResources() {
-  swapchain_images_ =
-      swapchain_->GetVkBSwapChain().get_images().value();
+  swapchain_images_ = swapchain_->GetVkBSwapChain().get_images().value();
   swapchain_image_views_ =
       swapchain_->GetVkBSwapChain().get_image_views().value();
 
@@ -274,10 +271,8 @@ void Renderer::CreateFrameResources() {
     framebuffer_info.renderPass = render_pass_;
     framebuffer_info.attachmentCount = 1;
     framebuffer_info.pAttachments    = attachments;
-    framebuffer_info.width =
-        swapchain_->GetVkBSwapChain().extent.width;
-    framebuffer_info.height =
-        swapchain_->GetVkBSwapChain().extent.height;
+    framebuffer_info.width  = swapchain_->GetVkBSwapChain().extent.width;
+    framebuffer_info.height = swapchain_->GetVkBSwapChain().extent.height;
     framebuffer_info.layers = 1;
 
     if (vkCreateFramebuffer(render_context_->Device().device, &framebuffer_info,
@@ -338,8 +333,7 @@ void Renderer::RecordCommandBuffers() {
     render_pass_info.renderPass  = render_pass_;
     render_pass_info.framebuffer = framebuffers_[i];
     render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent =
-        swapchain_->GetVkBSwapChain().extent;
+    render_pass_info.renderArea.extent = swapchain_->GetVkBSwapChain().extent;
     VkClearValue clearColor{{{0.0f, 0.0f, 0.0f, 1.0f}}};
     render_pass_info.clearValueCount = 1;
     render_pass_info.pClearValues    = &clearColor;
@@ -347,10 +341,8 @@ void Renderer::RecordCommandBuffers() {
     VkViewport viewport = {};
     viewport.x          = 0.0f;
     viewport.y          = 0.0f;
-    viewport.width =
-        (float)swapchain_->GetVkBSwapChain().extent.width;
-    viewport.height =
-        (float)swapchain_->GetVkBSwapChain().extent.height;
+    viewport.width      = (float)swapchain_->GetVkBSwapChain().extent.width;
+    viewport.height     = (float)swapchain_->GetVkBSwapChain().extent.height;
     viewport.minDepth   = 0.0f;
     viewport.maxDepth   = 1.0f;
 
@@ -387,8 +379,7 @@ void Renderer::RecreateSwapChain() {
     vkDestroyFramebuffer(render_context_->Device().device, framebuffer,
                          nullptr);
   }
-  swapchain_->GetVkBSwapChain().destroy_image_views(
-      swapchain_image_views_);
+  swapchain_->GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
   spdlog::debug("Destroyed old swapchain in frame");
 
   swapchain_->Recreate();
@@ -399,14 +390,14 @@ void Renderer::RecreateSwapChain() {
 
 void Renderer::Draw() {
   vkWaitForFences(render_context_->Device().device, 1,
-                  &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE, UINT64_MAX);
+                  &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
+                  UINT64_MAX);
 
   uint32_t image_index = 0;
   VkResult result      = vkAcquireNextImageKHR(
       render_context_->Device().device, swapchain_->GetVkBSwapChain().swapchain,
       UINT64_MAX, swapchain_->available_semaphores_[current_frame_idx_],
-      VK_NULL_HANDLE,
-      &image_index);
+      VK_NULL_HANDLE, &image_index);
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     RecreateSwapChain();

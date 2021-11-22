@@ -52,7 +52,6 @@ RenderContext::RenderContext() {
   }
   device_ = device_success.value();
   spdlog::debug("Successfully created Vulkan logical device");
-
 }
 
 RenderContext::~RenderContext() {

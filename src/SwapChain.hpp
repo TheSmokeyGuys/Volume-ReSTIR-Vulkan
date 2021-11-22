@@ -2,14 +2,13 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VkBootstrap.h"
-
 #include <vector>
+
 #include "RenderContext.hpp"
+#include "VkBootstrap.h"
 
 namespace volume_restir {
 class SwapChain {
-
 public:
   vkb::Swapchain GetVkBSwapChain() const;
   VkFormat GetVkImageFormat() const;
@@ -20,8 +19,8 @@ public:
   VkImage GetVkImage(uint32_t index) const;
 
   // Fix this
- /* VkSemaphore GetImageAvailableVkSemaphore() const;
-  VkSemaphore GetRenderFinishedVkSemaphore() const;*/
+  /* VkSemaphore GetImageAvailableVkSemaphore() const;
+   VkSemaphore GetRenderFinishedVkSemaphore() const;*/
 
   SwapChain(RenderContext* renderContext);
   void Recreate();
@@ -35,21 +34,21 @@ public:
   std::vector<VkFence> images_in_flight_;
 
 private:
-  //SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
+  // SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
   //          unsigned int numBuffers);
   void Create();
   void Destroy();
 
   RenderContext* renderContext;
   VkSurfaceKHR vkSurface;
-  //unsigned int numBuffers;
+  // unsigned int numBuffers;
   vkb::Swapchain swapchain_;
   std::vector<VkImage> vkSwapChainImages;
   VkFormat vkSwapChainImageFormat;
   VkExtent2D vkSwapChainExtent;
   uint32_t imageIndex = 0;
 
- /* VkSemaphore imageAvailableSemaphore;
-  VkSemaphore renderFinishedSemaphore;*/
+  /* VkSemaphore imageAvailableSemaphore;
+   VkSemaphore renderFinishedSemaphore;*/
 };
 }  // namespace volume_restir

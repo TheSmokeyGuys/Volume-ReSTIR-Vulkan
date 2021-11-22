@@ -11,6 +11,7 @@
  */
 
 #include <vulkan/vulkan.h>
+
 #include "VkBootstrap.h"
 
 namespace volume_restir {
@@ -22,7 +23,7 @@ public:
 
   vkb::Instance& Instance() { return instance_; }
   vkb::Device& Device() { return device_; }
-  VkSurfaceKHR Surface() const { return surface_; } 
+  VkSurfaceKHR Surface() const { return surface_; }
   const vkb::Instance& Instance() const { return instance_; }
   const vkb::Device& Device() const { return device_; }
 

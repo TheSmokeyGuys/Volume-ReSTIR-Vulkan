@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "RenderContext.hpp"
-#include "SwapChain.hpp"
 #include "ShaderModule.hpp"
+#include "SwapChain.hpp"
 #include "VkBootstrap.h"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
@@ -33,17 +33,15 @@ private:
   void CreateFrameResources();
   void CreateCommandPools();
   void RecordCommandBuffers();
-  //void CreateSyncObjects();  // FIXME: Move this into Swapchain class
+  // void CreateSyncObjects();  // FIXME: Move this into Swapchain class
   void RecreateSwapChain();  // FIXME: Move this into Swapchain class
 
   void CreateSwapChain();
- // void CreateSwapChain(VkSurfaceKHR surface, unsigned int numBuffers); // FOr future if we may need this
+  // void CreateSwapChain(VkSurfaceKHR surface, unsigned int numBuffers); // FOr
+  // future if we may need this
 
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<SwapChain> swapchain_;
-
-
-
 
   Queues queues_;
 
