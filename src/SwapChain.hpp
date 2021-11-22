@@ -8,12 +8,7 @@
 #include "RenderContext.hpp"
 
 namespace volume_restir {
-class RenderContext;
-}
-
-namespace volume_restir {
 class SwapChain {
-  friend class RenderContext;
 
 public:
   vkb::Swapchain GetVkBSwapChain() const;
@@ -25,6 +20,7 @@ public:
   VkSemaphore GetImageAvailableVkSemaphore() const;
   VkSemaphore GetRenderFinishedVkSemaphore() const;
 
+  SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface);
   void Recreate();
   bool Acquire();
   bool Present();
@@ -33,8 +29,6 @@ public:
 private:
   //SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
   //          unsigned int numBuffers);
-  SwapChain();
-  SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface);
   void Create();
   void Destroy();
 

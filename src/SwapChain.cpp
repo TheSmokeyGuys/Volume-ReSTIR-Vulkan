@@ -111,6 +111,9 @@ void SwapChain::Create() {
 
 void SwapChain::Destroy() {
   //vkDestroySwapchainKHR(renderContext->Device().device, vkSwapChain, nullptr);
+
+  vkDestroySurfaceKHR(renderContext->Instance().instance, vkSurface,
+                      renderContext->Instance().allocation_callbacks);
   vkb::destroy_swapchain(swapchain_);
 }
 

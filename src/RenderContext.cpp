@@ -54,18 +54,12 @@ RenderContext::RenderContext() {
   device_ = device_success.value();
   spdlog::debug("Successfully created Vulkan logical device");
 
-  // create swapchain
-  SwapChain temp(this, surface_);
-  swapchain_ = temp;
 }
 
 RenderContext::~RenderContext() {
-  vkb::destroy_swapchain(swapchain_.swapchain_);
   spdlog::debug("Destroyed swapchain");
   vkb::destroy_device(device_);
   spdlog::debug("Destroyed logical device");
-  vkDestroySurfaceKHR(instance_.instance, swapchain_.vkSurface,
-                      instance_.allocation_callbacks);
   spdlog::debug("Destroyed Vulkan surface");
   vkb::destroy_instance(instance_);
   spdlog::debug("Destroyed instance");

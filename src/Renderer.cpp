@@ -39,7 +39,7 @@ Renderer::~Renderer() {
   vkDestroyPipelineLayout(render_context_->Device().device,
                           graphics_pipeline_layout_, nullptr);
   vkDestroyRenderPass(render_context_->Device().device, render_pass_, nullptr);
-  render_context_->Swapchain().GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
+  swapchain_->GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
 }
 
 void Renderer::InitQueues() {
@@ -68,7 +68,7 @@ void Renderer::InitQueues() {
 
 void Renderer::CreateRenderPass() {
   VkAttachmentDescription color_attachment{};
-  color_attachment.format         = render_context_->Swapchain().GetVkBSwapChain().image_format;
+  color_attachment.format         = swapchain_->GetVkBSwapChain().image_format;
   color_attachment.samples        = VK_SAMPLE_COUNT_1_BIT;
   color_attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
   color_attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
@@ -158,15 +158,15 @@ void Renderer::CreateGraphicsPipeline() {
   viewport.x          = 0.0f;
   viewport.y          = 0.0f;
   viewport.width =
-      (float)render_context_->Swapchain().GetVkBSwapChain().extent.width;
+      (float)swapchain_->GetVkBSwapChain().extent.width;
   viewport.height =
-      (float)render_context_->Swapchain().GetVkBSwapChain().extent.height;
+      (float)swapchain_->GetVkBSwapChain().extent.height;
   viewport.minDepth   = 0.0f;
   viewport.maxDepth   = 1.0f;
 
   VkRect2D scissor = {};
   scissor.offset   = {0, 0};
-  scissor.extent   = render_context_->Swapchain().GetVkBSwapChain().extent;
+  scissor.extent   = swapchain_->GetVkBSwapChain().extent;
 
   VkPipelineViewportStateCreateInfo viewport_state = {};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -261,11 +261,15 @@ void Renderer::CreateGraphicsPipeline() {
       "Destroyed unused shader module after creating graphics pipeline");
 }
 
+void Renderer :: CreateSwapChain(VkSurfaceKHR surface) {
+  swapchain_ = std::make_unique<SwapChain>(render_context_.get(), surface);
+}
+
 void Renderer::CreateFrameResources() {
   swapchain_images_ =
-      render_context_->Swapchain().GetVkBSwapChain().get_images().value();
+      swapchain_->GetVkBSwapChain().get_images().value();
   swapchain_image_views_ =
-      render_context_->Swapchain().GetVkBSwapChain().get_image_views().value();
+      swapchain_->GetVkBSwapChain().get_image_views().value();
 
   framebuffers_.resize(swapchain_image_views_.size());
 
@@ -278,9 +282,9 @@ void Renderer::CreateFrameResources() {
     framebuffer_info.attachmentCount = 1;
     framebuffer_info.pAttachments    = attachments;
     framebuffer_info.width =
-        render_context_->Swapchain().GetVkBSwapChain().extent.width;
+        swapchain_->GetVkBSwapChain().extent.width;
     framebuffer_info.height =
-        render_context_->Swapchain().GetVkBSwapChain().extent.height;
+        swapchain_->GetVkBSwapChain().extent.height;
     framebuffer_info.layers = 1;
 
     if (vkCreateFramebuffer(render_context_->Device().device, &framebuffer_info,
@@ -342,7 +346,7 @@ void Renderer::RecordCommandBuffers() {
     render_pass_info.framebuffer = framebuffers_[i];
     render_pass_info.renderArea.offset = {0, 0};
     render_pass_info.renderArea.extent =
-        render_context_->Swapchain().GetVkBSwapChain().extent;
+        swapchain_->GetVkBSwapChain().extent;
     VkClearValue clearColor{{{0.0f, 0.0f, 0.0f, 1.0f}}};
     render_pass_info.clearValueCount = 1;
     render_pass_info.pClearValues    = &clearColor;
@@ -351,15 +355,15 @@ void Renderer::RecordCommandBuffers() {
     viewport.x          = 0.0f;
     viewport.y          = 0.0f;
     viewport.width =
-        (float)render_context_->Swapchain().GetVkBSwapChain().extent.width;
+        (float)swapchain_->GetVkBSwapChain().extent.width;
     viewport.height =
-        (float)render_context_->Swapchain().GetVkBSwapChain().extent.height;
+        (float)swapchain_->GetVkBSwapChain().extent.height;
     viewport.minDepth   = 0.0f;
     viewport.maxDepth   = 1.0f;
 
     VkRect2D scissor = {};
     scissor.offset   = {0, 0};
-    scissor.extent   = render_context_->Swapchain().GetVkBSwapChain().extent;
+    scissor.extent   = swapchain_->GetVkBSwapChain().extent;
 
     vkCmdSetViewport(command_buffers_[i], 0, 1, &viewport);
     vkCmdSetScissor(command_buffers_[i], 0, 1, &scissor);
@@ -387,7 +391,7 @@ void Renderer::CreateSyncObjects() {
   finished_semaphores_.resize(static_config::kMaxFrameInFlight);
   fences_in_flight_.resize(static_config::kMaxFrameInFlight);
   images_in_flight_.resize(
-      render_context_->Swapchain().GetVkBSwapChain().image_count,
+      swapchain_->GetVkBSwapChain().image_count,
                            VK_NULL_HANDLE);
 
   VkSemaphoreCreateInfo semaphore_info = {};
@@ -419,11 +423,11 @@ void Renderer::RecreateSwapChain() {
     vkDestroyFramebuffer(render_context_->Device().device, framebuffer,
                          nullptr);
   }
-  render_context_->Swapchain().GetVkBSwapChain().destroy_image_views(
+  swapchain_->GetVkBSwapChain().destroy_image_views(
       swapchain_image_views_);
   spdlog::debug("Destroyed old swapchain in frame");
 
-  render_context_->Swapchain().Recreate();
+  swapchain_->Recreate();
   CreateFrameResources();
   CreateCommandPools();
   RecordCommandBuffers();
@@ -435,7 +439,7 @@ void Renderer::Draw() {
 
   uint32_t image_index = 0;
   VkResult result      = vkAcquireNextImageKHR(
-      render_context_->Device().device, render_context_->Swapchain().GetVkBSwapChain().swapchain,
+      render_context_->Device().device, swapchain_->GetVkBSwapChain().swapchain,
       UINT64_MAX, available_semaphores_[current_frame_idx_], VK_NULL_HANDLE,
       &image_index);
 
@@ -484,7 +488,7 @@ void Renderer::Draw() {
   present_info.waitSemaphoreCount = 1;
   present_info.pWaitSemaphores    = signal_semaphores;
 
-  VkSwapchainKHR swapChains[] = {render_context_->Swapchain().GetVkBSwapChain().swapchain};
+  VkSwapchainKHR swapChains[] = {swapchain_->GetVkBSwapChain().swapchain};
   present_info.swapchainCount = 1;
   present_info.pSwapchains    = swapChains;
 
