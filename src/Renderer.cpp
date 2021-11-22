@@ -9,6 +9,7 @@ namespace volume_restir {
 
 Renderer::Renderer() {
   render_context_ = std::make_unique<RenderContext>();
+  CreateSwapChain();
   InitQueues();
   CreateRenderPass();
   CreateGraphicsPipeline();
@@ -20,14 +21,6 @@ Renderer::Renderer() {
 
 Renderer::~Renderer() {
   vkDeviceWaitIdle(render_context_->Device().device);
-  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-    vkDestroySemaphore(render_context_->Device().device,
-                       finished_semaphores_[i], nullptr);
-    vkDestroySemaphore(render_context_->Device().device,
-                       available_semaphores_[i], nullptr);
-    vkDestroyFence(render_context_->Device().device, fences_in_flight_[i],
-                   nullptr);
-  }
   vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
                        nullptr);
   for (auto framebuffer : framebuffers_) {
@@ -261,8 +254,8 @@ void Renderer::CreateGraphicsPipeline() {
       "Destroyed unused shader module after creating graphics pipeline");
 }
 
-void Renderer :: CreateSwapChain(VkSurfaceKHR surface) {
-  swapchain_ = std::make_unique<SwapChain>(render_context_.get(), surface);
+void Renderer :: CreateSwapChain() {
+  swapchain_ = std::make_unique<SwapChain>(render_context_.get());
 }
 
 void Renderer::CreateFrameResources() {
@@ -386,35 +379,6 @@ void Renderer::RecordCommandBuffers() {
   }
 }
 
-//void Renderer::CreateSyncObjects() {
-//  available_semaphores_.resize(static_config::kMaxFrameInFlight);
-//  finished_semaphores_.resize(static_config::kMaxFrameInFlight);
-//  fences_in_flight_.resize(static_config::kMaxFrameInFlight);
-//  images_in_flight_.resize(
-//      swapchain_->GetVkBSwapChain().image_count,
-//                           VK_NULL_HANDLE);
-//
-//  VkSemaphoreCreateInfo semaphore_info = {};
-//  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-//
-//  VkFenceCreateInfo fence_info = {};
-//  fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-//  fence_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
-//
-//  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-//    if (vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-//                          nullptr, &available_semaphores_[i]) != VK_SUCCESS ||
-//        vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-//                          nullptr, &finished_semaphores_[i]) != VK_SUCCESS ||
-//        vkCreateFence(render_context_->Device().device, &fence_info, nullptr,
-//                      &fences_in_flight_[i]) != VK_SUCCESS) {
-//      spdlog::error("Failed to create sync objects {} of {}", i,
-//                    static_config::kMaxFrameInFlight);
-//      throw std::runtime_error("Failed to create sync objects");
-//    }
-//  }
-//}
-
 void Renderer::RecreateSwapChain() {
   vkDeviceWaitIdle(render_context_->Device().device);
   vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
@@ -435,12 +399,13 @@ void Renderer::RecreateSwapChain() {
 
 void Renderer::Draw() {
   vkWaitForFences(render_context_->Device().device, 1,
-                  &fences_in_flight_[current_frame_idx_], VK_TRUE, UINT64_MAX);
+                  &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE, UINT64_MAX);
 
   uint32_t image_index = 0;
   VkResult result      = vkAcquireNextImageKHR(
       render_context_->Device().device, swapchain_->GetVkBSwapChain().swapchain,
-      UINT64_MAX, available_semaphores_[current_frame_idx_], VK_NULL_HANDLE,
+      UINT64_MAX, swapchain_->available_semaphores_[current_frame_idx_],
+      VK_NULL_HANDLE,
       &image_index);
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -450,16 +415,19 @@ void Renderer::Draw() {
     throw std::runtime_error("Failed to acquire swapchain image");
   }
 
-  if (images_in_flight_[image_index] != VK_NULL_HANDLE) {
+  if (swapchain_->images_in_flight_[image_index] != VK_NULL_HANDLE) {
     vkWaitForFences(render_context_->Device().device, 1,
-                    &images_in_flight_[image_index], VK_TRUE, UINT64_MAX);
+                    &swapchain_->images_in_flight_[image_index], VK_TRUE,
+                    UINT64_MAX);
   }
-  images_in_flight_[image_index] = fences_in_flight_[current_frame_idx_];
+  swapchain_->images_in_flight_[image_index] =
+      swapchain_->fences_in_flight_[current_frame_idx_];
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType        = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-  VkSemaphore wait_semaphores[] = {available_semaphores_[current_frame_idx_]};
+  VkSemaphore wait_semaphores[] = {
+      swapchain_->available_semaphores_[current_frame_idx_]};
   VkPipelineStageFlags wait_stages[] = {
       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   submitInfo.waitSemaphoreCount = 1;
@@ -469,15 +437,17 @@ void Renderer::Draw() {
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers    = &command_buffers_[image_index];
 
-  VkSemaphore signal_semaphores[] = {finished_semaphores_[current_frame_idx_]};
+  VkSemaphore signal_semaphores[] = {
+      swapchain_->finished_semaphores_[current_frame_idx_]};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores    = signal_semaphores;
 
   vkResetFences(render_context_->Device().device, 1,
-                &fences_in_flight_[current_frame_idx_]);
+                &swapchain_->fences_in_flight_[current_frame_idx_]);
 
   if (vkQueueSubmit(queues_[vkq_index::kGraphicsIdx], 1, &submitInfo,
-                    fences_in_flight_[current_frame_idx_]) != VK_SUCCESS) {
+                    swapchain_->fences_in_flight_[current_frame_idx_]) !=
+      VK_SUCCESS) {
     spdlog::error("Failed to submit draw command buffer");
     throw std::runtime_error("Failed to submit draw command buffer");
   }

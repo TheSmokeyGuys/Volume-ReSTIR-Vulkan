@@ -6,6 +6,8 @@
 
 #include "spdlog/spdlog.h"
 
+#include"config/static_config.hpp"
+
 namespace volume_restir {
 // Specify the color channel format and color space type
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -72,22 +74,49 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
   }
 }
 
-SwapChain::SwapChain(volume_restir::RenderContext* a_renderContext,
-                     VkSurfaceKHR vkSurface)
-    : renderContext(a_renderContext), vkSurface(vkSurface) {
+SwapChain::SwapChain(volume_restir::RenderContext* a_renderContext)
+    : renderContext(a_renderContext), vkSurface(a_renderContext->Surface()) {
   Create();
 
   VkSemaphoreCreateInfo semaphoreInfo = {};
   semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-  if (vkCreateSemaphore( a_renderContext->Device().device,
+ /* if (vkCreateSemaphore( a_renderContext->Device().device,
           &semaphoreInfo, nullptr,
                         &imageAvailableSemaphore) != VK_SUCCESS ||
       vkCreateSemaphore(a_renderContext->Device().device, &semaphoreInfo,
                         nullptr,
                         &renderFinishedSemaphore) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create semaphores");
+  }*/
+
+   available_semaphores_.resize(static_config::kMaxFrameInFlight);
+  finished_semaphores_.resize(static_config::kMaxFrameInFlight);
+  fences_in_flight_.resize(static_config::kMaxFrameInFlight);
+  images_in_flight_.resize(swapchain_.image_count,
+                           VK_NULL_HANDLE);
+
+  VkSemaphoreCreateInfo semaphore_info = {};
+  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+  VkFenceCreateInfo fence_info = {};
+  fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fence_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
+
+  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
+    if (vkCreateSemaphore(a_renderContext->Device().device, &semaphore_info,
+                          nullptr, &available_semaphores_[i]) != VK_SUCCESS ||
+        vkCreateSemaphore(a_renderContext->Device().device, &semaphore_info,
+                          nullptr, &finished_semaphores_[i]) != VK_SUCCESS ||
+        vkCreateFence(a_renderContext->Device().device, &fence_info, nullptr,
+                      &fences_in_flight_[i]) != VK_SUCCESS) {
+      spdlog::error("Failed to create sync objects {} of {}", i,
+                    static_config::kMaxFrameInFlight);
+      throw std::runtime_error("Failed to create sync objects");
+    }
   }
+
+
 }
 
 void SwapChain::Create() {
@@ -131,13 +160,13 @@ VkImage SwapChain::GetVkImage(uint32_t index) const {
   return vkSwapChainImages[index];
 }
 
-VkSemaphore SwapChain::GetImageAvailableVkSemaphore() const {
-  return imageAvailableSemaphore;
-}
-
-VkSemaphore SwapChain::GetRenderFinishedVkSemaphore() const {
-  return renderFinishedSemaphore;
-}
+//VkSemaphore SwapChain::GetImageAvailableVkSemaphore() const {
+//  return imageAvailableSemaphore;
+//}
+//
+//VkSemaphore SwapChain::GetRenderFinishedVkSemaphore() const {
+//  return renderFinishedSemaphore;
+//}
 
 void SwapChain::Recreate() {
   Destroy();
@@ -150,7 +179,7 @@ bool SwapChain::Acquire() {
   //  // synchronize with the GPU
   //  vkQueueWaitIdle(device->GetQueue(QueueFlags::Present));
   //}
-  VkResult result = vkAcquireNextImageKHR(
+  /*VkResult result = vkAcquireNextImageKHR(
       renderContext->Device().device, swapchain_.swapchain, std::numeric_limits<uint64_t>::max(),
       imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
   if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -160,7 +189,7 @@ bool SwapChain::Acquire() {
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     Recreate();
     return false;
-  }
+  }*/
 
   return true;
 }
@@ -207,8 +236,18 @@ bool SwapChain::Present() {
 }
 
 SwapChain::~SwapChain() {
-  vkDestroySemaphore(renderContext->Device().device, imageAvailableSemaphore, nullptr);
-  vkDestroySemaphore(renderContext->Device().device, renderFinishedSemaphore, nullptr);
+  //vkDestroySemaphore(renderContext->Device().device, imageAvailableSemaphore, nullptr);
+  //vkDestroySemaphore(renderContext->Device().device, renderFinishedSemaphore, nullptr);
+
+  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
+    vkDestroySemaphore(renderContext->Device().device,
+                       finished_semaphores_[i], nullptr);
+    vkDestroySemaphore(renderContext->Device().device,
+                       available_semaphores_[i], nullptr);
+    vkDestroyFence(renderContext->Device().device, fences_in_flight_[i],
+                   nullptr);
+  
+  }
   Destroy();
 }
 

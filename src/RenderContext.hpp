@@ -22,6 +22,7 @@ public:
 
   vkb::Instance& Instance() { return instance_; }
   vkb::Device& Device() { return device_; }
+  VkSurfaceKHR Surface() const { return surface_; } 
   const vkb::Instance& Instance() const { return instance_; }
   const vkb::Device& Device() const { return device_; }
 
@@ -29,6 +30,7 @@ private:
   vkb::Instance instance_;
   vkb::PhysicalDevice phys_device_;
   vkb::Device device_;
+  VkSurfaceKHR surface_;
 };
 
 }  // namespace volume_restir

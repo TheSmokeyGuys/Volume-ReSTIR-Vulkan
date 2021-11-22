@@ -36,7 +36,7 @@ private:
   //void CreateSyncObjects();  // FIXME: Move this into Swapchain class
   void RecreateSwapChain();  // FIXME: Move this into Swapchain class
 
-  void CreateSwapChain(VkSurfaceKHR surface);
+  void CreateSwapChain();
  // void CreateSwapChain(VkSurfaceKHR surface, unsigned int numBuffers); // FOr future if we may need this
 
   std::unique_ptr<RenderContext> render_context_;
@@ -58,11 +58,6 @@ private:
 
   VkCommandPool graphics_command_pool_;
   std::vector<VkCommandBuffer> command_buffers_;
-
-  std::vector<VkSemaphore> available_semaphores_;
-  std::vector<VkSemaphore> finished_semaphores_;
-  std::vector<VkFence> fences_in_flight_;
-  std::vector<VkFence> images_in_flight_;
 
   size_t current_frame_idx_ = 0;
 };

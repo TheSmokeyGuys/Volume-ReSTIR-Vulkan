@@ -22,7 +22,6 @@ RenderContext::RenderContext() {
   spdlog::debug("Successfully created Vulkan instance");
 
   // create surface
-  VkSurfaceKHR surface_;
   if (glfwCreateWindowSurface(instance_.instance,
                               SingletonManager::GetWindow().WindowPtr(),
                               nullptr, &surface_) != VK_SUCCESS) {
