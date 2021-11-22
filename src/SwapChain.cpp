@@ -2,8 +2,6 @@
 
 #include <vector>
 
-//#include "Device.h"
-#include "Instance.h"
 #include "Window.hpp"
 
 #include "spdlog/spdlog.h"
@@ -168,7 +166,7 @@ bool SwapChain::Acquire() {
 }
 
 bool SwapChain::Present() {
-  VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+ // VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
 
   // Submit result back to swap chain for presentation
  /* VkPresentInfoKHR presentInfo   = {};
@@ -199,7 +197,8 @@ bool SwapChain::Present() {
     throw std::runtime_error("Failed to get present queue");
   }
 
-  if (present_queue.has_value() == VK_ERROR_OUT_OF_DATE_KHR || present_queue.has_value() == VK_SUBOPTIMAL_KHR) {
+  if (present_queue.vk_result() == VK_ERROR_OUT_OF_DATE_KHR ||
+      present_queue.vk_result() == VK_SUBOPTIMAL_KHR) {
     Recreate();
     return false;
   }
