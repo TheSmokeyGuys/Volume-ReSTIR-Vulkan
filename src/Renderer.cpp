@@ -256,7 +256,8 @@ void Renderer ::CreateSwapChain() {
 }
 
 void Renderer::CreateFrameResources() {
-  swapchain_image_views_ = swapchain_->GetVkBSwapChain().get_image_views().value();
+  swapchain_image_views_ =
+      swapchain_->GetVkBSwapChain().get_image_views().value();
 
   framebuffers_.resize(swapchain_image_views_.size());
 
@@ -389,8 +390,6 @@ void Renderer::Draw() {
   vkWaitForFences(render_context_->Device().device, 1,
                   &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
                   UINT64_MAX);
-
- 
 
   VkResult result = swapchain_.get()->Acquire(current_frame_idx_);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
