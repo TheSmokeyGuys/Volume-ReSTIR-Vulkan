@@ -75,19 +75,6 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
 SwapChain::SwapChain(volume_restir::RenderContext* a_renderContext)
     : renderContext(a_renderContext), vkSurface(a_renderContext->Surface()) {
   Create();
-
-  VkSemaphoreCreateInfo semaphoreInfo = {};
-  semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  /* if (vkCreateSemaphore( a_renderContext->Device().device,
-           &semaphoreInfo, nullptr,
-                         &imageAvailableSemaphore) != VK_SUCCESS ||
-       vkCreateSemaphore(a_renderContext->Device().device, &semaphoreInfo,
-                         nullptr,
-                         &renderFinishedSemaphore) != VK_SUCCESS) {
-     throw std::runtime_error("Failed to create semaphores");
-   }*/
-
   available_semaphores_.resize(static_config::kMaxFrameInFlight);
   finished_semaphores_.resize(static_config::kMaxFrameInFlight);
   fences_in_flight_.resize(static_config::kMaxFrameInFlight);
@@ -128,7 +115,7 @@ void SwapChain::Create() {
   swapchain_ = swapchain_success.value();
   spdlog::debug("Successfully created Vulkan swapchain");
 
-    // --- Retrieve swap chain images ---
+  // --- Retrieve swap chain images ---
   uint32_t imageCount = swapchain_.image_count;
   vkSwapChainImages.resize(imageCount);
   vkSwapChainImages = swapchain_.get_images().value();
@@ -138,7 +125,6 @@ void SwapChain::Create() {
 }
 
 void SwapChain::Destroy() {
-
   vkDestroySurfaceKHR(renderContext->Instance().instance, vkSurface,
                       renderContext->Instance().allocation_callbacks);
   vkb::destroy_swapchain(swapchain_);
@@ -175,10 +161,8 @@ VkResult SwapChain::Acquire(size_t a_current_frame_idx) {
 
   VkResult result = vkAcquireNextImageKHR(
       renderContext->Device().device, swapchain_.swapchain,
-                          std::numeric_limits<uint64_t>::max(),
-      available_semaphores_[a_current_frame_idx],
-                          VK_NULL_HANDLE,
-  &imageIndex); 
+      std::numeric_limits<uint64_t>::max(),
+      available_semaphores_[a_current_frame_idx], VK_NULL_HANDLE, &imageIndex);
   return result;
 }
 
@@ -202,7 +186,6 @@ bool SwapChain::Present() {
 }
 
 SwapChain::~SwapChain() {
-
   for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
     vkDestroySemaphore(renderContext->Device().device, finished_semaphores_[i],
                        nullptr);
