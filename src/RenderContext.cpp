@@ -55,10 +55,8 @@ RenderContext::RenderContext() {
 }
 
 RenderContext::~RenderContext() {
-  spdlog::debug("Destroyed swapchain");
   vkb::destroy_device(device_);
   spdlog::debug("Destroyed logical device");
-  spdlog::debug("Destroyed Vulkan surface");
   vkb::destroy_instance(instance_);
   spdlog::debug("Destroyed instance");
   spdlog::info("All RenderContext cleaned up successfully");

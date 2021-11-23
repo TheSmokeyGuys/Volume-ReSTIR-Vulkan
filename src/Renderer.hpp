@@ -42,7 +42,7 @@ private:
 
   Queues queues_;
 
-  std::vector<VkImage> swapchain_images_;
+  //std::vector<VkImage> swapchain_images_;
   std::vector<VkImageView> swapchain_image_views_;
   std::vector<VkFramebuffer> framebuffers_;
 

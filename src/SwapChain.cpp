@@ -127,6 +127,14 @@ void SwapChain::Create() {
   vkb::destroy_swapchain(swapchain_);
   swapchain_ = swapchain_success.value();
   spdlog::debug("Successfully created Vulkan swapchain");
+
+    // --- Retrieve swap chain images ---
+  uint32_t imageCount = swapchain_.image_count;
+  vkSwapChainImages.resize(imageCount);
+  vkSwapChainImages = swapchain_.get_images().value();
+
+  vkSwapChainImageFormat = swapchain_.image_format;
+  vkSwapChainExtent      = swapchain_.extent;
 }
 
 void SwapChain::Destroy() {
@@ -166,17 +174,17 @@ bool SwapChain::Acquire() {
   //  // synchronize with the GPU
   //  vkQueueWaitIdle(device->GetQueue(QueueFlags::Present));
   //}
-  /*VkResult result = vkAcquireNextImageKHR(
-      renderContext->Device().device, swapchain_.swapchain,
-  std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE,
-  &imageIndex); if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { throw
-  std::runtime_error("Failed to acquire swap chain image");
-  }
+  //VkResult result = vkAcquireNextImageKHR(
+  //    renderContext->Device().device, swapchain_.swapchain,
+  //std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE,
+  //&imageIndex); if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { throw
+  //std::runtime_error("Failed to acquire swap chain image");
+  //}
 
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-    Recreate();
-    return false;
-  }*/
+  //if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+  //  Recreate();
+  //  return false;
+  //}
 
   return true;
 }
