@@ -390,7 +390,7 @@ void Renderer::Draw() {
                   &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
                   UINT64_MAX);
 
-  uint32_t image_index = 0;
+ 
 
   VkResult result = swapchain_.get()->Acquire(current_frame_idx_);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -399,6 +399,7 @@ void Renderer::Draw() {
     spdlog::error("Failed to acquire swapchain image. Error {}", result);
     throw std::runtime_error("Failed to acquire swapchain image");
   }
+  uint32_t image_index = swapchain_.get()->GetIndex();
 
   if (swapchain_->images_in_flight_[image_index] != VK_NULL_HANDLE) {
     vkWaitForFences(render_context_->Device().device, 1,
