@@ -256,7 +256,6 @@ void Renderer ::CreateSwapChain() {
 }
 
 void Renderer::CreateFrameResources() {
-  std::vector<VkImage>  swapchain_images_ = swapchain_->GetVkBSwapChain().get_images().value();
   swapchain_image_views_ = swapchain_->GetVkBSwapChain().get_image_views().value();
 
   framebuffers_.resize(swapchain_image_views_.size());
