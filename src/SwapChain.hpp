@@ -20,7 +20,7 @@ public:
 
   SwapChain(RenderContext* renderContext);
   void Recreate();
-  bool Acquire();
+  VkResult Acquire(size_t a_current_frame_idx);
   bool Present();
   ~SwapChain();
 

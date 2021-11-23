@@ -391,11 +391,8 @@ void Renderer::Draw() {
                   UINT64_MAX);
 
   uint32_t image_index = 0;
-  VkResult result      = vkAcquireNextImageKHR(
-      render_context_->Device().device, swapchain_->GetVkBSwapChain().swapchain,
-      UINT64_MAX, swapchain_->available_semaphores_[current_frame_idx_],
-      VK_NULL_HANDLE, &image_index);
 
+  VkResult result = swapchain_.get()->Acquire(current_frame_idx_);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     RecreateSwapChain();
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {

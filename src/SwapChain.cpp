@@ -138,8 +138,6 @@ void SwapChain::Create() {
 }
 
 void SwapChain::Destroy() {
-  // vkDestroySwapchainKHR(renderContext->Device().device, vkSwapChain,
-  // nullptr);
 
   vkDestroySurfaceKHR(renderContext->Instance().instance, vkSurface,
                       renderContext->Instance().allocation_callbacks);
@@ -167,26 +165,21 @@ void SwapChain::Recreate() {
   Create();
 }
 
-bool SwapChain::Acquire() {
+VkResult SwapChain::Acquire(size_t a_current_frame_idx) {
   // if (ENABLE_VALIDATION) {
   //  // the validation layer implementation expects the application to
   //  explicitly
   //  // synchronize with the GPU
   //  vkQueueWaitIdle(device->GetQueue(QueueFlags::Present));
   //}
-  //VkResult result = vkAcquireNextImageKHR(
-  //    renderContext->Device().device, swapchain_.swapchain,
-  //std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE,
-  //&imageIndex); if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { throw
-  //std::runtime_error("Failed to acquire swap chain image");
-  //}
 
-  //if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-  //  Recreate();
-  //  return false;
-  //}
-
-  return true;
+  VkResult result = vkAcquireNextImageKHR(
+      renderContext->Device().device, swapchain_.swapchain,
+                          std::numeric_limits<uint64_t>::max(),
+      available_semaphores_[a_current_frame_idx],
+                          VK_NULL_HANDLE,
+  &imageIndex); 
+  return result;
 }
 
 bool SwapChain::Present() {
