@@ -154,14 +154,6 @@ VkImage SwapChain::GetVkImage(uint32_t index) const {
   return vkSwapChainImages[index];
 }
 
-// VkSemaphore SwapChain::GetImageAvailableVkSemaphore() const {
-//  return imageAvailableSemaphore;
-//}
-//
-// VkSemaphore SwapChain::GetRenderFinishedVkSemaphore() const {
-//  return renderFinishedSemaphore;
-//}
-
 void SwapChain::Recreate() {
   Destroy();
   Create();
@@ -190,27 +182,6 @@ bool SwapChain::Acquire() {
 }
 
 bool SwapChain::Present() {
-  // VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
-
-  // Submit result back to swap chain for presentation
-  /* VkPresentInfoKHR presentInfo   = {};
-   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.waitSemaphoreCount = 1;
-   presentInfo.pWaitSemaphores    = signalSemaphores;
-
-   VkSwapchainKHR swapChains[] = {swapchain_.swapchain};
-   presentInfo.swapchainCount  = 1;
-   presentInfo.pSwapchains     = swapChains;
-   presentInfo.pImageIndices   = &imageIndex;
-   presentInfo.pResults        = nullptr;
-
-   VkResult result =
-       vkQueuePresentKHR(device->GetQueue(QueueFlags::Present), &presentInfo);
-
-   if (result != VK_SUCCESS) {
-     throw std::runtime_error("Failed to present swap chain image");
-   }*/
-
   // get present queue
   auto present_queue =
       renderContext->Device().get_queue(vkb::QueueType::present);
@@ -230,9 +201,6 @@ bool SwapChain::Present() {
 }
 
 SwapChain::~SwapChain() {
-  // vkDestroySemaphore(renderContext->Device().device, imageAvailableSemaphore,
-  // nullptr); vkDestroySemaphore(renderContext->Device().device,
-  // renderFinishedSemaphore, nullptr);
 
   for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
     vkDestroySemaphore(renderContext->Device().device, finished_semaphores_[i],

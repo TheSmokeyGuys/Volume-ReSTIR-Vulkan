@@ -18,10 +18,6 @@ public:
   uint32_t GetCount() const;
   VkImage GetVkImage(uint32_t index) const;
 
-  // Fix this
-  /* VkSemaphore GetImageAvailableVkSemaphore() const;
-   VkSemaphore GetRenderFinishedVkSemaphore() const;*/
-
   SwapChain(RenderContext* renderContext);
   void Recreate();
   bool Acquire();
@@ -34,8 +30,6 @@ public:
   std::vector<VkFence> images_in_flight_;
 
 private:
-  // SwapChain(RenderContext* renderContext, VkSurfaceKHR vkSurface,
-  //          unsigned int numBuffers);
   void Create();
   void Destroy();
 
@@ -47,8 +41,5 @@ private:
   VkFormat vkSwapChainImageFormat;
   VkExtent2D vkSwapChainExtent;
   uint32_t imageIndex = 0;
-
-  /* VkSemaphore imageAvailableSemaphore;
-   VkSemaphore renderFinishedSemaphore;*/
 };
 }  // namespace volume_restir

@@ -33,12 +33,9 @@ private:
   void CreateFrameResources();
   void CreateCommandPools();
   void RecordCommandBuffers();
-  // void CreateSyncObjects();  // FIXME: Move this into Swapchain class
-  void RecreateSwapChain();  // FIXME: Move this into Swapchain class
+  void RecreateSwapChain(); 
 
   void CreateSwapChain();
-  // void CreateSwapChain(VkSurfaceKHR surface, unsigned int numBuffers); // FOr
-  // future if we may need this
 
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<SwapChain> swapchain_;
