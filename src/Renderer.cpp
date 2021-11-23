@@ -9,25 +9,17 @@ namespace volume_restir {
 
 Renderer::Renderer() {
   render_context_ = std::make_unique<RenderContext>();
+  CreateSwapChain();
   InitQueues();
   CreateRenderPass();
   CreateGraphicsPipeline();
   CreateFrameResources();
   CreateCommandPools();
   RecordCommandBuffers();
-  CreateSyncObjects();
 }
 
 Renderer::~Renderer() {
   vkDeviceWaitIdle(render_context_->Device().device);
-  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-    vkDestroySemaphore(render_context_->Device().device,
-                       finished_semaphores_[i], nullptr);
-    vkDestroySemaphore(render_context_->Device().device,
-                       available_semaphores_[i], nullptr);
-    vkDestroyFence(render_context_->Device().device, fences_in_flight_[i],
-                   nullptr);
-  }
   vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
                        nullptr);
   for (auto framebuffer : framebuffers_) {
@@ -39,7 +31,7 @@ Renderer::~Renderer() {
   vkDestroyPipelineLayout(render_context_->Device().device,
                           graphics_pipeline_layout_, nullptr);
   vkDestroyRenderPass(render_context_->Device().device, render_pass_, nullptr);
-  render_context_->Swapchain().destroy_image_views(swapchain_image_views_);
+  swapchain_->GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
 }
 
 void Renderer::InitQueues() {
@@ -68,7 +60,7 @@ void Renderer::InitQueues() {
 
 void Renderer::CreateRenderPass() {
   VkAttachmentDescription color_attachment{};
-  color_attachment.format         = render_context_->Swapchain().image_format;
+  color_attachment.format         = swapchain_->GetVkBSwapChain().image_format;
   color_attachment.samples        = VK_SAMPLE_COUNT_1_BIT;
   color_attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
   color_attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
@@ -157,14 +149,14 @@ void Renderer::CreateGraphicsPipeline() {
   VkViewport viewport = {};
   viewport.x          = 0.0f;
   viewport.y          = 0.0f;
-  viewport.width      = (float)render_context_->Swapchain().extent.width;
-  viewport.height     = (float)render_context_->Swapchain().extent.height;
+  viewport.width      = (float)swapchain_->GetVkBSwapChain().extent.width;
+  viewport.height     = (float)swapchain_->GetVkBSwapChain().extent.height;
   viewport.minDepth   = 0.0f;
   viewport.maxDepth   = 1.0f;
 
   VkRect2D scissor = {};
   scissor.offset   = {0, 0};
-  scissor.extent   = render_context_->Swapchain().extent;
+  scissor.extent   = swapchain_->GetVkBSwapChain().extent;
 
   VkPipelineViewportStateCreateInfo viewport_state = {};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -259,10 +251,12 @@ void Renderer::CreateGraphicsPipeline() {
       "Destroyed unused shader module after creating graphics pipeline");
 }
 
+void Renderer ::CreateSwapChain() {
+  swapchain_ = std::make_unique<SwapChain>(render_context_.get());
+}
+
 void Renderer::CreateFrameResources() {
-  swapchain_images_ = render_context_->Swapchain().get_images().value();
-  swapchain_image_views_ =
-      render_context_->Swapchain().get_image_views().value();
+  swapchain_image_views_ = swapchain_->GetVkBSwapChain().get_image_views().value();
 
   framebuffers_.resize(swapchain_image_views_.size());
 
@@ -274,8 +268,8 @@ void Renderer::CreateFrameResources() {
     framebuffer_info.renderPass = render_pass_;
     framebuffer_info.attachmentCount = 1;
     framebuffer_info.pAttachments    = attachments;
-    framebuffer_info.width  = render_context_->Swapchain().extent.width;
-    framebuffer_info.height = render_context_->Swapchain().extent.height;
+    framebuffer_info.width  = swapchain_->GetVkBSwapChain().extent.width;
+    framebuffer_info.height = swapchain_->GetVkBSwapChain().extent.height;
     framebuffer_info.layers = 1;
 
     if (vkCreateFramebuffer(render_context_->Device().device, &framebuffer_info,
@@ -336,7 +330,7 @@ void Renderer::RecordCommandBuffers() {
     render_pass_info.renderPass  = render_pass_;
     render_pass_info.framebuffer = framebuffers_[i];
     render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent = render_context_->Swapchain().extent;
+    render_pass_info.renderArea.extent = swapchain_->GetVkBSwapChain().extent;
     VkClearValue clearColor{{{0.0f, 0.0f, 0.0f, 1.0f}}};
     render_pass_info.clearValueCount = 1;
     render_pass_info.pClearValues    = &clearColor;
@@ -344,14 +338,14 @@ void Renderer::RecordCommandBuffers() {
     VkViewport viewport = {};
     viewport.x          = 0.0f;
     viewport.y          = 0.0f;
-    viewport.width      = (float)render_context_->Swapchain().extent.width;
-    viewport.height     = (float)render_context_->Swapchain().extent.height;
+    viewport.width      = (float)swapchain_->GetVkBSwapChain().extent.width;
+    viewport.height     = (float)swapchain_->GetVkBSwapChain().extent.height;
     viewport.minDepth   = 0.0f;
     viewport.maxDepth   = 1.0f;
 
     VkRect2D scissor = {};
     scissor.offset   = {0, 0};
-    scissor.extent   = render_context_->Swapchain().extent;
+    scissor.extent   = swapchain_->GetVkBSwapChain().extent;
 
     vkCmdSetViewport(command_buffers_[i], 0, 1, &viewport);
     vkCmdSetScissor(command_buffers_[i], 0, 1, &scissor);
@@ -374,34 +368,6 @@ void Renderer::RecordCommandBuffers() {
   }
 }
 
-void Renderer::CreateSyncObjects() {
-  available_semaphores_.resize(static_config::kMaxFrameInFlight);
-  finished_semaphores_.resize(static_config::kMaxFrameInFlight);
-  fences_in_flight_.resize(static_config::kMaxFrameInFlight);
-  images_in_flight_.resize(render_context_->Swapchain().image_count,
-                           VK_NULL_HANDLE);
-
-  VkSemaphoreCreateInfo semaphore_info = {};
-  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  VkFenceCreateInfo fence_info = {};
-  fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fence_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
-
-  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-    if (vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-                          nullptr, &available_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateSemaphore(render_context_->Device().device, &semaphore_info,
-                          nullptr, &finished_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateFence(render_context_->Device().device, &fence_info, nullptr,
-                      &fences_in_flight_[i]) != VK_SUCCESS) {
-      spdlog::error("Failed to create sync objects {} of {}", i,
-                    static_config::kMaxFrameInFlight);
-      throw std::runtime_error("Failed to create sync objects");
-    }
-  }
-}
-
 void Renderer::RecreateSwapChain() {
   vkDeviceWaitIdle(render_context_->Device().device);
   vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
@@ -410,10 +376,10 @@ void Renderer::RecreateSwapChain() {
     vkDestroyFramebuffer(render_context_->Device().device, framebuffer,
                          nullptr);
   }
-  render_context_->Swapchain().destroy_image_views(swapchain_image_views_);
+  swapchain_->GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
   spdlog::debug("Destroyed old swapchain in frame");
 
-  render_context_->CreateSwapChain();
+  swapchain_->Recreate();
   CreateFrameResources();
   CreateCommandPools();
   RecordCommandBuffers();
@@ -421,14 +387,12 @@ void Renderer::RecreateSwapChain() {
 
 void Renderer::Draw() {
   vkWaitForFences(render_context_->Device().device, 1,
-                  &fences_in_flight_[current_frame_idx_], VK_TRUE, UINT64_MAX);
+                  &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
+                  UINT64_MAX);
 
   uint32_t image_index = 0;
-  VkResult result      = vkAcquireNextImageKHR(
-      render_context_->Device().device, render_context_->Swapchain().swapchain,
-      UINT64_MAX, available_semaphores_[current_frame_idx_], VK_NULL_HANDLE,
-      &image_index);
 
+  VkResult result = swapchain_.get()->Acquire(current_frame_idx_);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     RecreateSwapChain();
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -436,16 +400,19 @@ void Renderer::Draw() {
     throw std::runtime_error("Failed to acquire swapchain image");
   }
 
-  if (images_in_flight_[image_index] != VK_NULL_HANDLE) {
+  if (swapchain_->images_in_flight_[image_index] != VK_NULL_HANDLE) {
     vkWaitForFences(render_context_->Device().device, 1,
-                    &images_in_flight_[image_index], VK_TRUE, UINT64_MAX);
+                    &swapchain_->images_in_flight_[image_index], VK_TRUE,
+                    UINT64_MAX);
   }
-  images_in_flight_[image_index] = fences_in_flight_[current_frame_idx_];
+  swapchain_->images_in_flight_[image_index] =
+      swapchain_->fences_in_flight_[current_frame_idx_];
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType        = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-  VkSemaphore wait_semaphores[] = {available_semaphores_[current_frame_idx_]};
+  VkSemaphore wait_semaphores[] = {
+      swapchain_->available_semaphores_[current_frame_idx_]};
   VkPipelineStageFlags wait_stages[] = {
       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   submitInfo.waitSemaphoreCount = 1;
@@ -455,15 +422,17 @@ void Renderer::Draw() {
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers    = &command_buffers_[image_index];
 
-  VkSemaphore signal_semaphores[] = {finished_semaphores_[current_frame_idx_]};
+  VkSemaphore signal_semaphores[] = {
+      swapchain_->finished_semaphores_[current_frame_idx_]};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores    = signal_semaphores;
 
   vkResetFences(render_context_->Device().device, 1,
-                &fences_in_flight_[current_frame_idx_]);
+                &swapchain_->fences_in_flight_[current_frame_idx_]);
 
   if (vkQueueSubmit(queues_[vkq_index::kGraphicsIdx], 1, &submitInfo,
-                    fences_in_flight_[current_frame_idx_]) != VK_SUCCESS) {
+                    swapchain_->fences_in_flight_[current_frame_idx_]) !=
+      VK_SUCCESS) {
     spdlog::error("Failed to submit draw command buffer");
     throw std::runtime_error("Failed to submit draw command buffer");
   }
@@ -474,7 +443,7 @@ void Renderer::Draw() {
   present_info.waitSemaphoreCount = 1;
   present_info.pWaitSemaphores    = signal_semaphores;
 
-  VkSwapchainKHR swapChains[] = {render_context_->Swapchain().swapchain};
+  VkSwapchainKHR swapChains[] = {swapchain_->GetVkBSwapChain().swapchain};
   present_info.swapchainCount = 1;
   present_info.pSwapchains    = swapChains;
 

@@ -9,6 +9,7 @@
 
 #include "RenderContext.hpp"
 #include "ShaderModule.hpp"
+#include "SwapChain.hpp"
 #include "VkBootstrap.h"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
@@ -32,14 +33,16 @@ private:
   void CreateFrameResources();
   void CreateCommandPools();
   void RecordCommandBuffers();
-  void CreateSyncObjects();  // FIXME: Move this into Swapchain class
-  void RecreateSwapChain();  // FIXME: Move this into Swapchain class
+  void RecreateSwapChain(); 
+
+  void CreateSwapChain();
 
   std::unique_ptr<RenderContext> render_context_;
+  std::unique_ptr<SwapChain> swapchain_;
 
   Queues queues_;
 
-  std::vector<VkImage> swapchain_images_;
+  //std::vector<VkImage> swapchain_images_;
   std::vector<VkImageView> swapchain_image_views_;
   std::vector<VkFramebuffer> framebuffers_;
 
@@ -50,11 +53,6 @@ private:
 
   VkCommandPool graphics_command_pool_;
   std::vector<VkCommandBuffer> command_buffers_;
-
-  std::vector<VkSemaphore> available_semaphores_;
-  std::vector<VkSemaphore> finished_semaphores_;
-  std::vector<VkFence> fences_in_flight_;
-  std::vector<VkFence> images_in_flight_;
 
   size_t current_frame_idx_ = 0;
 };
