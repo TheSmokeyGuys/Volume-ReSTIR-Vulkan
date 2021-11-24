@@ -3,17 +3,27 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "config/static_config.hpp"
 #include "spdlog/spdlog.h"
 
 namespace volume_restir {
 
 Renderer::Renderer() {
+  float aspect_ratio =
+      static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
+
   render_context_ = std::make_unique<RenderContext>();
-  CreateSwapChain();
+  swapchain_      = std::make_unique<SwapChain>(render_context_.get());
+  camera_         = std::make_unique<Camera>(
+      render_context_.get(), static_config::kFOVInDegrees, aspect_ratio);
+
   InitQueues();
   CreateRenderPass();
-  CreateGraphicsPipeline();
+  CreateCameraDiscriptorSetLayout();
+  CreateDescriptorPool();
+  CreateCameraDescriptorSet();
   CreateFrameResources();
+  CreateGraphicsPipeline();
   CreateCommandPools();
   RecordCommandBuffers();
 }
@@ -30,6 +40,13 @@ Renderer::~Renderer() {
                     nullptr);
   vkDestroyPipelineLayout(render_context_->Device().device,
                           graphics_pipeline_layout_, nullptr);
+
+  vkDestroyDescriptorSetLayout(render_context_->Device().device,
+                               camera_descriptorset_layout_, nullptr);
+
+  vkDestroyDescriptorPool(render_context_->Device().device, descriptor_pool_,
+                          nullptr);
+
   vkDestroyRenderPass(render_context_->Device().device, render_pass_, nullptr);
   swapchain_->GetVkBSwapChain().destroy_image_views(swapchain_image_views_);
 }
@@ -199,6 +216,10 @@ void Renderer::CreateGraphicsPipeline() {
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
+  // TODO: add camera descriptor set layout here.
+  // pipeline_layout_info.setLayoutCount = descriptorSetLayout.size()
+  //
+
   VkPipelineLayoutCreateInfo pipeline_layout_info = {};
   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipeline_layout_info.setLayoutCount         = 0;
@@ -249,10 +270,6 @@ void Renderer::CreateGraphicsPipeline() {
 
   spdlog::debug(
       "Destroyed unused shader module after creating graphics pipeline");
-}
-
-void Renderer ::CreateSwapChain() {
-  swapchain_ = std::make_unique<SwapChain>(render_context_.get());
 }
 
 void Renderer::CreateFrameResources() {
@@ -459,6 +476,91 @@ void Renderer::Draw() {
 
   current_frame_idx_ =
       (current_frame_idx_ + 1) % static_config::kMaxFrameInFlight;
+}
+
+RenderContext* Renderer::RenderContextPtr() const noexcept {
+  return render_context_.get();
+}
+
+void Renderer::CreateCameraDiscriptorSetLayout() {
+  // Describe the binding of the descriptor set layout
+  VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+  uboLayoutBinding.binding                      = 0;
+  uboLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboLayoutBinding.descriptorCount    = 1;
+  uboLayoutBinding.stageFlags         = VK_SHADER_STAGE_ALL;
+  uboLayoutBinding.pImmutableSamplers = nullptr;
+
+  std::vector<VkDescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
+
+  // Create the descriptor set layout
+  VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+  layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+  layoutInfo.pBindings    = bindings.data();
+
+  if (vkCreateDescriptorSetLayout(render_context_->Device().device, &layoutInfo,
+                                  nullptr, &camera_descriptorset_layout_) !=
+      VK_SUCCESS) {
+    spdlog::error("Failed to create camera descriptor set layout");
+    throw std::runtime_error("Failed to create camera descriptor set layout");
+  }
+}
+
+void Renderer::CreateDescriptorPool() {
+  // Describe which descriptor types that the descriptor sets will contain
+  std::vector<VkDescriptorPoolSize> poolSizes = {
+      // Camera
+      {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}};
+
+  VkDescriptorPoolCreateInfo poolInfo = {};
+  poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+  poolInfo.pPoolSizes    = poolSizes.data();
+  poolInfo.maxSets       = 5;
+
+  if (vkCreateDescriptorPool(render_context_->Device().device, &poolInfo,
+                             nullptr, &descriptor_pool_) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to create descriptor pool");
+  }
+}
+
+void Renderer::CreateCameraDescriptorSet() {
+  // Describe the descriptor set
+  VkDescriptorSetLayout layouts[]       = {camera_descriptorset_layout_};
+  VkDescriptorSetAllocateInfo allocInfo = {};
+  allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool     = descriptor_pool_;
+  allocInfo.descriptorSetCount = 1;
+  allocInfo.pSetLayouts        = layouts;
+
+  // Allocate descriptor sets
+  if (vkAllocateDescriptorSets(render_context_->Device().device, &allocInfo,
+                               &camera_descriptorset_) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to allocate camera descriptor set");
+  }
+
+  // Configure the descriptors to refer to buffers
+  VkDescriptorBufferInfo cameraBufferInfo = {};
+  cameraBufferInfo.buffer                 = camera_->GetBuffer();
+  cameraBufferInfo.offset                 = 0;
+  cameraBufferInfo.range                  = sizeof(CameraBufferObject);
+
+  std::array<VkWriteDescriptorSet, 1> descriptorWrites = {};
+  descriptorWrites[0].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptorWrites[0].dstSet           = camera_descriptorset_;
+  descriptorWrites[0].dstBinding       = 0;
+  descriptorWrites[0].dstArrayElement  = 0;
+  descriptorWrites[0].descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  descriptorWrites[0].descriptorCount  = 1;
+  descriptorWrites[0].pBufferInfo      = &cameraBufferInfo;
+  descriptorWrites[0].pImageInfo       = nullptr;
+  descriptorWrites[0].pTexelBufferView = nullptr;
+
+  // Update descriptor sets
+  vkUpdateDescriptorSets(render_context_->Device().device,
+                         static_cast<uint32_t>(descriptorWrites.size()),
+                         descriptorWrites.data(), 0, nullptr);
 }
 
 }  // namespace volume_restir
