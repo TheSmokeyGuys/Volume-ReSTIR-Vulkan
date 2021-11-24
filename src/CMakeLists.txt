@@ -43,7 +43,7 @@ target_link_libraries(${PROJECT_NAME}
   ${ASSIMP_LIBRARIES}
   Vulkan::Vulkan 
   glfw
-  spdlog::spdlog_header_only
+  spdlog::spdlog
   vk-bootstrap::vk-bootstrap
   # OpenVDB::openvdb
 )
