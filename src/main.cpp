@@ -1,7 +1,11 @@
+#include "Camera.hpp"
 #include "Renderer.hpp"
 #include "SingtonManager.hpp"
 #include "VkBootstrap.h"
+#include "config/static_config.hpp"
 #include "spdlog/spdlog.h"
+
+using namespace volume_restir;
 
 int main() {
 #if DEBUG
@@ -9,9 +13,9 @@ int main() {
 #endif
   spdlog::info("Hello from Volumetric-ReSTIR project!");
 
-  volume_restir::Renderer renderer;
+  Renderer renderer;
 
-  while (!volume_restir::SingletonManager::GetWindow().ShouldQuit()) {
+  while (!SingletonManager::GetWindow().ShouldQuit()) {
     glfwPollEvents();
     renderer.Draw();
   }
