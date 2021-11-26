@@ -53,9 +53,12 @@ public:
 
   /// @brief Basic initiliasation of class
   void init();
-  /// @brief Set the total available GPU memory in KB
-  /// @param [in] _mem GLint - memory
-  inline void setTotalGPUMemKB(GLint _mem) { m_total_GPU_mem_kb = _mem; }
+
+  //TODO
+  ///// @brief Set the total available GPU memory in KB
+  ///// @param [in] _mem GLint - memory
+  //inline void setTotalGPUMemKB(GLint _mem) { m_total_GPU_mem_kb = _mem; }
+
   /// @brief Open and Load data from VDB file
   /// @param [in] _file std::string - file to load
   void openFile(std::string _file);
@@ -85,17 +88,21 @@ public:
   /// @param [in] _grid int - grid to query
   int getNumPointsAtGrid(int _grid);
 
-  /// @brief Return the channel extremes of the current channel - returns
-  /// BBoxBare
-  inline BBoxBare getCurrentChannelExtremes() {
-    return m_channelExtremes->at(m_currentActiveChannelPoints);
-  }
-  /// @brief Return the channel extremes of the specified channel - returns
-  /// BBoxBare
-  /// @param [in] _channel int - the channel to query
-  inline BBoxBare getChannelExtremesAt(int _channel) {
-    return m_channelExtremes->at(_channel);
-  }
+
+  //TODO
+  ///// @brief Return the channel extremes of the current channel - returns
+  ///// BBoxBare
+  //inline BBoxBare getCurrentChannelExtremes() {
+  //  return m_channelExtremes->at(m_currentActiveChannelPoints);
+  //}
+  ///// @brief Return the channel extremes of the specified channel - returns
+  ///// BBoxBare
+  ///// @param [in] _channel int - the channel to query
+  //inline BBoxBare getChannelExtremesAt(int _channel) {
+  //  return m_channelExtremes->at(_channel);
+  //}
+
+
   /// @brief Return the current active point render channel - returns int
   inline int pointChannel() { return m_currentActiveChannelPoints; }
   /// @brief Return the current active vector render channel - returns int
@@ -103,17 +110,21 @@ public:
 
   /// @brief Draw the VDB volume
   void drawVDB();
-  /// @brief Draw bounding box
-  inline void drawBBox() { m_bbox->draw(); }
-  /// @brief Draw the VDB tree
-  /// @param [in] _shadLib ShaderLibrary* - active shader library to set values
-  void drawTree(ShaderLibrary *_shadLib);
-  /// @brief Draw the vectors
-  /// @param [in] _shadLib ShaderLibrary* - active shader library to set values
-  void drawVectors(ShaderLibrary *_shadLib);
-  /// @brief Draw active crop boxes
-  /// @param [in] _shadLib ShaderLibrary* - active shader library to set values
-  void drawCrop(ShaderLibrary *_shadLib);
+
+  //TODO
+  ///// @brief Draw bounding box
+  //inline void drawBBox() { m_bbox->draw(); }
+
+  //TODO
+  ///// @brief Draw the VDB tree
+  ///// @param [in] _shadLib ShaderLibrary* - active shader library to set values
+  //void drawTree(ShaderLibrary *_shadLib);
+  ///// @brief Draw the vectors
+  ///// @param [in] _shadLib ShaderLibrary* - active shader library to set values
+  //void drawVectors(ShaderLibrary *_shadLib);
+  ///// @brief Draw active crop boxes
+  ///// @param [in] _shadLib ShaderLibrary* - active shader library to set values
+  //void drawCrop(ShaderLibrary *_shadLib);
 
   /// @brief Return the opened filename - returns std::string
   inline std::string filename() { return m_fileName; }
@@ -153,6 +164,7 @@ public:
   /// @param [in] _index int - the channel to get s from
   inline float getS(int _index) { return m_s.at(_index); }
 
+  //TODO
   /// @brief Build the bounding box for the file
   /// @param [in] _minx float - minimum X value
   /// @param [in] _maxx float - maximum X value
@@ -160,102 +172,114 @@ public:
   /// @param [in] _maxy float - maximum Y value
   /// @param [in] _minz float - minimum Z value
   /// @param [in] _maxz float - maximum Z value
-  void buildBBox(float _minx, float _maxx, float _miny, float _maxy,
-                 float _minz, float _maxz);
+  //void buildBBox(float _minx, float _maxx, float _miny, float _maxy,
+  //               float _minz, float _maxz);
 
-  /// @brief Get the Bounding Box - returns BoundBox
-  inline BoundBox getBBox() { return *m_bbox; }
-  /// @brief Get the crop box at the specified index - returns BoundBox
-  /// @param [in] _index int - the crop box to retrieve
-  inline BoundBox getCBox(int _index) { return m_crop[_index]; }
-  /// @brief Get the crop box from storage from the specified index
-  /// @param [in] _index int - the Crop box to get
-  inline BoundBox getCBoxStorage(int _index) { return m_cropStorage[_index]; }
+  //TODO
+  ///// @brief Get the Bounding Box - returns BoundBox
+  //inline BoundBox getBBox() { return *m_bbox; }
+  ///// @brief Get the crop box at the specified index - returns BoundBox
+  ///// @param [in] _index int - the crop box to retrieve
+  //inline BoundBox getCBox(int _index) { return m_crop[_index]; }
+  ///// @brief Get the crop box from storage from the specified index
+  ///// @param [in] _index int - the Crop box to get
+  //inline BoundBox getCBoxStorage(int _index) { return m_cropStorage[_index]; }
+
+  //TODO
   /// @brief Set cropbox at index
   /// @param [in] _min openvdb::Vec3f - minimum value
   /// @param [in] _max openvdb::Vec3f - maximum value
   /// @param [in] _index int - the crop box to set
-  void setCrop(openvdb::Vec3f _min, openvdb::Vec3f _max, int _index);
-  /// @brief Set cropbox at index
-  /// @param [in] _minx float - minimum X value
-  /// @param [in] _maxx float - maximum X value
-  /// @param [in] _miny float - minimum Y value
-  /// @param [in] _maxy float - maximum Y value
-  /// @param [in] _minz float - minimum Z value
-  /// @param [in] _maxz float - maximum Z value
-  /// @param [in] _index int - the crop box to set
-  void setCrop(float _minx, float _maxx, float _miny, float _maxy, float _minz,
-               float _maxz, int _index);
-  /// @brief Set cropbox at index
-  /// @param [in] _centre openvdb::Vec3f - centre of crop box
-  /// @param [in] _w float - width
-  /// @param [in] _h float - height
-  /// @param [in] _d float - depth
-  /// @param [in] _index int - the crop box to set
-  void setCrop(openvdb::Vec3f _centre, float _w, float _h, float _d,
-               int _index);
-  /// @brief Set Crop Width at index
-  /// @param [in] _w float - width
-  /// @param [in] _index int - the crop box to set
-  void setCropW(float _w, int _index);
-  /// @brief Set Crop Height at index
-  /// @param [in] _h float - width
-  /// @param [in] _index int - the crop box to set
-  void setCropH(float _h, int _index);
-  /// @brief Set Crop Depth at index
-  /// @param [in] _d float - width
-  /// @param [in] _index int - the crop box to set
-  void setCropD(float _d, int _index);
-  /// @brief Set Crop at index
-  /// @param [in] _box BoundBox - passed in BoundBox to copy
-  /// @param [in] _index int - the crop box to set
-  void setCrop(BoundBox _box, int _index);
-  /// @brief Set Crop box centre at index
-  /// @param [in] _c openvdb::Vec3f - centre to set
-  /// @param [in] _index int - the crop box to set
-  inline void setCropCentre(openvdb::Vec3f _c, int _index) {
-    m_crop[_index].setCentre(_c);
-  }
-  /// @brief Set Crop box centre at index
-  /// @param [in] _x float - x value of centre
-  /// @param [in] _y float - y value of centre
-  /// @param [in] _z float - z value of centre
-  /// @param [in] _index int - the crop box to set
-  inline void setCropCentre(float _x, float _y, float _z, int _index) {
-    m_crop[_index].setCentre(_x, _y, _z);
-  }
-  /// @brief Set all crop boxes into storage
-  void setAllCropStorage();
-  /// @brief Set specified crop box to storage
-  /// @param [in] _index int - the crop box to store
-  void setCropStorage(int _index);
-  /// @brief Return all crop boxes from storage
-  void returnAllFromStorage();
-  /// @brief Set specified crop box to retrieve
-  /// @param [in] _index int - the crop box to retrieve
-  void returnFromStorage(int _index);
+  //void setCrop(openvdb::Vec3f _min, openvdb::Vec3f _max, int _index);
+  ///// @brief Set cropbox at index
+  ///// @param [in] _minx float - minimum X value
+  ///// @param [in] _maxx float - maximum X value
+  ///// @param [in] _miny float - minimum Y value
+  ///// @param [in] _maxy float - maximum Y value
+  ///// @param [in] _minz float - minimum Z value
+  ///// @param [in] _maxz float - maximum Z value
+  ///// @param [in] _index int - the crop box to set
+  //void setCrop(float _minx, float _maxx, float _miny, float _maxy, float _minz,
+  //             float _maxz, int _index);
+  ///// @brief Set cropbox at index
+  ///// @param [in] _centre openvdb::Vec3f - centre of crop box
+  ///// @param [in] _w float - width
+  ///// @param [in] _h float - height
+  ///// @param [in] _d float - depth
+  ///// @param [in] _index int - the crop box to set
+  //void setCrop(openvdb::Vec3f _centre, float _w, float _h, float _d,
+  //             int _index);
+  ///// @brief Set Crop Width at index
+  ///// @param [in] _w float - width
+  ///// @param [in] _index int - the crop box to set
+  //void setCropW(float _w, int _index);
+  ///// @brief Set Crop Height at index
+  ///// @param [in] _h float - width
+  ///// @param [in] _index int - the crop box to set
+  //void setCropH(float _h, int _index);
+  ///// @brief Set Crop Depth at index
+  ///// @param [in] _d float - width
+  ///// @param [in] _index int - the crop box to set
+  //void setCropD(float _d, int _index);
 
-  /// @brief Method to translate the specified crop
-  /// @param [in] _t openvdb::vec3f - the vector to translate by
-  /// @param [in] _index int - the crop box to set
-  inline void translateCrop(openvdb::Vec3f _t, int _index) {
-    m_crop[_index].translate(_t);
-  }
-  /// @brief Method to colour the specified crop
-  /// @param [in] _colour openvdb::vec3f - the colour to set
-  /// @param [in] _index int - the crop box to set
-  inline void setCropColour(openvdb::Vec3f _colour, int _index) {
-    m_crop[_index].setColour(_colour);
-  }
-  /// @brief Get the colour of the specified crop box - returns openvdb::Vec3f
-  /// @param [in] _index int - the crop box to query
-  inline openvdb::Vec3f cropColour(int _index) {
-    return m_crop[_index].colour();
-  }
-  /// @brief Get stored available GPU memory in KB - returns GLint
-  inline GLint getCurrentAvailableGPUMemKB() {
-    return m_current_available_GPU_mem_kb;
-  }
+  //TODO
+  ///// @brief Set Crop at index
+  ///// @param [in] _box BoundBox - passed in BoundBox to copy
+  ///// @param [in] _index int - the crop box to set
+  //void setCrop(BoundBox _box, int _index);
+  ///// @brief Set Crop box centre at index
+  ///// @param [in] _c openvdb::Vec3f - centre to set
+  ///// @param [in] _index int - the crop box to set
+  //inline void setCropCentre(openvdb::Vec3f _c, int _index) {
+  //  m_crop[_index].setCentre(_c);
+  //}
+  ///// @brief Set Crop box centre at index
+  ///// @param [in] _x float - x value of centre
+  ///// @param [in] _y float - y value of centre
+  ///// @param [in] _z float - z value of centre
+  ///// @param [in] _index int - the crop box to set
+  //inline void setCropCentre(float _x, float _y, float _z, int _index) {
+  //  m_crop[_index].setCentre(_x, _y, _z);
+  //}
+  // 
+  // TODO
+  /// @brief Set all crop boxes into storage
+  //void setAllCropStorage();
+
+  // TODO
+  ///// @brief Set specified crop box to storage
+  ///// @param [in] _index int - the crop box to store
+  //void setCropStorage(int _index);
+  ///// @brief Return all crop boxes from storage
+  //void returnAllFromStorage();
+  ///// @brief Set specified crop box to retrieve
+  ///// @param [in] _index int - the crop box to retrieve
+  //void returnFromStorage(int _index);
+
+  //TODO
+  ///// @brief Method to translate the specified crop
+  ///// @param [in] _t openvdb::vec3f - the vector to translate by
+  ///// @param [in] _index int - the crop box to set
+  //inline void translateCrop(openvdb::Vec3f _t, int _index) {
+  //  m_crop[_index].translate(_t);
+  //}
+  ///// @brief Method to colour the specified crop
+  ///// @param [in] _colour openvdb::vec3f - the colour to set
+  ///// @param [in] _index int - the crop box to set
+  //inline void setCropColour(openvdb::Vec3f _colour, int _index) {
+  //  m_crop[_index].setColour(_colour);
+  //}
+  ///// @brief Get the colour of the specified crop box - returns openvdb::Vec3f
+  ///// @param [in] _index int - the crop box to query
+  //inline openvdb::Vec3f cropColour(int _index) {
+  //  return m_crop[_index].colour();
+  //}
+
+  //TODO
+  ///// @brief Get stored available GPU memory in KB - returns GLint
+  //inline GLint getCurrentAvailableGPUMemKB() {
+  //  return m_current_available_GPU_mem_kb;
+  //}
 
   /// @brief Values to specify whether to draw certain tree levels
   int m_drawTreeLevels[4];
@@ -303,7 +327,8 @@ private:
   /// @brief Reset attributes and arrays
   void resetParams();
 
-  /// @brief Get mesh values out of the file on a scalar type
+  // TODO
+  /*/// @brief Get mesh values out of the file on a scalar type
   /// @param [in] _grid typename GridType::ConstPtr - the grid to retrieve
   /// values from
   template <typename GridType>
@@ -312,7 +337,8 @@ private:
   /// @param [in] _grid typename GridType::ConstPtr - the grid to retrieve
   /// values from
   template <typename GridType>
-  void getMeshValuesVector(typename GridType::ConstPtr _grid);
+  void getMeshValuesVector(typename GridType::ConstPtr _grid);*/
+
   /// @brief Get tree values
   /// @param [in] _grid typename GridType::Ptr - the grid to retrieve values
   /// from
@@ -331,23 +357,28 @@ private:
   // types of the variables stored within the file - mapped to names 1-1
   /// @brief Types of the variables stored within the file - mapped to names 1-1
   std::vector<std::string> m_variableTypes;
-  /// @brief All drawable grids in the file
-  std::vector<VAO> *m_vdbGrids;
-  /// @brief The bounding box
-  BoundBox *m_bbox;
-  /// @brief Vector of extreme values for all channels
-  std::vector<BBoxBare> *m_channelExtremes;
 
-  // Using a 'Crop Box' to limit how much of the model can be seen
-  // Using a Bounding box structure for this as it is exactly what I need
-  /// @brief All crop boxes available
-  BoundBox m_crop[3];
-  // used when scans are run so that the crop box can be returned to its
-  // previous state before it was run
-  /// @brief Shadow array used as storage during crop scans
-  BoundBox m_cropStorage[3];
-  /// @brief VAO for the drawing of the VDB tree
-  VAO *m_vdbTreeVAO;
+  //TODO
+  ///// @brief All drawable grids in the file
+  //std::vector<VAO> *m_vdbGrids;
+  ///// @brief The bounding box
+  //BoundBox *m_bbox;
+  ///// @brief Vector of extreme values for all channels
+  //std::vector<BBoxBare> *m_channelExtremes;
+
+  //TODO
+  //// Using a 'Crop Box' to limit how much of the model can be seen
+  //// Using a Bounding box structure for this as it is exactly what I need
+  ///// @brief All crop boxes available
+  //BoundBox m_crop[3];
+  //// used when scans are run so that the crop box can be returned to its
+  //// previous state before it was run
+  ///// @brief Shadow array used as storage during crop scans
+  //BoundBox m_cropStorage[3];
+  ///// @brief VAO for the drawing of the VDB tree
+  //VAO *m_vdbTreeVAO;
+
+
   /// @brief The current active render channel for points
   int m_currentActiveChannelPoints;
   /// @brief The current active render channel for vectors
@@ -418,22 +449,27 @@ private:
   /// @brief Size of vectors
   float m_vectorSize;
 
-  // information on the graphics card
-  /// @brief Total GPU memory in KB
-  GLint m_total_GPU_mem_kb;
-  /// @brief Current available GPU memory in KB
-  GLint m_current_available_GPU_mem_kb;
+  //TODO
+  //// information on the graphics card
+  ///// @brief Total GPU memory in KB
+  //GLint m_total_GPU_mem_kb;
+  ///// @brief Current available GPU memory in KB
+  //GLint m_current_available_GPU_mem_kb;
   /// @brief Vector storing the channel value data to upload to a texture buffer
   /// on the GPU
   std::vector<openvdb::Vec4f> *m_channelValueData;
-  /// @brief Texture Buffer ID
-  GLuint m_gridsTBO;
+  // TODO
+  ///// @brief Texture Buffer ID
+  //GLuint m_gridsTBO;
   /// @brief Size of the texture buffer vector
   int m_tboSize;
-  /// @brief Push back a VDB tree vert
-  void pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
-                       vDat _vert);
-  /// @brief Report that the file contains a std::string grid
+  // TODO
+  ///// @brief Push back a VDB tree vert
+  //void pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
+  //                     vDat _vert);
+
+  // TODO
+ /* /// @brief Report that the file contains a std::string grid
   void reportStringGridTypeError();
   /// @brief Call appropriate scalar function to get values
   template <typename GridType>
@@ -443,14 +479,15 @@ private:
   void callGetValuesGridVector(typename GridType::Ptr grid);
   /// @brief Call appropriate function to get VDB tree values
   template <typename GridType>
-  void callGetValuesTree(typename GridType::Ptr grid);
+  void callGetValuesTree(typename GridType::Ptr grid);*/
 
+  //TODO
   // inspiration taken from openvdb code examples in OpenVDBCookbook
   // http://www.openvdb.org/documentation/doxygen/codeExamples.html
   /// @brief Process Grid type to call the correct get mesh function
-  void processTypedGrid(openvdb::GridBase::Ptr grid);
+  //void processTypedGrid(openvdb::GridBase::Ptr grid);
   /// @brief Process Tree type to call the correct get tree values function
-  void processTypedTree(openvdb::GridBase::Ptr grid);
+  //void processTypedTree(openvdb::GridBase::Ptr grid);
 };
 
 #endif /* __VDB_H__ */

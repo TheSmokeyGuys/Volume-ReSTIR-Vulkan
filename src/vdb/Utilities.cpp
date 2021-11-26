@@ -17,7 +17,6 @@
 
 #include "Utilities.h"
 
-#include <QString>
 #include <boost/lexical_cast.hpp>
 
 #ifdef DARWIN
@@ -32,12 +31,13 @@ float Utilities::u_radians(const float _deg) { return (_deg / 180.0f) * M_PI; }
 
 float Utilities::u_degrees(const float _rad) { return (_rad / M_PI) * 180.0f; }
 
-std::string Utilities::glubyteToStdString(const GLubyte *_in) {
-  // cast a GLubyte to a QString
-  QString temp = QString((const char *)_in);
-  // return the QString as a std::string
-  return temp.toStdString();
-}
+// TODO
+//std::string Utilities::glubyteToStdString(const GLubyte *_in) {
+//  // cast a GLubyte to a QString
+//  QString temp = QString((const char *)_in);
+//  // return the QString as a std::string
+//  return temp.toStdString();
+//}
 
 std::string Utilities::vdbCoordToStdString(const openvdb::Coord _in) {
   // use boost to cast the x, y and z paramters of a openvdb::coord to a string
@@ -70,57 +70,59 @@ openvdb::Vec3f Utilities::getColourFromLevel(int _level) {
   }
 }
 
-GLenum Utilities::checkGLError() {
-  GLenum errCode;
-  errCode = glGetError();
-  if (errCode != 0) {
-    std::cerr << "GL ERROR: " << errCode << std::endl;
-  }
-  return errCode;
-}
+// TODO
+//GLenum Utilities::checkGLError() {
+//  GLenum errCode;
+//  errCode = glGetError();
+//  if (errCode != 0) {
+//    std::cerr << "GL ERROR: " << errCode << std::endl;
+//  }
+//  return errCode;
+//}
 
-std::vector<GLfloat> Utilities::u_Mat3ToFloatArray(openvdb::Mat3R _in) {
-  // flatten a Mat3 and return as a single array of values to upload to the GPU
-  std::vector<GLfloat> m;
-  m.resize(9);
-
-  m[0] = (GLfloat)_in(0, 0);
-  m[1] = (GLfloat)_in(0, 1);
-  m[2] = (GLfloat)_in(0, 2);
-  m[3] = (GLfloat)_in(1, 0);
-  m[4] = (GLfloat)_in(1, 1);
-  m[5] = (GLfloat)_in(1, 2);
-  m[6] = (GLfloat)_in(2, 0);
-  m[7] = (GLfloat)_in(2, 1);
-  m[8] = (GLfloat)_in(2, 2);
-
-  return m;
-}
-
-std::vector<GLfloat> Utilities::u_Mat4ToFloatArray(openvdb::Mat4s _in) {
-  // flatten a Mat4 and return as a single array of values to upload to the GPU
-  std::vector<GLfloat> m;
-  m.resize(16);
-
-  m[0]  = (GLfloat)_in(0, 0);
-  m[1]  = (GLfloat)_in(0, 1);
-  m[2]  = (GLfloat)_in(0, 2);
-  m[3]  = (GLfloat)_in(0, 3);
-  m[4]  = (GLfloat)_in(1, 0);
-  m[5]  = (GLfloat)_in(1, 1);
-  m[6]  = (GLfloat)_in(1, 2);
-  m[7]  = (GLfloat)_in(1, 3);
-  m[8]  = (GLfloat)_in(2, 0);
-  m[9]  = (GLfloat)_in(2, 1);
-  m[10] = (GLfloat)_in(2, 2);
-  m[11] = (GLfloat)_in(2, 3);
-  m[12] = (GLfloat)_in(3, 0);
-  m[13] = (GLfloat)_in(3, 1);
-  m[14] = (GLfloat)_in(3, 2);
-  m[15] = (GLfloat)_in(3, 3);
-
-  return m;
-}
+// TODO
+//std::vector<GLfloat> Utilities::u_Mat3ToFloatArray(openvdb::Mat3R _in) {
+//  // flatten a Mat3 and return as a single array of values to upload to the GPU
+//  std::vector<GLfloat> m;
+//  m.resize(9);
+//
+//  m[0] = (GLfloat)_in(0, 0);
+//  m[1] = (GLfloat)_in(0, 1);
+//  m[2] = (GLfloat)_in(0, 2);
+//  m[3] = (GLfloat)_in(1, 0);
+//  m[4] = (GLfloat)_in(1, 1);
+//  m[5] = (GLfloat)_in(1, 2);
+//  m[6] = (GLfloat)_in(2, 0);
+//  m[7] = (GLfloat)_in(2, 1);
+//  m[8] = (GLfloat)_in(2, 2);
+//
+//  return m;
+//}
+//
+//std::vector<GLfloat> Utilities::u_Mat4ToFloatArray(openvdb::Mat4s _in) {
+//  // flatten a Mat4 and return as a single array of values to upload to the GPU
+//  std::vector<GLfloat> m;
+//  m.resize(16);
+//
+//  m[0]  = (GLfloat)_in(0, 0);
+//  m[1]  = (GLfloat)_in(0, 1);
+//  m[2]  = (GLfloat)_in(0, 2);
+//  m[3]  = (GLfloat)_in(0, 3);
+//  m[4]  = (GLfloat)_in(1, 0);
+//  m[5]  = (GLfloat)_in(1, 1);
+//  m[6]  = (GLfloat)_in(1, 2);
+//  m[7]  = (GLfloat)_in(1, 3);
+//  m[8]  = (GLfloat)_in(2, 0);
+//  m[9]  = (GLfloat)_in(2, 1);
+//  m[10] = (GLfloat)_in(2, 2);
+//  m[11] = (GLfloat)_in(2, 3);
+//  m[12] = (GLfloat)_in(3, 0);
+//  m[13] = (GLfloat)_in(3, 1);
+//  m[14] = (GLfloat)_in(3, 2);
+//  m[15] = (GLfloat)_in(3, 3);
+//
+//  return m;
+//}
 
 std::string Utilities::PLATFORM_FILE_PATH(std::string _path) {
   std::string prefixString;

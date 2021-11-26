@@ -23,7 +23,7 @@
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
 #else
-#include <GL/gl.h>
+//#include <GL/gl.h>
 #endif
 
 #include <openvdb/openvdb.h>
@@ -39,22 +39,23 @@
 /// Revision History:
 /// Initial Version 05/01/2014
 
+// TODO
 /// @struct vDat
 /// @brief Structure taken from Jon Maceys NGL to allow for storage of data to
 /// upload to the graphics card in OpenGL
 /// (http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib)
 // structure taken from Jon Maceys NGL
 // http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib
-struct vDat {
-  GLfloat u;
-  GLfloat v;
-  GLfloat nx;
-  GLfloat ny;
-  GLfloat nz;
-  GLfloat x;
-  GLfloat y;
-  GLfloat z;
-};
+//struct vDat {
+//  GLfloat u;
+//  GLfloat v;
+//  GLfloat nx;
+//  GLfloat ny;
+//  GLfloat nz;
+//  GLfloat x;
+//  GLfloat y;
+//  GLfloat z;
+//};
 
 /// @struct BBoxBare
 /// @brief Structure to simply hold min and max values of a bounding box and

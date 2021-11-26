@@ -22,7 +22,7 @@
 #include "Camera.h"
 #include "ShaderLibrary.h"
 #include "Types.h"
-#include "VAO.h"
+//#include "VAO.h"
 
 /// @file BoundBox.h
 /// @brief Class to create and control a bounding box. Handles its drawing and
