@@ -9,6 +9,7 @@
 
 bool m_vdbLoaded = false;
 VDB *m_vdb;
+bool m_extLoaded = false;
 
 /// @brief value used to determine which points should be hidden for LOD -
 /// uploaded to shader
@@ -64,8 +65,8 @@ void loadVDBFile(std::string _file) {
     std::cerr << "Error whilst loading file" << std::endl;
   }
 
-  // TODO
-//  m_extLoaded = false;
+  // TODO : Update this value whenever you want to laod extra data
+  m_extLoaded = true;
 //  if (replyLoad == QMessageBox::Yes && replyCont == QMessageBox::Yes) {
 //    // if it has been chosen to load high resolution, load
 //    if (m_vdb->loadExt()) {
@@ -77,6 +78,16 @@ void loadVDBFile(std::string _file) {
 //      std::cerr << "Error whilst loading high resolution volume" << std::endl;
 //    }
 //  }
+
+    // if it has been chosen to load high resolution, load
+  if (m_vdb->loadExt()) {
+#ifdef DEBUG
+    std::cout << "High resolution load complete!!" << std::endl;
+#endif
+    m_extLoaded = true;
+  } else {
+    std::cerr << "Error whilst loading high resolution volume" << std::endl;
+  }
   // get the s value of the current channel
   m_s = m_vdb->getS();
 
@@ -148,15 +159,15 @@ void loadVDBFile(std::string _file) {
   //openvdb::Vec4f currentLook = m_camera->getLook();
 
   // find the difference between the new position an the current positions
-  //m_currentBaseCameraFrom =
-  //    openvdb::Vec4f(from.x(), from.y(), from.z(), 1.0) - currentEye;
-  //m_currentBaseCameraTo =
-  //    openvdb::Vec4f(to.x(), to.y(), to.z(), 1.0) - currentLook;
+ /* m_currentBaseCameraFrom =
+      openvdb::Vec4f(from.x(), from.y(), from.z(), 1.0) - currentEye;
+  m_currentBaseCameraTo =
+      openvdb::Vec4f(to.x(), to.y(), to.z(), 1.0) - currentLook;
 
-  //m_camera->moveEye(m_currentBaseCameraFrom.x(), m_currentBaseCameraFrom.y(),
-  //                  m_currentBaseCameraFrom.z());
-  //m_camera->moveLook(m_currentBaseCameraTo.x(), m_currentBaseCameraTo.y(),
-  //                   m_currentBaseCameraTo.z());
+  m_camera->moveEye(m_currentBaseCameraFrom.x(), m_currentBaseCameraFrom.y(),
+                    m_currentBaseCameraFrom.z());
+  m_camera->moveLook(m_currentBaseCameraTo.x(), m_currentBaseCameraTo.y(),
+                     m_currentBaseCameraTo.z());*/
 
   // set base vectors so that the camera can be returned to these values on a
   // reset once a transformation has taken place

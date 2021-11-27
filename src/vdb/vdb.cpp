@@ -331,6 +331,7 @@ bool VDB::loadExt() {
 #endif
 #endif
 
+  // TODO : texture being Created Here
   // TODO
   // create a texture buffer
   //GLuint channelID;
@@ -378,6 +379,7 @@ bool VDB::loadExt() {
   return true;
 }
 
+  // TODO : Removing Old Mesh Data Happening Here
 void VDB::removeMeshVAO() {
   // TODO
 
@@ -432,7 +434,7 @@ int VDB::getNumPointsAtGrid(int _grid) {
   return -1;
 }
 
-
+  // TODO : Very Imp! Drawing of VDB Happening Here
 void VDB::drawVDB() {
   // TODO
   // bind VAO and texture buffer and then draw
@@ -814,7 +816,8 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     }
   }
 
-  //TODO
+   // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure
+  // we do it in vulkan
   //VAO temp(GL_POINTS);
   //temp.create();
 
@@ -842,113 +845,116 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
 // logic of this function taken from studying The GL viewer provided with the
 // OpenVDB library this function is idnetical to the one above except it handles
 // vector types so has a few differences which are hihglighted
-//template <typename GridType>
-//void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
-//  typedef typename GridType::ValueType ValueType;
-//  typedef typename GridType::TreeType TreeType;
-//
-//  const TreeType &tree = _grid->tree();
-//
-//  openvdb::tree::ValueAccessor<const TreeType> acc(
-//      tree);  // accessor into grid of the right type
-//
-//  int j = 0;
-//
-//  openvdb::Vec4f channelTemp;
-//  channelTemp[3] = 1.0f;
-//
-//  std::vector<vDat> pointStore;
-//  pointStore.resize(0);
-//
-//  vDat point;
-//
-//  openvdb::Coord coord;
-//
-//  BBoxBare channelExtremes;
-//  channelExtremes.minx = channelExtremes.miny = channelExtremes.minz = 0.0f;
-//  channelExtremes.maxx = channelExtremes.maxy = channelExtremes.maxz = 0.0f;
-//
-//  for (typename GridType::ValueOnCIter it = _grid->cbeginValueOn(); it; ++it) {
-//    // will always be a rounding issue here as must be an integer step
-//    // however this could then cause it to miss out a few hundred thousand
-//    // points instead it will over compensate and draw a couple hundred thousand
-//    // more prevents a model with a hole in it all caused by rounding issues
-//
-//    coord                     = it.getCoord();
-//    ValueType vec             = acc.getValue(coord);
-//    openvdb::Vec3d worldSpace = _grid->indexToWorld(coord);
-//
-//    point.x = worldSpace[0];
-//    point.y = worldSpace[1];
-//    point.z = worldSpace[2];
-//    point.u = j;
-//
-//    j++;
-//
-//    vec.normalize();  // normalize vector before setting
-//
-//    point.nx = vec[0];
-//    point.ny = vec[1];
-//    point.nz = vec[2];
-//
-//    channelTemp[0] = vec[0];
-//    channelTemp[1] = vec[1];
-//    channelTemp[2] = vec[2];
-//
-//    channelTemp.normalize();  // normalize data again to ensure between 0 and 1
-//
-//    point.v = 1;  // type is vector - used on the shader
-//
-//    m_channelValueData->push_back(channelTemp);
-//    m_tboSize++;
-//    pointStore.push_back(point);
-//
-//    // check for minimum
-//    if (point.nx < channelExtremes.minx || point.ny < channelExtremes.miny ||
-//        point.nz < channelExtremes.minz) {
-//      if (point.nx < channelExtremes.minx) {
-//        channelExtremes.minx = point.nx;
-//      }
-//      if (point.ny < channelExtremes.miny) {
-//        channelExtremes.miny = point.ny;
-//      }
-//      if (point.nz < channelExtremes.minz) {
-//        channelExtremes.minz = point.nz;
-//      }
-//    }
-//    // check for maximum
-//    if (point.nx > channelExtremes.maxx || point.ny > channelExtremes.maxy ||
-//        point.nz > channelExtremes.maxz) {
-//      if (point.nx > channelExtremes.maxx) {
-//        channelExtremes.maxx = point.nx;
-//      }
-//      if (point.ny > channelExtremes.maxy) {
-//        channelExtremes.maxy = point.ny;
-//      }
-//      if (point.nz > channelExtremes.maxz) {
-//        channelExtremes.maxz = point.nz;
-//      }
-//    }
-//  }
-//
-//  VAO temp(GL_POINTS);
-//  temp.create();
-//  // bind and create the VAO for this gird
-//  temp.bind();
-//  temp.setIndicesCount(j);
-//  temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
-//  temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-//  temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-//  temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
-//  temp.unbind();
-//  // store to vector of VAOs
-//  m_vdbGrids->push_back(temp);
-//  // store extremes for this channel
-//  m_channelExtremes->push_back(channelExtremes);
-//
-//  pointStore.clear();
-//}
+template <typename GridType>
+void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
+  typedef typename GridType::ValueType ValueType;
+  typedef typename GridType::TreeType TreeType;
 
+  const TreeType &tree = _grid->tree();
+
+  openvdb::tree::ValueAccessor<const TreeType> acc(
+      tree);  // accessor into grid of the right type
+
+  int j = 0;
+
+  openvdb::Vec4f channelTemp;
+  channelTemp[3] = 1.0f;
+
+  std::vector<vDat> pointStore;
+  pointStore.resize(0);
+
+  vDat point;
+
+  openvdb::Coord coord;
+
+  BBoxBare channelExtremes;
+  channelExtremes.minx = channelExtremes.miny = channelExtremes.minz = 0.0f;
+  channelExtremes.maxx = channelExtremes.maxy = channelExtremes.maxz = 0.0f;
+
+  for (typename GridType::ValueOnCIter it = _grid->cbeginValueOn(); it; ++it) {
+    // will always be a rounding issue here as must be an integer step
+    // however this could then cause it to miss out a few hundred thousand
+    // points instead it will over compensate and draw a couple hundred thousand
+    // more prevents a model with a hole in it all caused by rounding issues
+
+    coord                     = it.getCoord();
+    ValueType vec             = acc.getValue(coord);
+    openvdb::Vec3d worldSpace = _grid->indexToWorld(coord);
+
+    point.x = worldSpace[0];
+    point.y = worldSpace[1];
+    point.z = worldSpace[2];
+    point.u = j;
+
+    j++;
+
+    vec.normalize();  // normalize vector before setting
+
+    point.nx = vec[0];
+    point.ny = vec[1];
+    point.nz = vec[2];
+
+    channelTemp[0] = vec[0];
+    channelTemp[1] = vec[1];
+    channelTemp[2] = vec[2];
+
+    channelTemp.normalize();  // normalize data again to ensure between 0 and 1
+
+    point.v = 1;  // type is vector - used on the shader
+
+    m_channelValueData->push_back(channelTemp);
+    m_tboSize++;
+    pointStore.push_back(point);
+
+    // check for minimum
+    if (point.nx < channelExtremes.minx || point.ny < channelExtremes.miny ||
+        point.nz < channelExtremes.minz) {
+      if (point.nx < channelExtremes.minx) {
+        channelExtremes.minx = point.nx;
+      }
+      if (point.ny < channelExtremes.miny) {
+        channelExtremes.miny = point.ny;
+      }
+      if (point.nz < channelExtremes.minz) {
+        channelExtremes.minz = point.nz;
+      }
+    }
+    // check for maximum
+    if (point.nx > channelExtremes.maxx || point.ny > channelExtremes.maxy ||
+        point.nz > channelExtremes.maxz) {
+      if (point.nx > channelExtremes.maxx) {
+        channelExtremes.maxx = point.nx;
+      }
+      if (point.ny > channelExtremes.maxy) {
+        channelExtremes.maxy = point.ny;
+      }
+      if (point.nz > channelExtremes.maxz) {
+        channelExtremes.maxz = point.nz;
+      }
+    }
+  }
+
+  // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure we do it in vulkan
+  //VAO temp(GL_POINTS);
+  //temp.create();
+  //// bind and create the VAO for this gird
+  //temp.bind();
+  //temp.setIndicesCount(j);
+  //temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
+  //temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  //temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  //temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
+  //temp.unbind();
+  //// store to vector of VAOs
+  //m_vdbGrids->push_back(temp);
+  //// store extremes for this channel
+  //m_channelExtremes->push_back(channelExtremes);
+
+  pointStore.clear();
+}
+
+
+//TODO : Some Stuff
 // get the data values for the VDB tree
 template <typename GridType>
 void VDB::getTreeValues(typename GridType::Ptr _grid) {
@@ -974,16 +980,14 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
 
   int level = -1;
 
-  // TODO
   // create blueprint elemtns array for each voxel
- /* static const GLuint elementsBare[24] = {0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6,
-                                          6, 7, 7, 4, 4, 0, 1, 5, 7, 3, 6, 2};*/
+  static const GLuint elementsBare[24] = {0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6,
+                                          6, 7, 7, 4, 4, 0, 1, 5, 7, 3, 6, 2};
 
-  // TODO
-  /*std::vector<vDat> vertices;
+  std::vector<vDat> vertices;
   vertices.resize(0);
   std::vector<GLint> indexes;
-  indexes.resize(0);*/
+  indexes.resize(0);
   int totalVertices = m_totalVoxels * 8;   // 8vertices per voxel
   int totalElements = m_totalVoxels * 24;  // 24 elements per voxel
 
@@ -993,7 +997,7 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
   openvdb::Vec3f max(0.0f, 0.0f, 0.0f);
   openvdb::Vec3f colour(0.0f, 0.0f, 0.0f);
   // TODO
-  //vDat pointVDat;
+  vDat pointVDat;
 
   int count = 0;
 
@@ -1019,28 +1023,28 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
     // get colour
     colour       = Utilities::getColourFromLevel(level);
     // TODO
-    //pointVDat.nx = colour.x();  // store colour for this voxel level from pre
-    //                            // defined function
-    //pointVDat.ny = colour.y();
-    //pointVDat.nz = colour.z();
-    //// get level
-    //pointVDat.u = level;
-    //pointVDat.v = level;
+    pointVDat.nx = colour.x();  // store colour for this voxel level from pre
+                                // defined function
+    pointVDat.ny = colour.y();
+    pointVDat.nz = colour.z();
+    // get level
+    pointVDat.u = level;
+    pointVDat.v = level;
 
-    /*
-     *[0] (minX, minY, maxZ)
+    //Rubbish
+     /**[0] (minX, minY, maxZ)
      *[1] (maxX, minY, maxZ)
      *[2] (maxX, maxY, maxZ)
      *[3] (minX, maxY, maxZ)
      *[4] (minX, minY, minZ)
      *[5] (maxX, minY, minZ)
      *[6] (maxX, maxY, minZ)
-     *[7] (minX, maxY, minZ)
-     */
+     *[7] (minX, maxY, minZ)*/
+     
 
     // TODO
     // get and store vertices
-  /*  point = openvdb::Vec3f(min.x(), min.y(), max.z());
+    point = openvdb::Vec3f(min.x(), min.y(), max.z());
     pushBackVDBVert(&vertices, point, pointVDat);
     point = openvdb::Vec3f(max.x(), min.y(), max.z());
     pushBackVDBVert(&vertices, point, pointVDat);
@@ -1055,29 +1059,29 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
     point = openvdb::Vec3f(max.x(), max.y(), min.z());
     pushBackVDBVert(&vertices, point, pointVDat);
     point = openvdb::Vec3f(min.x(), max.y(), min.z());
-    pushBackVDBVert(&vertices, point, pointVDat);*/
+    pushBackVDBVert(&vertices, point, pointVDat);
 
     // TODO
     // push back the corresponding element array
-    //for (int j = 0; j < 24; j++) {
-    //  indexes.push_back((count * 8) + elementsBare[j]);
-    //}
+    for (int j = 0; j < 24; j++) {
+      indexes.push_back((count * 8) + elementsBare[j]);
+    }
 
     ++count;
   }
 
-  // TODO
-  /*m_vdbTreeVAO->bind();
-  m_vdbTreeVAO->setIndexedData(totalVertices * sizeof(vDat), vertices[0].u,
-                               totalElements, &indexes[0], GL_UNSIGNED_INT);
-  m_vdbTreeVAO->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  m_vdbTreeVAO->vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-  m_vdbTreeVAO->vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2);
-  m_vdbTreeVAO->setIndicesCount(totalElements);
-  m_vdbTreeVAO->unbind();*/
+  // TODO : Very Imp!!! Vertices are directly Being Pushed in VAO so make sure we do it in vulkan
+  //m_vdbTreeVAO->bind();
+  //m_vdbTreeVAO->setIndexedData(totalVertices * sizeof(vDat), vertices[0].u,
+  //                             totalElements, &indexes[0], GL_UNSIGNED_INT);
+  //m_vdbTreeVAO->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  //m_vdbTreeVAO->vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  //m_vdbTreeVAO->vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2);
+  //m_vdbTreeVAO->setIndicesCount(totalElements);
+  //m_vdbTreeVAO->unbind();
 
   // TODO
-  //vertices.clear();
+  vertices.clear();
 
 #ifdef DEBUG
   std::cout << "VDB Tree successfully built" << std::endl;
@@ -1129,9 +1133,9 @@ bool VDB::loadMesh() {
   //m_vdbGrids->resize(0);
 
   // TODO
-  /*m_channelExtremes = new std::vector<BBoxBare>;
+  m_channelExtremes = new std::vector<BBoxBare>;
   m_channelExtremes->resize(0);
-  m_extremesInit = true;*/
+  m_extremesInit = true;
 
   // now to actually load in the values - for now to test I will load in the
   // colours to the normals vector I have a feeling that in the future I may
@@ -1145,8 +1149,8 @@ bool VDB::loadMesh() {
   m_channel = 0;
 
   // TODO
-  /*m_channelValueData = new std::vector<openvdb::Vec4f>;
-  m_channelValueData->resize(0);*/
+  m_channelValueData = new std::vector<openvdb::Vec4f>;
+  m_channelValueData->resize(0);
 
   while (pBegin != pEnd) {
     if ((*pBegin)) {
@@ -1161,7 +1165,7 @@ bool VDB::loadMesh() {
       m_s.push_back(float((m_numPoints.at(m_channel)) / (numLoadedPoints)));
       // TODO
       // work out the type of grid and then get values
-      //processTypedGrid((*pBegin));
+      processTypedGrid((*pBegin));
     }
     ++pBegin;
     ++m_channel;
@@ -1180,7 +1184,7 @@ bool VDB::loadVDBTree() {
       if ((*pBegin)->getName() == m_variableNames[m_channel - 1]) {
         // work out the type of grid and then get values
         // TODO
-        //processTypedTree((*pBegin));
+        processTypedTree((*pBegin));
       }
     }
     ++pBegin;
@@ -1189,39 +1193,38 @@ bool VDB::loadVDBTree() {
 }
 
 // TODO
-//void VDB::pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
-//                          vDat _vert) {
-//  _vert.x = _point.x();
-//  _vert.y = _point.y();
-//  _vert.z = _point.z();
-//  _v->push_back(_vert);
-//}
+void VDB::pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
+                          vDat _vert) {
+  _vert.x = _point.x();
+  _vert.y = _point.y();
+  _vert.z = _point.z();
+  _v->push_back(_vert);
+}
 
-// TODO
-//void VDB::reportStringGridTypeError() {
-//  std::cerr << "File contain grid of type std::string - std::string is "
-//               "currently not supported, closing application"
-//            << std::endl;
-//  exit(EXIT_FAILURE);
-//}
+void VDB::reportStringGridTypeError() {
+  std::cerr << "File contain grid of type std::string - std::string is "
+               "currently not supported, closing application"
+            << std::endl;
+  exit(EXIT_FAILURE);
+}
+
+template <typename GridType>
+void VDB::callGetValuesGridScalar(typename GridType::Ptr grid) {
+  // call the function to get high res data values with a scalar type
+  getMeshValuesScalar<GridType>(grid);
+}
 //
-//template <typename GridType>
-//void VDB::callGetValuesGridScalar(typename GridType::Ptr grid) {
-//  // call the function to get high res data values with a scalar type
-//  getMeshValuesScalar<GridType>(grid);
-//}
+template <typename GridType>
+void VDB::callGetValuesGridVector(typename GridType::Ptr grid) {
+  // call the function to get high res data values with a vector type
+  getMeshValuesVector<GridType>(grid);
+}
 //
-//template <typename GridType>
-//void VDB::callGetValuesGridVector(typename GridType::Ptr grid) {
-//  // call the function to get high res data values with a vector type
-//  getMeshValuesVector<GridType>(grid);
-//}
-//
-//template <typename GridType>
-//void VDB::callGetValuesTree(typename GridType::Ptr grid) {
-//  // call the function to get tree data values
-//  getTreeValues<GridType>(grid);
-//}
+template <typename GridType>
+void VDB::callGetValuesTree(typename GridType::Ptr grid) {
+  // call the function to get tree data values
+  getTreeValues<GridType>(grid);
+}
 
 // inspiration taken from openvdb code examples in doxygen
 // http://www.openvdb.org/documentation/doxygen/codeExamples.html
@@ -1229,69 +1232,69 @@ bool VDB::loadVDBTree() {
 // TODO
 //// process the type of grid being passed to it using templates and then call the
 //// correct function for scalar or vector to get high res data values
-//void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
-//  // scalar types
-//  if (grid->isType<openvdb::BoolGrid>())
-//    callGetValuesGridScalar<openvdb::BoolGrid>(
-//        openvdb::gridPtrCast<openvdb::BoolGrid>(grid));
-//  else if (grid->isType<openvdb::FloatGrid>())
-//    callGetValuesGridScalar<openvdb::FloatGrid>(
-//        openvdb::gridPtrCast<openvdb::FloatGrid>(grid));
-//  else if (grid->isType<openvdb::DoubleGrid>())
-//    callGetValuesGridScalar<openvdb::DoubleGrid>(
-//        openvdb::gridPtrCast<openvdb::DoubleGrid>(grid));
-//  else if (grid->isType<openvdb::Int32Grid>())
-//    callGetValuesGridScalar<openvdb::Int32Grid>(
-//        openvdb::gridPtrCast<openvdb::Int32Grid>(grid));
-//  else if (grid->isType<openvdb::Int64Grid>())
-//    callGetValuesGridScalar<openvdb::Int64Grid>(
-//        openvdb::gridPtrCast<openvdb::Int64Grid>(grid));
-//  // vector types
-//  else if (grid->isType<openvdb::Vec3IGrid>())
-//    callGetValuesGridVector<openvdb::Vec3IGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3IGrid>(grid));
-//  else if (grid->isType<openvdb::Vec3SGrid>())
-//    callGetValuesGridVector<openvdb::Vec3SGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3SGrid>(grid));
-//  else if (grid->isType<openvdb::Vec3DGrid>())
-//    callGetValuesGridVector<openvdb::Vec3DGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3DGrid>(grid));
-//  // std::string currently not supported so just report error
-//  else if (grid->isType<openvdb::StringGrid>())
-//    reportStringGridTypeError();
-//}
+void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
+  // scalar types
+  if (grid->isType<openvdb::BoolGrid>())
+    callGetValuesGridScalar<openvdb::BoolGrid>(
+        openvdb::gridPtrCast<openvdb::BoolGrid>(grid));
+  else if (grid->isType<openvdb::FloatGrid>())
+    callGetValuesGridScalar<openvdb::FloatGrid>(
+        openvdb::gridPtrCast<openvdb::FloatGrid>(grid));
+  else if (grid->isType<openvdb::DoubleGrid>())
+    callGetValuesGridScalar<openvdb::DoubleGrid>(
+        openvdb::gridPtrCast<openvdb::DoubleGrid>(grid));
+  else if (grid->isType<openvdb::Int32Grid>())
+    callGetValuesGridScalar<openvdb::Int32Grid>(
+        openvdb::gridPtrCast<openvdb::Int32Grid>(grid));
+  else if (grid->isType<openvdb::Int64Grid>())
+    callGetValuesGridScalar<openvdb::Int64Grid>(
+        openvdb::gridPtrCast<openvdb::Int64Grid>(grid));
+  // vector types
+  else if (grid->isType<openvdb::Vec3IGrid>())
+    callGetValuesGridVector<openvdb::Vec3IGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3IGrid>(grid));
+  else if (grid->isType<openvdb::Vec3SGrid>())
+    callGetValuesGridVector<openvdb::Vec3SGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3SGrid>(grid));
+  else if (grid->isType<openvdb::Vec3DGrid>())
+    callGetValuesGridVector<openvdb::Vec3DGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3DGrid>(grid));
+  // std::string currently not supported so just report error
+  else if (grid->isType<openvdb::StringGrid>())
+    reportStringGridTypeError();
+}
 
 // TODO
 // process the type of grid being passed to it using templates and then call the
 // correct function for scalar or vector to get tree values
-//void VDB::processTypedTree(openvdb::GridBase::Ptr grid) {
-//  // scalar types
-//  if (grid->isType<openvdb::BoolGrid>())
-//    getTreeValues<openvdb::BoolGrid>(
-//        openvdb::gridPtrCast<openvdb::BoolGrid>(grid));
-//  else if (grid->isType<openvdb::FloatGrid>())
-//    getTreeValues<openvdb::FloatGrid>(
-//        openvdb::gridPtrCast<openvdb::FloatGrid>(grid));
-//  else if (grid->isType<openvdb::DoubleGrid>())
-//    getTreeValues<openvdb::DoubleGrid>(
-//        openvdb::gridPtrCast<openvdb::DoubleGrid>(grid));
-//  else if (grid->isType<openvdb::Int32Grid>())
-//    getTreeValues<openvdb::Int32Grid>(
-//        openvdb::gridPtrCast<openvdb::Int32Grid>(grid));
-//  else if (grid->isType<openvdb::Int64Grid>())
-//    getTreeValues<openvdb::Int64Grid>(
-//        openvdb::gridPtrCast<openvdb::Int64Grid>(grid));
-//  // vector types
-//  else if (grid->isType<openvdb::Vec3IGrid>())
-//    getTreeValues<openvdb::Vec3IGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3IGrid>(grid));
-//  else if (grid->isType<openvdb::Vec3SGrid>())
-//    getTreeValues<openvdb::Vec3SGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3SGrid>(grid));
-//  else if (grid->isType<openvdb::Vec3DGrid>())
-//    getTreeValues<openvdb::Vec3DGrid>(
-//        openvdb::gridPtrCast<openvdb::Vec3DGrid>(grid));
-//  // std::string currently not supported so just report error
-//  else if (grid->isType<openvdb::StringGrid>())
-//    reportStringGridTypeError();
-//}
+void VDB::processTypedTree(openvdb::GridBase::Ptr grid) {
+  // scalar types
+  if (grid->isType<openvdb::BoolGrid>())
+    getTreeValues<openvdb::BoolGrid>(
+        openvdb::gridPtrCast<openvdb::BoolGrid>(grid));
+  else if (grid->isType<openvdb::FloatGrid>())
+    getTreeValues<openvdb::FloatGrid>(
+        openvdb::gridPtrCast<openvdb::FloatGrid>(grid));
+  else if (grid->isType<openvdb::DoubleGrid>())
+    getTreeValues<openvdb::DoubleGrid>(
+        openvdb::gridPtrCast<openvdb::DoubleGrid>(grid));
+  else if (grid->isType<openvdb::Int32Grid>())
+    getTreeValues<openvdb::Int32Grid>(
+        openvdb::gridPtrCast<openvdb::Int32Grid>(grid));
+  else if (grid->isType<openvdb::Int64Grid>())
+    getTreeValues<openvdb::Int64Grid>(
+        openvdb::gridPtrCast<openvdb::Int64Grid>(grid));
+  // vector types
+  else if (grid->isType<openvdb::Vec3IGrid>())
+    getTreeValues<openvdb::Vec3IGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3IGrid>(grid));
+  else if (grid->isType<openvdb::Vec3SGrid>())
+    getTreeValues<openvdb::Vec3SGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3SGrid>(grid));
+  else if (grid->isType<openvdb::Vec3DGrid>())
+    getTreeValues<openvdb::Vec3DGrid>(
+        openvdb::gridPtrCast<openvdb::Vec3DGrid>(grid));
+  // std::string currently not supported so just report error
+  else if (grid->isType<openvdb::StringGrid>())
+    reportStringGridTypeError();
+}

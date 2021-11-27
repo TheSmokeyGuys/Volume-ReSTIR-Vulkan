@@ -339,8 +339,8 @@ private:
   /// @brief Get mesh values out of the file on a vector type
   /// @param [in] _grid typename GridType::ConstPtr - the grid to retrieve
   /// values from
-  //template <typename GridType>
-  //void getMeshValuesVector(typename GridType::ConstPtr _grid);
+  template <typename GridType>
+  void getMeshValuesVector(typename GridType::ConstPtr _grid);
 
   /// @brief Get tree values
   /// @param [in] _grid typename GridType::Ptr - the grid to retrieve values
@@ -473,7 +473,7 @@ private:
                        vDat _vert);
 
   // TODO
- /* /// @brief Report that the file contains a std::string grid
+  /// @brief Report that the file contains a std::string grid
   void reportStringGridTypeError();
   /// @brief Call appropriate scalar function to get values
   template <typename GridType>
@@ -482,16 +482,19 @@ private:
   template <typename GridType>
   void callGetValuesGridVector(typename GridType::Ptr grid);
   /// @brief Call appropriate function to get VDB tree values
+
+  // TODO
   template <typename GridType>
-  void callGetValuesTree(typename GridType::Ptr grid);*/
+  void callGetValuesTree(typename GridType::Ptr grid);
 
   //TODO
   // inspiration taken from openvdb code examples in OpenVDBCookbook
   // http://www.openvdb.org/documentation/doxygen/codeExamples.html
   /// @brief Process Grid type to call the correct get mesh function
-  //void processTypedGrid(openvdb::GridBase::Ptr grid);
+  void processTypedGrid(openvdb::GridBase::Ptr grid);
+
   /// @brief Process Tree type to call the correct get tree values function
-  //void processTypedTree(openvdb::GridBase::Ptr grid);
+  void processTypedTree(openvdb::GridBase::Ptr grid);
 };
 
 #endif /* __VDB_H__ */
