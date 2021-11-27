@@ -22,7 +22,7 @@ namespace volume_restir {
 class ModelBase {
 public:
   ModelBase() = delete;
-  ModelBase(RenderContext* render_context);
+  ModelBase(RenderContext* render_context, VkCommandPool command_pool);
   ModelBase(RenderContext* render_context, VkCommandPool command_pool,
             const std::vector<Vertex>& vertices,
             const std::vector<uint32_t>& indices);
@@ -44,6 +44,7 @@ public:
 
 protected:
   RenderContext* render_context_;
+  VkCommandPool command_pool_;
 
   std::vector<Vertex> vertices_;
   VkBuffer vertex_buffer_;
@@ -60,6 +61,10 @@ protected:
   VkImage texture_           = VK_NULL_HANDLE;
   VkImageView texture_view_  = VK_NULL_HANDLE;
   VkSampler texture_sampler_ = VK_NULL_HANDLE;
+
+  virtual void CreateVertexBuffer(const std::vector<Vertex>& vertices);
+  virtual void CreateIndexBuffer(const std::vector<uint32_t>& indices);
+  virtual void CreateModelBuffer(const glm::mat4& model_matrix);
 };
 
 }  // namespace volume_restir

@@ -1,33 +1,49 @@
 #include "ModelBase.hpp"
 
 #include "utils/buffer.hpp"
+#include "utils/logging.hpp"
 
 namespace volume_restir {
 
-ModelBase::ModelBase(RenderContext* render_context)
-    : render_context_(render_context) {}
+ModelBase::ModelBase(RenderContext* render_context, VkCommandPool command_pool)
+    : render_context_(render_context), command_pool_(command_pool) {}
 
 ModelBase::ModelBase(RenderContext* render_context, VkCommandPool command_pool,
                      const std::vector<Vertex>& vertices,
                      const std::vector<uint32_t>& indices)
-    : render_context_(render_context), vertices_(vertices), indices_(indices) {
+    : render_context_(render_context),
+      command_pool_(command_pool),
+      vertices_(vertices),
+      indices_(indices) {
+  CreateVertexBuffer(vertices);
+  CreateIndexBuffer(indices);
+  glm::mat4 model_matrix{1.0f};
+  CreateModelBuffer(model_matrix);
+}
+
+void ModelBase::CreateVertexBuffer(const std::vector<Vertex>& vertices) {
   if (!vertices_.empty()) {
     buffer::CreateBufferFromData(
-        render_context_, command_pool, this->vertices_.data(),
+        render_context_, command_pool_, this->vertices_.data(),
         vertices_.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         vertex_buffer_, vertex_buffer_memory_);
+    spdlog::debug("Successfully created vertex buffer");
   }
+}
 
+void ModelBase::CreateIndexBuffer(const std::vector<uint32_t>& indices) {
   if (!indices_.empty()) {
     buffer::CreateBufferFromData(
-        render_context_, command_pool, this->indices_.data(),
+        render_context_, command_pool_, this->indices_.data(),
         indices_.size() * sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         index_buffer_, index_buffer_memory_);
+    spdlog::debug("Successfully created index buffer");
   }
+}
 
-  model_matrix_ = glm::mat4(1.0f);
+void ModelBase::CreateModelBuffer(const glm::mat4& model_matrix) {
   buffer::CreateBufferFromData(
-      render_context_, command_pool, &model_matrix_, sizeof(glm::mat4),
+      render_context_, command_pool_, &model_matrix_, sizeof(glm::mat4),
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, model_buffer_, model_buffer_memory_);
 }
 
