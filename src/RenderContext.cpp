@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 
-#include "SingtonManager.hpp"
 #include "spdlog/spdlog.h"
 
 namespace volume_restir {

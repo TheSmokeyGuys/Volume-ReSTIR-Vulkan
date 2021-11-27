@@ -16,6 +16,8 @@ int main() {
     renderer.Draw();
   }
 
+  //vkDeviceWaitIdle(renderer.getRenderContext().Device().device);
+
 #ifdef _WIN32
   system("pause");
 #endif

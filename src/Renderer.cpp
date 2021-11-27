@@ -2,20 +2,89 @@
 
 #include <fstream>
 #include <stdexcept>
-
 #include "spdlog/spdlog.h"
 
 namespace volume_restir {
 
 Renderer::Renderer() {
+  /******************************************
+   * render_context uses VKB to handle:
+   * createInstance()
+   * createSurface()
+   * pickPhysicalDevice()
+   * createLogicalDevice()
+   ******************************************/
   render_context_ = std::make_unique<RenderContext>();
-  CreateSwapChain();
+
+  vertex_manager_ = std::make_unique<VertexManager>();
+
+  CreateSwapChain();  // CreateImageViews()
   InitQueues();
   CreateRenderPass();
   CreateGraphicsPipeline();
   CreateFrameResources();
+  CreateVertexBuffer();
   CreateCommandPools();
   RecordCommandBuffers();
+};
+
+void Renderer::CreateVertexBuffer() {
+  VkBufferCreateInfo bufferInfo{};
+  bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferInfo.size  = sizeof(vertex_manager_->vertices_[0]) *
+                    vertex_manager_->GetVerticesSize();
+  bufferInfo.usage       = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+  bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  if (vkCreateBuffer(render_context_->Device().device, &bufferInfo, nullptr,
+                     &vertex_buffer_) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create vertex buffer!");
+  }
+
+  vkGetBufferMemoryRequirements(render_context_->Device().device,
+                                vertex_buffer_, &mem_requirements_);
+
+  VkMemoryAllocateInfo allocInfo{};
+  allocInfo.sType          = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  allocInfo.allocationSize = mem_requirements_.size;
+  allocInfo.memoryTypeIndex =
+      FineMemoryType(mem_requirements_.memoryTypeBits,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+  if (vkAllocateMemory(render_context_->Device().device, &allocInfo, nullptr,
+                       &vertex_buffer_memory_) != VK_SUCCESS) {
+    throw std::runtime_error("failed to allocate vertex buffer memory!");
+  }
+
+  vkBindBufferMemory(render_context_->Device().device, vertex_buffer_,
+                     vertex_buffer_memory_, 0);
+
+  vkMapMemory(render_context_->Device().device, vertex_buffer_memory_, 0,
+              bufferInfo.size, 0, &data_);
+  memcpy(data_, vertex_manager_->vertices_.data(), (size_t)bufferInfo.size);
+  std::cout << vertex_manager_->vertices_.data() << std::endl;
+  vkUnmapMemory(render_context_->Device().device, vertex_buffer_memory_);
+};
+
+uint32_t Renderer::FineMemoryType(uint32_t typeFilter,
+                                  VkMemoryPropertyFlags properties) {
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vkGetPhysicalDeviceMemoryProperties(
+      render_context_->Device().physical_device.physical_device,
+      &memProperties);
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags &
+                                    properties) == properties) {
+      return i;
+    }
+  }
+  throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void Renderer::SetFrameBufferResized(bool val) {
+  this->frame_buffer_resized_ = val;
 }
 
 Renderer::~Renderer() {
@@ -139,6 +208,14 @@ void Renderer::CreateGraphicsPipeline() {
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertex_input_info.vertexBindingDescriptionCount   = 0;
   vertex_input_info.vertexAttributeDescriptionCount = 0;
+
+  auto bindingDescription    = Vertex::getBindingDescription();
+  auto attributeDescriptions = Vertex::getAttributeDescriptions();
+  vertex_input_info.vertexBindingDescriptionCount = 1;
+  vertex_input_info.vertexAttributeDescriptionCount =
+      static_cast<uint32_t>(attributeDescriptions.size());
+  vertex_input_info.pVertexBindingDescriptions   = &bindingDescription;
+  vertex_input_info.pVertexAttributeDescriptions = attributeDescriptions.data();
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
   input_assembly.sType =
@@ -357,7 +434,13 @@ void Renderer::RecordCommandBuffers() {
     vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                       graphics_pipeline_);
 
-    vkCmdDraw(command_buffers_[i], 3, 1, 0, 0);
+    VkBuffer vertexBuffers[] = {vertex_buffer_};
+    VkDeviceSize offsets[]   = {0};
+    vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
+
+    vkCmdDraw(command_buffers_[i],
+              static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
+              0);
 
     vkCmdEndRenderPass(command_buffers_[i]);
 
@@ -370,7 +453,18 @@ void Renderer::RecordCommandBuffers() {
 }
 
 void Renderer::RecreateSwapChain() {
+  int width  = 0;
+  int height = 0;
+  do {
+    glfwGetFramebufferSize(SingletonManager::GetWindow().WindowPtr(), &width,
+                           &height);
+    glfwWaitEvents();
+  } while (width == 0 || height == 0);
+
   vkDeviceWaitIdle(render_context_->Device().device);
+
+  // CleanupSwapChain();
+
   vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
                        nullptr);
   for (auto framebuffer : framebuffers_) {
@@ -386,13 +480,72 @@ void Renderer::RecreateSwapChain() {
   RecordCommandBuffers();
 }
 
+void Renderer::CleanupSwapChain() {
+  for (size_t i = 0; i < static_config::kMaxFrameInFlight; i++) {
+    vkDestroyFramebuffer(render_context_->Device().device, framebuffers_[i],
+                         nullptr);
+  }
+
+  vkFreeCommandBuffers(render_context_->Device().device, graphics_command_pool_,
+                       static_cast<uint32_t>(command_buffers_.size()),
+                       command_buffers_.data());
+
+  vkDestroyPipeline(render_context_->Device().device, graphics_pipeline_,
+                    nullptr);
+  vkDestroyPipelineLayout(render_context_->Device().device,
+                          graphics_pipeline_layout_, nullptr);
+  vkDestroyRenderPass(render_context_->Device().device, render_pass_, nullptr);
+  for (size_t i = 0; i < swapchain_image_views_.size(); i++) {
+    vkDestroyImageView(render_context_->Device().device,
+                       swapchain_image_views_[i], nullptr);
+  }
+
+  vkDestroySwapchainKHR(render_context_->Device().device,
+                        swapchain_->GetVkBSwapChain().swapchain, nullptr);
+}
+
+void Renderer::Cleanup() {
+  CleanupSwapChain();
+
+  vkDestroyBuffer(render_context_->Device().device, vertex_buffer_, nullptr);
+  vkFreeMemory(render_context_->Device().device, vertex_buffer_memory_,
+               nullptr);
+
+  for (size_t i = 0; i < static_config::kMaxFrameInFlight; i++) {
+    vkDestroySemaphore(render_context_->Device().device,
+                       swapchain_->finished_semaphores_[i], nullptr);
+    vkDestroySemaphore(render_context_->Device().device,
+                       swapchain_->available_semaphores_[i], nullptr);
+    vkDestroyFence(render_context_->Device().device,
+                   swapchain_->fences_in_flight_[i], nullptr);
+  }
+
+  vkDestroyCommandPool(render_context_->Device().device, graphics_command_pool_,
+                       nullptr);
+  vkDestroyDevice(render_context_->Device().device, nullptr);
+
+  // if (enableValidationLayers) {
+  //  DestroyDebugUtilsMessengerEXT(intance, debugMessenger, nullptr);
+  //}
+
+  vkDestroySurfaceKHR(render_context_->Instance().instance,
+                      render_context_->Surface(), nullptr);
+
+  vkDestroyInstance(render_context_->Instance().instance, nullptr);
+
+  glfwDestroyWindow(SingletonManager::GetWindow().WindowPtr());
+  glfwTerminate();
+}
+
 void Renderer::Draw() {
   vkWaitForFences(render_context_->Device().device, 1,
                   &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
                   UINT64_MAX);
 
   VkResult result = swapchain_.get()->Acquire(current_frame_idx_);
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+  if ((result == VK_ERROR_OUT_OF_DATE_KHR) ||
+      (result == VK_SUBOPTIMAL_KHR || frame_buffer_resized_)) {
+    frame_buffer_resized_ = false;
     RecreateSwapChain();
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
     spdlog::error("Failed to acquire swapchain image. Error {}", result);
