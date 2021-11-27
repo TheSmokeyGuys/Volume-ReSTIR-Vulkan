@@ -38,7 +38,14 @@ private:
   void CreateCommandPools();
   void RecordCommandBuffers();
 
+  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                    VkDeviceMemory& bufferMemory);
+  void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+  uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
   void CreateVertexBuffer(); 
+  void CreateIndexBuffer(); 
   uint32_t FineMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties); 
 
   void CreateSwapChain();
@@ -69,8 +76,11 @@ private:
 
   std::unique_ptr<VertexManager> vertex_manager_; 
   VkBuffer vertex_buffer_;
-  VkMemoryRequirements mem_requirements_;
   VkDeviceMemory vertex_buffer_memory_;
+  VkMemoryRequirements mem_requirements_;
+  VkBuffer index_buffer_;
+  VkDeviceMemory index_buffer_memory_;
+
 
   void* data_;
 

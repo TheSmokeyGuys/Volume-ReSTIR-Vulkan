@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <stdexcept>
+
 #include "spdlog/spdlog.h"
 
 namespace volume_restir {
@@ -24,48 +25,134 @@ Renderer::Renderer() {
   CreateGraphicsPipeline();
   CreateFrameResources();
   CreateVertexBuffer();
+  CreateIndexBuffer();
   CreateCommandPools();
   RecordCommandBuffers();
 };
 
 void Renderer::CreateVertexBuffer() {
+  VkDeviceSize bufferSize =
+      sizeof(vertex_manager_->vertices_[0]) * vertex_manager_->vertices_.size();
+  VkBuffer stagingBuffer;
+  VkDeviceMemory stagingBufferMemory;
+  CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               stagingBuffer, stagingBufferMemory);
+  void* data;
+  vkMapMemory(render_context_->Device().device, stagingBufferMemory, 0,
+              bufferSize, 0, &data);
+  memcpy(data, vertex_manager_->vertices_.data(), (size_t)bufferSize);
+  vkUnmapMemory(render_context_->Device().device, stagingBufferMemory);
+  CreateBuffer(
+      bufferSize,
+      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertex_buffer_,
+      vertex_buffer_memory_);
+  CopyBuffer(stagingBuffer, vertex_buffer_, bufferSize);
+  vkDestroyBuffer(render_context_->Device().device, stagingBuffer, nullptr);
+  vkFreeMemory(render_context_->Device().device, stagingBufferMemory, nullptr);
+}
+
+void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                            VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                            VkDeviceMemory& bufferMemory) {
   VkBufferCreateInfo bufferInfo{};
-  bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  bufferInfo.size  = sizeof(vertex_manager_->vertices_[0]) *
-                    vertex_manager_->GetVerticesSize();
-  bufferInfo.usage       = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+  bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferInfo.size        = size;
+  bufferInfo.usage       = usage;
   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
   if (vkCreateBuffer(render_context_->Device().device, &bufferInfo, nullptr,
-                     &vertex_buffer_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create vertex buffer!");
+                     &buffer) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create buffer!");
   }
-
-  vkGetBufferMemoryRequirements(render_context_->Device().device,
-                                vertex_buffer_, &mem_requirements_);
-
+  VkMemoryRequirements memRequirements;
+  vkGetBufferMemoryRequirements(render_context_->Device().device, buffer,
+                                &memRequirements);
   VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType          = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  allocInfo.allocationSize = mem_requirements_.size;
+  allocInfo.allocationSize = memRequirements.size;
   allocInfo.memoryTypeIndex =
-      FineMemoryType(mem_requirements_.memoryTypeBits,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
+      FindMemoryType(memRequirements.memoryTypeBits, properties);
   if (vkAllocateMemory(render_context_->Device().device, &allocInfo, nullptr,
-                       &vertex_buffer_memory_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate vertex buffer memory!");
+                       &bufferMemory) != VK_SUCCESS) {
+    throw std::runtime_error("failed to allocate buffer memory!");
   }
+  vkBindBufferMemory(render_context_->Device().device, buffer, bufferMemory, 0);
+}
 
-  vkBindBufferMemory(render_context_->Device().device, vertex_buffer_,
-                     vertex_buffer_memory_, 0);
+void Renderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
+                          VkDeviceSize size) {
+  VkCommandBufferAllocateInfo allocInfo{};
+  allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  allocInfo.commandPool        = graphics_command_pool_;
+  allocInfo.commandBufferCount = 1;
+  VkCommandBuffer commandBuffer;
+  vkAllocateCommandBuffers(render_context_->Device().device, &allocInfo,
+                           &commandBuffer);
 
-  vkMapMemory(render_context_->Device().device, vertex_buffer_memory_, 0,
-              bufferInfo.size, 0, &data_);
-  memcpy(data_, vertex_manager_->vertices_.data(), (size_t)bufferInfo.size);
-  std::cout << vertex_manager_->vertices_.data() << std::endl;
-  vkUnmapMemory(render_context_->Device().device, vertex_buffer_memory_);
-};
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+  VkBufferCopy copyRegion{};
+  copyRegion.srcOffset = 0;  // Optional
+  copyRegion.dstOffset = 0;  // Optional
+  copyRegion.size      = size;
+  vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+  vkEndCommandBuffer(commandBuffer);
+
+  VkSubmitInfo submitInfo{};
+  submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers    = &commandBuffer;
+  vkQueueSubmit(queues_[vkq_index::kGraphicsIdx], 1, &submitInfo,
+                VK_NULL_HANDLE);
+  vkQueueWaitIdle(queues_[vkq_index::kGraphicsIdx]);
+  vkFreeCommandBuffers(render_context_->Device().device, graphics_command_pool_,
+                       1, &commandBuffer);
+}
+
+uint32_t Renderer::FindMemoryType(uint32_t typeFilter,
+                                  VkMemoryPropertyFlags properties) {
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vkGetPhysicalDeviceMemoryProperties(
+      render_context_->Device().physical_device.physical_device,
+      &memProperties);
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags &
+                                    properties) == properties) {
+      return i;
+    }
+  }
+  throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void Renderer::CreateIndexBuffer() {
+  VkDeviceSize bufferSize =
+      sizeof(vertex_manager_->indices_[0]) * vertex_manager_->indices_.size();
+  VkBuffer stagingBuffer;
+  VkDeviceMemory stagingBufferMemory;
+  CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               stagingBuffer, stagingBufferMemory);
+  void* data;
+  vkMapMemory(render_context_->Device().device, stagingBufferMemory, 0,
+              bufferSize, 0, &data);
+  memcpy(data, vertex_manager_->indices_.data(), (size_t)bufferSize);
+  vkUnmapMemory(render_context_->Device().device, stagingBufferMemory);
+  CreateBuffer(
+      bufferSize,
+      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, index_buffer_, index_buffer_memory_);
+  CopyBuffer(stagingBuffer, index_buffer_, bufferSize);
+  vkDestroyBuffer(render_context_->Device().device, stagingBuffer, nullptr);
+  vkFreeMemory(render_context_->Device().device, stagingBufferMemory, nullptr);
+}
 
 uint32_t Renderer::FineMemoryType(uint32_t typeFilter,
                                   VkMemoryPropertyFlags properties) {
@@ -438,9 +525,15 @@ void Renderer::RecordCommandBuffers() {
     VkDeviceSize offsets[]   = {0};
     vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
 
-    vkCmdDraw(command_buffers_[i],
-              static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
-              0);
+    vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
+                         VK_INDEX_TYPE_UINT16);
+
+    vkCmdDrawIndexed(command_buffers_[i], static_cast<uint32_t>(vertex_manager_->indices_.size()),
+                     1, 0, 0, 0);
+
+    //vkCmdDraw(command_buffers_[i],
+    //          static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
+    //          0);
 
     vkCmdEndRenderPass(command_buffers_[i]);
 
@@ -506,6 +599,9 @@ void Renderer::CleanupSwapChain() {
 
 void Renderer::Cleanup() {
   CleanupSwapChain();
+
+  vkDestroyBuffer(render_context_->Device().device, index_buffer_, nullptr);
+  vkFreeMemory(render_context_->Device().device, index_buffer_memory_, nullptr);
 
   vkDestroyBuffer(render_context_->Device().device, vertex_buffer_, nullptr);
   vkFreeMemory(render_context_->Device().device, vertex_buffer_memory_,
