@@ -83,12 +83,25 @@ void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
 
 void Renderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
                           VkDeviceSize size) {
-  VkCommandBufferAllocateInfo allocInfo{};
-  allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandPool        = graphics_command_pool_;
-  allocInfo.commandBufferCount = 1;
+  VkCommandPool commandPool;
+  VkCommandPoolCreateInfo pool_info = {};
+  pool_info.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  pool_info.queueFamilyIndex = render_context_->Device()
+                                   .get_queue_index(vkb::QueueType::graphics)
+                                   .value();
+
+  if (vkCreateCommandPool(render_context_->Device().device, &pool_info, nullptr,
+                          &commandPool) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to create command pool");
+  }
+
   VkCommandBuffer commandBuffer;
+  VkCommandBufferAllocateInfo allocInfo{};
+      allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+      allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+      allocInfo.commandPool        = commandPool;
+      allocInfo.commandBufferCount = 1;
+
   vkAllocateCommandBuffers(render_context_->Device().device, &allocInfo,
                            &commandBuffer);
 
@@ -111,8 +124,10 @@ void Renderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
   vkQueueSubmit(queues_[vkq_index::kGraphicsIdx], 1, &submitInfo,
                 VK_NULL_HANDLE);
   vkQueueWaitIdle(queues_[vkq_index::kGraphicsIdx]);
-  vkFreeCommandBuffers(render_context_->Device().device, graphics_command_pool_,
+  vkFreeCommandBuffers(render_context_->Device().device, commandPool,
                        1, &commandBuffer);
+
+  vkDestroyCommandPool(render_context_->Device().device, commandPool, nullptr);
 }
 
 uint32_t Renderer::FindMemoryType(uint32_t typeFilter,
@@ -525,15 +540,16 @@ void Renderer::RecordCommandBuffers() {
     VkDeviceSize offsets[]   = {0};
     vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
-                         VK_INDEX_TYPE_UINT16);
+    /*vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
+                         VK_INDEX_TYPE_UINT16);*/
 
-    vkCmdDrawIndexed(command_buffers_[i], static_cast<uint32_t>(vertex_manager_->indices_.size()),
-                     1, 0, 0, 0);
+    /*vkCmdDrawIndexed(command_buffers_[i],
+                     static_cast<uint32_t>(vertex_manager_->indices_.size()), 1,
+                     0, 0, 0);*/
 
-    //vkCmdDraw(command_buffers_[i],
-    //          static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
-    //          0);
+     vkCmdDraw(command_buffers_[i],
+              static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
+              0);
 
     vkCmdEndRenderPass(command_buffers_[i]);
 
