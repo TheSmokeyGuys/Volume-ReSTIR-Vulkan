@@ -26,7 +26,8 @@
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
 #else
-//#include <GL/gl.h>
+#include <windows.h>
+#include <GL/gl.h>
 #endif
 
 #include <openvdb/openvdb.h>
@@ -57,10 +58,10 @@ float u_radians(const float _deg);
 /// @brief Method to convert radians into degrees - returns float
 /// @param [in] _rad const float - radians passed in
 float u_degrees(const float _rad);
-// TODO
-///// @brief Method to convert a GLubyte to a string - returns std::string
-///// @param [in] _in const GLubyte* - values passed in
-//std::string glubyteToStdString(const GLubyte *_in);
+
+/// @brief Method to convert a GLubyte to a string - returns std::string
+/// @param [in] _in const GLubyte* - values passed in
+std::string glubyteToStdString(const GLubyte *_in);
 /// @brief Method to convert an openvdb::Coord to a string - returns std::string
 /// @param [in] _in const openvdb::Coord - coord to convert
 std::string vdbCoordToStdString(const openvdb::Coord _in);
@@ -68,15 +69,14 @@ std::string vdbCoordToStdString(const openvdb::Coord _in);
 /// @param [in] _level int - level to return as colour
 openvdb::Vec3f getColourFromLevel(int _level);
 
-// TODO
 /// @brief Check for a GLError - returns GLenum
-//GLenum checkGLError();
-///// @brief Expand Matrix3x3 to a float array - returns std::vector<GLfloat>
-///// @param [in] _in openvdb::Mat3R - matrix to flatten
-//std::vector<GLfloat> u_Mat3ToFloatArray(openvdb::Mat3R _in);
-///// @brief Expand Matrix4x4 to a float array - returns std::vector<GLfloat>
-///// @param [in] _in openvdb::Mat4s - matrix to flatten
-//std::vector<GLfloat> u_Mat4ToFloatArray(openvdb::Mat4s _in);
+GLenum checkGLError();
+/// @brief Expand Matrix3x3 to a float array - returns std::vector<GLfloat>
+/// @param [in] _in openvdb::Mat3R - matrix to flatten
+std::vector<GLfloat> u_Mat3ToFloatArray(openvdb::Mat3R _in);
+/// @brief Expand Matrix4x4 to a float array - returns std::vector<GLfloat>
+/// @param [in] _in openvdb::Mat4s - matrix to flatten
+std::vector<GLfloat> u_Mat4ToFloatArray(openvdb::Mat4s _in);
 /// @brief Report that not external GPU device is attached
 
 inline void printNoExtGPU() {

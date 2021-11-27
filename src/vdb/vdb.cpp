@@ -506,12 +506,12 @@ void VDB::setNumCropToDraw(int _n) {
 float VDB::getS() { return m_s.at(m_currentActiveChannelPoints); }
 
 // TODO
-//void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
-//                    float _minz, float _maxz) {
-//  // build the bounding box of the VDB file
-//  m_bbox = new BoundBox(_minx, _maxx, _miny, _maxy, _minz, _maxz);
-//  m_bbox->buildVAOIndexed();
-//}
+void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
+                    float _minz, float _maxz) {
+  // build the bounding box of the VDB file
+  m_bbox = new BoundBox(_minx, _maxx, _miny, _maxy, _minz, _maxz);
+  m_bbox->buildVAOIndexed();
+}
 
 // TODO
 // set the crop box at a specific index multiple ways
@@ -725,115 +725,118 @@ void VDB::resetParams() {
 //TODO
     // logic of this function taken from studying The GL viewer provided with the
 // OpenVDB library
-//template <typename GridType>
-//void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
-//  typedef typename GridType::ValueType ValueType;
-//  typedef typename GridType::TreeType TreeType;
-//
-//  const TreeType &tree = _grid->tree();
-//
-//  openvdb::tree::ValueAccessor<const TreeType> acc(
-//      tree);  // accesoor into the file of the correct type
-//
-//  int j = 0;
-//
-//  // create Vec4 ready for data for texture buffer
-//  openvdb::Vec4f channelTemp;
-//  channelTemp[3] = 1.0f;
-//
-//  //TODO
-//  //std::vector<vDat> pointStore;  // store point data and normal data
-//  //pointStore.resize(0);
-//
-//  //vDat point;
-//
-//  openvdb::Coord coord;  // coord to get from file
-//
-//  BBoxBare channelExtremes;
-//  // init extremes ready
-//  channelExtremes.minx = channelExtremes.miny = channelExtremes.minz = 0.0f;
-//  channelExtremes.maxx = channelExtremes.maxy = channelExtremes.maxz = 0.0f;
-//
-//  for (typename GridType::ValueOnCIter it = _grid->cbeginValueOn(); it; ++it) {
-//    // will always be a rounding issue here as must be an integer step
-//    // however this could then cause it to miss out a few hundred thousand
-//    // points instead it will over compensate and draw a couple hundred thousand
-//    // more prevents a model with a hole in it all caused by rounding issues
-//
-//    coord         = it.getCoord();        // retirve coordinate
-//    ValueType vec = acc.getValue(coord);  // get vector value (colour)
-//    openvdb::Vec3d worldSpace =
-//        _grid->indexToWorld(coord);  // convert coordinate into world space
-//
-//    point.x = worldSpace[0];
-//    point.y = worldSpace[1];
-//    point.z = worldSpace[2];
-//    point.u = j;
-//
-//    j++;  // incremenet poin count
-//
-//    point.nx = vec;  // set colour to normal for rendering on the shader
-//    point.ny = vec;
-//    point.nz = vec;
-//
-//    channelTemp[0] = vec;  // store value for texture buffer
-//    channelTemp[1] = vec;
-//    channelTemp[2] = vec;
-//
-//    point.v = 0;  // type scalar
-//
-//    m_channelValueData->push_back(channelTemp);  // add to texture store
-//    m_tboSize++;
-//    pointStore.push_back(point);  // add to point store
-//
-//    // check for minimum
-//    if (point.nx < channelExtremes.minx || point.ny < channelExtremes.miny ||
-//        point.nz < channelExtremes.minz) {
-//      if (point.nx < channelExtremes.minx) {
-//        channelExtremes.minx = point.nx;
-//      }
-//      if (point.ny < channelExtremes.miny) {
-//        channelExtremes.miny = point.ny;
-//      }
-//      if (point.nz < channelExtremes.minz) {
-//        channelExtremes.minz = point.nz;
-//      }
-//    }
-//    // check for maximum
-//    if (point.nx > channelExtremes.maxx || point.ny > channelExtremes.maxy ||
-//        point.nz > channelExtremes.maxz) {
-//      if (point.nx > channelExtremes.maxx) {
-//        channelExtremes.maxx = point.nx;
-//      }
-//      if (point.ny > channelExtremes.maxy) {
-//        channelExtremes.maxy = point.ny;
-//      }
-//      if (point.nz > channelExtremes.maxz) {
-//        channelExtremes.maxz = point.nz;
-//      }
-//    }
-//  }
-//
-//  VAO temp(GL_POINTS);
-//  temp.create();
-//
-//  // create VAO for this grid
-//  temp.bind();
-//  temp.setIndicesCount(j);
-//  temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
-//  temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-//  temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-//  temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
-//  temp.unbind();
-//  // once created, push back into the vectors of VAOs
-//
-//  m_vdbGrids->push_back(temp);
-//
-//  // store the extremes for this channel
-//  m_channelExtremes->push_back(channelExtremes);
-//
-//  pointStore.clear();
-//}
+template <typename GridType>
+void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
+  typedef typename GridType::ValueType ValueType;
+  typedef typename GridType::TreeType TreeType;
+
+  const TreeType &tree = _grid->tree();
+
+  openvdb::tree::ValueAccessor<const TreeType> acc(
+      tree);  // accesoor into the file of the correct type
+
+  int j = 0;
+
+  // create Vec4 ready for data for texture buffer
+  openvdb::Vec4f channelTemp;
+  channelTemp[3] = 1.0f;
+
+  //TODO
+  std::vector<vDat> pointStore;  // store point data and normal data
+  pointStore.resize(0);
+
+  vDat point;
+
+  openvdb::Coord coord;  // coord to get from file
+
+  BBoxBare channelExtremes;
+  // init extremes ready
+  channelExtremes.minx = channelExtremes.miny = channelExtremes.minz = 0.0f;
+  channelExtremes.maxx = channelExtremes.maxy = channelExtremes.maxz = 0.0f;
+
+  for (typename GridType::ValueOnCIter it = _grid->cbeginValueOn(); it; ++it) {
+    // will always be a rounding issue here as must be an integer step
+    // however this could then cause it to miss out a few hundred thousand
+    // points instead it will over compensate and draw a couple hundred thousand
+    // more prevents a model with a hole in it all caused by rounding issues
+
+    coord         = it.getCoord();        // retirve coordinate
+    ValueType vec = acc.getValue(coord);  // get vector value (colour)
+    openvdb::Vec3d worldSpace =
+        _grid->indexToWorld(coord);  // convert coordinate into world space
+
+    point.x = worldSpace[0];
+    point.y = worldSpace[1];
+    point.z = worldSpace[2];
+    point.u = j;
+
+    j++;  // incremenet poin count
+
+    point.nx = vec;  // set colour to normal for rendering on the shader
+    point.ny = vec;
+    point.nz = vec;
+
+    channelTemp[0] = vec;  // store value for texture buffer
+    channelTemp[1] = vec;
+    channelTemp[2] = vec;
+
+    point.v = 0;  // type scalar
+
+    m_channelValueData->push_back(channelTemp);  // add to texture store
+    m_tboSize++;
+    pointStore.push_back(point);  // add to point store
+
+    // check for minimum
+    if (point.nx < channelExtremes.minx || point.ny < channelExtremes.miny ||
+        point.nz < channelExtremes.minz) {
+      if (point.nx < channelExtremes.minx) {
+        channelExtremes.minx = point.nx;
+      }
+      if (point.ny < channelExtremes.miny) {
+        channelExtremes.miny = point.ny;
+      }
+      if (point.nz < channelExtremes.minz) {
+        channelExtremes.minz = point.nz;
+      }
+    }
+    // check for maximum
+    if (point.nx > channelExtremes.maxx || point.ny > channelExtremes.maxy ||
+        point.nz > channelExtremes.maxz) {
+      if (point.nx > channelExtremes.maxx) {
+        channelExtremes.maxx = point.nx;
+      }
+      if (point.ny > channelExtremes.maxy) {
+        channelExtremes.maxy = point.ny;
+      }
+      if (point.nz > channelExtremes.maxz) {
+        channelExtremes.maxz = point.nz;
+      }
+    }
+  }
+
+  //TODO
+  //VAO temp(GL_POINTS);
+  //temp.create();
+
+  //// create VAO for this grid
+  //temp.bind();
+  //temp.setIndicesCount(j);
+  //temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
+  //temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  //temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  //temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
+  //temp.unbind();
+  // once created, push back into the vectors of VAOs
+
+  //TODO
+  ///VAO Object
+  //m_vdbGrids->push_back(temp);
+
+  // store the extremes for this channel
+  m_channelExtremes->push_back(channelExtremes);
+
+  pointStore.clear();
+}
 
 //TODO
 // logic of this function taken from studying The GL viewer provided with the
@@ -1099,7 +1102,7 @@ bool VDB::loadBBox() {
   }
 
   //TODO
-  //buildBBox(min.x(), max.x(), min.y(), max.y(), min.z(), max.z());
+  buildBBox(min.x(), max.x(), min.y(), max.y(), min.z(), max.z());
 
   return true;
 }

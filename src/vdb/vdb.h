@@ -23,7 +23,7 @@
 #include <openvdb/openvdb.h>
 
 
-//#include "BoundBox.h"
+#include "BoundBox.h"
 //#include "Camera.h"
 //#include "ShaderLibrary.h"
 
@@ -57,7 +57,7 @@ public:
   //TODO
   ///// @brief Set the total available GPU memory in KB
   ///// @param [in] _mem GLint - memory
-  //inline void setTotalGPUMemKB(GLint _mem) { m_total_GPU_mem_kb = _mem; }
+  inline void setTotalGPUMemKB(GLint _mem) { m_total_GPU_mem_kb = _mem; }
 
   /// @brief Open and Load data from VDB file
   /// @param [in] _file std::string - file to load
@@ -172,12 +172,13 @@ public:
   /// @param [in] _maxy float - maximum Y value
   /// @param [in] _minz float - minimum Z value
   /// @param [in] _maxz float - maximum Z value
-  //void buildBBox(float _minx, float _maxx, float _miny, float _maxy,
-  //               float _minz, float _maxz);
+  void buildBBox(float _minx, float _maxx, float _miny, float _maxy,
+                 float _minz, float _maxz);
 
-  //TODO
-  ///// @brief Get the Bounding Box - returns BoundBox
-  //inline BoundBox getBBox() { return *m_bbox; }
+  /// @brief Get the Bounding Box - returns BoundBox
+  inline BoundBox getBBox() { return *m_bbox; }
+
+  // TODO
   ///// @brief Get the crop box at the specified index - returns BoundBox
   ///// @param [in] _index int - the crop box to retrieve
   //inline BoundBox getCBox(int _index) { return m_crop[_index]; }
@@ -327,17 +328,19 @@ private:
   /// @brief Reset attributes and arrays
   void resetParams();
 
-  // TODO
-  /*/// @brief Get mesh values out of the file on a scalar type
+  /// @brief Get mesh values out of the file on a scalar type
   /// @param [in] _grid typename GridType::ConstPtr - the grid to retrieve
   /// values from
   template <typename GridType>
   void getMeshValuesScalar(typename GridType::ConstPtr _grid);
+
+  
+  // TODO
   /// @brief Get mesh values out of the file on a vector type
   /// @param [in] _grid typename GridType::ConstPtr - the grid to retrieve
   /// values from
-  template <typename GridType>
-  void getMeshValuesVector(typename GridType::ConstPtr _grid);*/
+  //template <typename GridType>
+  //void getMeshValuesVector(typename GridType::ConstPtr _grid);
 
   /// @brief Get tree values
   /// @param [in] _grid typename GridType::Ptr - the grid to retrieve values
@@ -361,10 +364,11 @@ private:
   //TODO
   ///// @brief All drawable grids in the file
   //std::vector<VAO> *m_vdbGrids;
-  ///// @brief The bounding box
-  //BoundBox *m_bbox;
-  ///// @brief Vector of extreme values for all channels
-  //std::vector<BBoxBare> *m_channelExtremes;
+
+  /// @brief The bounding box
+  BoundBox *m_bbox;
+  /// @brief Vector of extreme values for all channels
+  std::vector<BBoxBare> *m_channelExtremes;
 
   //TODO
   //// Using a 'Crop Box' to limit how much of the model can be seen
@@ -450,9 +454,9 @@ private:
   float m_vectorSize;
 
   //TODO
-  //// information on the graphics card
-  ///// @brief Total GPU memory in KB
-  //GLint m_total_GPU_mem_kb;
+  // information on the graphics card
+  /// @brief Total GPU memory in KB
+  GLint m_total_GPU_mem_kb;
   ///// @brief Current available GPU memory in KB
   //GLint m_current_available_GPU_mem_kb;
   /// @brief Vector storing the channel value data to upload to a texture buffer
@@ -463,10 +467,10 @@ private:
   //GLuint m_gridsTBO;
   /// @brief Size of the texture buffer vector
   int m_tboSize;
-  // TODO
-  ///// @brief Push back a VDB tree vert
-  //void pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
-  //                     vDat _vert);
+
+  /// @brief Push back a VDB tree vert
+  void pushBackVDBVert(std::vector<vDat> *_v, openvdb::Vec3f _point,
+                       vDat _vert);
 
   // TODO
  /* /// @brief Report that the file contains a std::string grid

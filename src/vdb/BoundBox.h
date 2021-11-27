@@ -200,8 +200,9 @@ public:
   /// @brief Draw the bounding box
   void draw();
 
+  //TODO
   /// @brief Returns the VAO of the bounding box - returns VAO
-  inline VAO getVAO() { return *m_vao; }
+  //inline VAO getVAO() { return *m_vao; }
 
   /// @brief Method to calculate if a point lies within the bounding box -
   /// returns true or false
@@ -247,9 +248,11 @@ private:
   /// @brief Fsce normals of the bounding box
   openvdb::Vec3f m_norms[6];
 
+  //TODO
   // the following attributes are used for drawing
   /// @brief VAO used for drawing the bounding box
-  VAO *m_vao;
+  /*VAO *m_vao;*/
+
   /// @brief Draw mode of the bounding box
   GLenum m_drawMode;
 
