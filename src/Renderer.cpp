@@ -202,7 +202,13 @@ void Renderer::CreateGraphicsPipeline() {
   colorBlendAttachment.colorWriteMask =
       VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
       VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachment.blendEnable = VK_FALSE;
+  colorBlendAttachment.blendEnable         = VK_FALSE;
+  colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
+  colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachment.alphaBlendOp        = VK_BLEND_OP_ADD;
 
   VkPipelineColorBlendStateCreateInfo color_blending = {};
   color_blending.sType =
@@ -216,14 +222,16 @@ void Renderer::CreateGraphicsPipeline() {
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  // TODO: add camera descriptor set layout here.
-  // pipeline_layout_info.setLayoutCount = descriptorSetLayout.size()
-  //
+  std::vector<VkDescriptorSetLayout> descriptor_set_layouts{
+      camera_descriptorset_layout_};
 
   VkPipelineLayoutCreateInfo pipeline_layout_info = {};
   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipeline_layout_info.setLayoutCount         = 0;
+  pipeline_layout_info.setLayoutCount =
+      static_cast<uint32_t>(descriptor_set_layouts.size());
+  pipeline_layout_info.pSetLayouts            = descriptor_set_layouts.data();
   pipeline_layout_info.pushConstantRangeCount = 0;
+  pipeline_layout_info.pPushConstantRanges    = VK_NULL_HANDLE;
 
   if (vkCreatePipelineLayout(render_context_->Device().device,
                              &pipeline_layout_info, nullptr,
