@@ -376,6 +376,12 @@ void Renderer::RecordCommandBuffers() {
     vkCmdSetViewport(command_buffers_[i], 0, 1, &viewport);
     vkCmdSetScissor(command_buffers_[i], 0, 1, &scissor);
 
+    // Bind the camera descriptor set. This is set 0 in all pipelines so it will
+    // be inherited
+    vkCmdBindDescriptorSets(
+        command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+        graphics_pipeline_layout_, 0, 1, &camera_descriptorset_, 0, nullptr);
+
     vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info,
                          VK_SUBPASS_CONTENTS_INLINE);
 
