@@ -62,9 +62,9 @@ protected:
   VkImageView texture_view_  = VK_NULL_HANDLE;
   VkSampler texture_sampler_ = VK_NULL_HANDLE;
 
-  virtual void CreateVertexBuffer(const std::vector<Vertex>& vertices);
-  virtual void CreateIndexBuffer(const std::vector<uint32_t>& indices);
-  virtual void CreateModelBuffer(const glm::mat4& model_matrix);
+  virtual void CreateVertexBuffer(std::vector<Vertex>& vertices);
+  virtual void CreateIndexBuffer(std::vector<uint32_t>& indices);
+  virtual void CreateModelBuffer(glm::mat4& model_matrix);
 };
 
 }  // namespace volume_restir

@@ -15,35 +15,35 @@ ModelBase::ModelBase(RenderContext* render_context, VkCommandPool command_pool,
       command_pool_(command_pool),
       vertices_(vertices),
       indices_(indices) {
-  CreateVertexBuffer(vertices);
-  CreateIndexBuffer(indices);
+  CreateVertexBuffer(vertices_);
+  CreateIndexBuffer(indices_);
   glm::mat4 model_matrix{1.0f};
   CreateModelBuffer(model_matrix);
 }
 
-void ModelBase::CreateVertexBuffer(const std::vector<Vertex>& vertices) {
-  if (!vertices_.empty()) {
+void ModelBase::CreateVertexBuffer(std::vector<Vertex>& vertices) {
+  if (!vertices.empty()) {
     buffer::CreateBufferFromData(
-        render_context_, command_pool_, this->vertices_.data(),
-        vertices_.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        render_context_, command_pool_, vertices.data(),
+        vertices.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         vertex_buffer_, vertex_buffer_memory_);
     spdlog::debug("Successfully created vertex buffer");
   }
 }
 
-void ModelBase::CreateIndexBuffer(const std::vector<uint32_t>& indices) {
-  if (!indices_.empty()) {
-    buffer::CreateBufferFromData(
-        render_context_, command_pool_, this->indices_.data(),
-        indices_.size() * sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        index_buffer_, index_buffer_memory_);
+void ModelBase::CreateIndexBuffer(std::vector<uint32_t>& indices) {
+  if (!indices.empty()) {
+    buffer::CreateBufferFromData(render_context_, command_pool_, indices.data(),
+                                 indices.size() * sizeof(uint32_t),
+                                 VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                 index_buffer_, index_buffer_memory_);
     spdlog::debug("Successfully created index buffer");
   }
 }
 
-void ModelBase::CreateModelBuffer(const glm::mat4& model_matrix) {
+void ModelBase::CreateModelBuffer(glm::mat4& model_matrix) {
   buffer::CreateBufferFromData(
-      render_context_, command_pool_, &model_matrix_, sizeof(glm::mat4),
+      render_context_, command_pool_, &model_matrix, sizeof(glm::mat4),
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, model_buffer_, model_buffer_memory_);
 }
 
@@ -75,6 +75,8 @@ ModelBase::~ModelBase() {
 }
 
 void ModelBase::SetTexture(VkImage texture) {
+  texture_ = texture;
+
   // TODO: rewrite this into our code base classes
   //
   // this->texture     = texture;
