@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "ShaderModule.hpp"
 #include "SingtonManager.hpp"
 #include "config/static_config.hpp"
 #include "model/Cube.hpp"
