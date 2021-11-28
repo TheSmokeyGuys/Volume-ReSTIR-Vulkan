@@ -30,7 +30,7 @@ namespace {
  * @param pitch:          output pitch
  */
 inline void GetYawPitch(const glm::mat4& transformation, float& yaw,
-                        float& pitch) {
+                        float& pitch, float &roll) {
   // if (transformation[0][0] == 1.0f) {
   //   yaw   = atan2f(transformation[0][2], transformation[2][3]);
   //   pitch = 0;
@@ -56,13 +56,16 @@ inline void GetYawPitch(const glm::mat4& transformation, float& yaw,
   pitch = asin(transformation[1][0]);
   if (pitch > -M_PI_2 + EPSILON) {
     if (pitch < M_PI_2 - EPSILON) {
-      yaw = atan2(-transformation[2][0], transformation[0][0]);
+      yaw = glm::atan(-transformation[2][0], transformation[0][0]);
+      roll = glm::atan(-transformation[1][2], transformation[1][1]);
     } else {
       // WARNING.  Not a unique solution.
+      roll = 0.0f;
       yaw = atan2(transformation[2][1], transformation[2][2]);
     }
   } else {
     // WARNING.  Not a unique solution.
+    roll = 0.0f;
     yaw = -atan2(transformation[2][1], transformation[2][2]);
   }
 }
@@ -87,9 +90,9 @@ Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
       glm::perspective(glm::radians(45.f), aspect_ratio, 0.1f, 100.f);
   buffer_object_.projection_matrix[1][1] *= -1;  // y-coordinate is flipped
 
-  GetYawPitch(buffer_object_.view_matrix_inverse, yaw_, pitch_);
-  yaw_   = glm::degrees(yaw_);
-  pitch_ = glm::degrees(pitch_);
+  GetYawPitch(buffer_object_.view_matrix_inverse, yaw_, pitch_, roll_);
+  //yaw_   = glm::degrees(yaw_);
+  //pitch_ = glm::degrees(pitch_);
 
   spdlog::info("Created camera at position {}", pos_);
   spdlog::info("Camera is looking in direction {}", view_);
@@ -137,16 +140,19 @@ void Camera::UpdateEulerAngles(float dx, float dy) {
   //
 
   yaw_ += dx;
-  pitch_ += dy;
-  pitch_ = glm::clamp(pitch_, -89.0f, 89.0f);
+  roll_ += dy;
+  //roll_ = glm::clamp(pitch_, -89.0f, 89.0f);
 
-  spdlog::info("Camera yaw: {}, pitch: {}", yaw_, pitch_);
+  spdlog::info("Camera yaw: {}, roll_: {}", yaw_, roll_);
 
   // calculate the new Front vector
   glm::vec3 front;
-  front.x = cos(glm::radians(yaw_)) * cos(glm::radians(pitch_));
-  front.y = sin(glm::radians(pitch_));
-  front.z = sin(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+  //front.x = cos(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+  //front.y = sin(glm::radians(pitch_));
+  //front.z = sin(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+  front.x = sin(glm::radians(yaw_)) * cos(glm::radians(roll_));
+  front.y = - sin(glm::radians(roll_)) ;
+  front.z = cos(glm::radians(yaw_)) * cos(glm::radians(roll_));
   view_   = glm::normalize(front);
   right_  = glm::normalize(glm::cross(view_, UP));
   up_     = glm::normalize(glm::cross(right_, view_));

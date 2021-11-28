@@ -65,6 +65,7 @@ private:
   glm::vec3 up_;     // up direction of camera
   float yaw_;        // yaw angle of camera
   float pitch_;      // pitch angle of camera
+  float roll_;      // pitch angle of camera
 
   // Device memory related
   bool has_device_memory_;
