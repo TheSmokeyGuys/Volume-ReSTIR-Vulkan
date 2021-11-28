@@ -43,9 +43,13 @@ public:
   glm::vec3 GetViewDir() const { return view_; }
   glm::vec3 GetRightDir() const { return right_; }
   glm::vec3 GetUpDir() const { return up_; }
-  glm::vec3 GetRefPt() const { return ref_; }
 
+  // Referenced at:
+  //  https://learnopengl.com/code_viewer_gh.php?code=includes/learnopengl/camera.h
+  //
   void UpdatePos(glm::vec3 new_pos);
+  void UpdateEulerAngles(float dx, float dy);
+
   /**
    * @brief Allocates memory buffer on device
    *
@@ -59,8 +63,9 @@ private:
   glm::vec3 view_;   // view direction of camera
   glm::vec3 right_;  // right direction of camera
   glm::vec3 up_;     // up direction of camera
-  glm::vec3 ref;     // The point in world space towards which the camera is
-                     // pointing
+  float yaw_;        // yaw angle of camera
+  float pitch_;      // pitch angle of camera
+
   // Device memory related
   bool has_device_memory_;
   CameraBufferObject buffer_object_;

@@ -30,6 +30,8 @@ public:
 
   void BindCamera(Camera* camera) { camera_ = camera; }
   void CameraMoveCallback(int key, int action);
+  void CameraRotateCallback(float xPos, float yPos);
+  void MousePressCallback(int button, int action);
 
 private:
   GLFWwindow* window_;
@@ -38,6 +40,10 @@ private:
   std::string name_;
 
   Camera* camera_;
+  bool left_mouse_down_;
+  bool right_mouse_down_;
+  double mouse_pos_x_;
+  double mouse_pos_y_;
 };
 
 }  // namespace volume_restir

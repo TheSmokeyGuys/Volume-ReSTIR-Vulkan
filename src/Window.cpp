@@ -40,6 +40,42 @@ void Window::CameraMoveCallback(int key, int action) {
   }
 }
 
+void Window::MousePressCallback(int button, int action) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_PRESS) {
+      left_mouse_down_ = true;
+      glfwGetCursorPos(window_, &mouse_pos_x_, &mouse_pos_y_);
+    } else if (action == GLFW_RELEASE) {
+      left_mouse_down_ = false;
+    }
+  } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+    if (action == GLFW_PRESS) {
+      right_mouse_down_ = true;
+      glfwGetCursorPos(window_, &mouse_pos_x_, &mouse_pos_y_);
+    } else if (action == GLFW_RELEASE) {
+      right_mouse_down_ = false;
+    }
+  }
+}
+
+void Window::CameraRotateCallback(float xPos, float yPos) {
+  if (!camera_) {
+    spdlog::warn("Camera class not bound to application window.");
+    return;
+  }
+
+  if (left_mouse_down_) {
+    float sensitivity = static_config::kCameraRotateSensitivity;
+    float deltaX      = static_cast<float>((xPos - mouse_pos_x_) * sensitivity);
+    float deltaY      = static_cast<float>((mouse_pos_y_ - yPos) * sensitivity);
+
+    camera_->UpdateEulerAngles(deltaX, deltaY);
+
+    mouse_pos_x_ = xPos;
+    mouse_pos_y_ = yPos;
+  }
+}
+
 Window::Window()
     : window_(nullptr),
       width_(static_config::kWindowWidth),
@@ -66,6 +102,17 @@ Window::Window()
     static_cast<Window*>(glfwGetWindowUserPointer(w))
         ->CameraMoveCallback(key, action);
   });
+  glfwSetMouseButtonCallback(window_,
+                             [](GLFWwindow* w, int button, int action, int) {
+                               static_cast<Window*>(glfwGetWindowUserPointer(w))
+                                   ->MousePressCallback(button, action);
+                             });
+  glfwSetCursorPosCallback(
+      window_, [](GLFWwindow* w, double x_pos, double y_pos) {
+        static_cast<Window*>(glfwGetWindowUserPointer(w))
+            ->CameraRotateCallback(static_cast<float>(x_pos),
+                                   static_cast<float>(y_pos));
+      });
 
   if (!window_) {
     spdlog::error("Failed to initialize GLFW window");
