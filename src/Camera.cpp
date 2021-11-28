@@ -9,6 +9,14 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 
+#ifndef M_PI_2
+#define M_PI_2 1.5707963267948966192313216916398
+#endif
+
+#ifndef EPSILON
+#define EPSILON 0.001f
+#endif
+
 namespace volume_restir {
 
 namespace {
@@ -23,22 +31,46 @@ namespace {
  */
 inline void GetYawPitch(const glm::mat4& transformation, float& yaw,
                         float& pitch) {
-  if (transformation[0][0] == 1.0f) {
-    yaw   = atan2f(transformation[0][2], transformation[2][3]);
-    pitch = 0;
-  } else if (transformation[0][0] == -1.0f) {
-    yaw   = atan2f(transformation[0][2], transformation[2][3]);
-    pitch = 0;
+  // if (transformation[0][0] == 1.0f) {
+  //   yaw   = atan2f(transformation[0][2], transformation[2][3]);
+  //   pitch = 0;
+  // } else if (transformation[0][0] == -1.0f) {
+  //   yaw   = atan2f(transformation[0][2], transformation[2][3]);
+  //   pitch = 0;
+  // } else {
+  //   yaw   = atan2(-transformation[2][0], transformation[0][0]);
+  //   pitch = asin(transformation[1][0]);
+  // }
+
+  // yaw = -asin(transformation[2][0]);
+  // if (yaw > -M_PI_2 + EPSILON) {
+  //   if (yaw < M_PI_2 - EPSILON) {
+  //     pitch = atan2(transformation[1][0], transformation[0][0]);
+  //   } else {
+  //     pitch = atan2(-transformation[0][1], transformation[0][2]);
+  //   }
+  // } else {
+  //   pitch = atan2(transformation[0][1], transformation[0][2]);
+  // }
+
+  pitch = asin(transformation[1][0]);
+  if (pitch > -M_PI_2 + EPSILON) {
+    if (pitch < M_PI_2 - EPSILON) {
+      yaw = atan2(-transformation[2][0], transformation[0][0]);
+    } else {
+      // WARNING.  Not a unique solution.
+      yaw = atan2(transformation[2][1], transformation[2][2]);
+    }
   } else {
-    yaw   = atan2(-transformation[2][0], transformation[0][0]);
-    pitch = asin(transformation[1][0]);
+    // WARNING.  Not a unique solution.
+    yaw = -atan2(transformation[2][1], transformation[2][2]);
   }
 }
 }  // namespace
 
 Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
     : metadata_({render_context, fov, aspect_ratio}),
-      pos_(0.f, 2.0, -1.0f),
+      pos_(0.f, 0.0f, -1.0f),
       yaw_(0.f),
       pitch_(0.f),
       has_device_memory_(false),
@@ -49,13 +81,15 @@ Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
   right_ = glm::cross(view_, UP);
   up_    = glm::cross(right_, view_);
 
-  buffer_object_.view_matrix         = glm::lookAt(pos_, pos_ + view_, up_);
+  buffer_object_.view_matrix         = glm::lookAt(pos_, ref_pt, up_);
   buffer_object_.view_matrix_inverse = glm::inverse(buffer_object_.view_matrix);
   buffer_object_.projection_matrix =
       glm::perspective(glm::radians(45.f), aspect_ratio, 0.1f, 100.f);
   buffer_object_.projection_matrix[1][1] *= -1;  // y-coordinate is flipped
 
   GetYawPitch(buffer_object_.view_matrix_inverse, yaw_, pitch_);
+  yaw_   = glm::degrees(yaw_);
+  pitch_ = glm::degrees(pitch_);
 
   spdlog::info("Created camera at position {}", pos_);
   spdlog::info("Camera is looking in direction {}", view_);
