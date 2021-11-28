@@ -10,6 +10,7 @@ extern const std::string kApplicationName;
 extern const int kWindowWidth;
 extern const int kWindowHeight;
 extern const int kMaxFrameInFlight;
+extern const float kFOVInDegrees;
 
 }  // namespace static_config
 }  // namespace volume_restir

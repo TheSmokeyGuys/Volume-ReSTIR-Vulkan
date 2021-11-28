@@ -7,6 +7,7 @@ const std::string kApplicationName = "Volume ReSTIR";
 const int kWindowWidth             = 800;
 const int kWindowHeight            = 450;
 const int kMaxFrameInFlight        = 2;
+const float kFOVInDegrees          = 45.0f;
 
 }  // namespace static_config
 }  // namespace volume_restir
