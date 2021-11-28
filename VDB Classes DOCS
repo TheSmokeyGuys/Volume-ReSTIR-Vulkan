@@ -1,0 +1,22 @@
+CAboutWindow	
+ CBBoxBare	Structure to simply hold min and max values of a bounding box and nothing else
+ CBoundBox	Class to create and control a bounding box. Handles its drawing and update of its properties
+ CCamera	Simple camera class to allow movement in an opengl scene. a lot of this stuff is from the HILL book Computer Graphics with OpenGL 2nd Ed Prentice Hall a very good book fustrum culling modified from http://www.lighthouse3d.com/opengl/viewfrustum/index.php?defvf
+ CCull	Structure to store all information about a single Cull and can be used to upload to the graphics card and shaders
+ CGLWindow	GL Window using OpenVDB math library to render OpenVDB files through OpenGL. All drawing elements and context are handled within this class. Also contains a lot of pass through functions to allow access to the VDB class and also control some UI functionality
+ CGrid	This grid class creates and draw a simple reference grid into the scene. The creation algorithm was taken from Jon Maceys NGL http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib/
+ CInformationWindow	Class to control window context for the simple information window. Handles the display and control of data both for the hardware and for the file
+ CMainWindow	Class to control window context for the main window of the application. Handles all UI interaction and interactions with the GLWindow class
+ CNameID	Simple structure to map the shader family names to their IDs
+ CPlane	Plane class hevaily based on Jon Maceys NGL Camera class (http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib). Modified to rely on the OpenVDB math library and remove some features not needed. Used only within the Camera class for the frustrum
+ CShader	Shader class to handle a single shader component as part of a larger shader family. Controls its compilation and loading and also the type of shader that it is
+ CShaderFamily	ShaderFamily class handles one shader program. It controls the linking and setting of shader attributes and uniforms within the family and allows an easy encapsulation for the creation of shaders as well as using them throughout the application
+ CShaderLibrary	ShaderLibrary class to store all compiled and linked shaders and handle access to them for the setting of attributes and uniforms. Also allows the switching of the currently actively shader
+ CTempVec3	Very simple structure to only store x, y and z positions to allow swapping of data without the need for allocation of a full Vec3 class
+ CVAO	VAO class handles the drawing of VAO meshes and Vertex Array pointers. Also handles the switch between unindexed and indexed data for drawing. Used in all classes with a draw capability
+ CvDat	Structure taken from Jon Maceys NGL to allow for storage of data to upload to the graphics card in OpenGL (http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib)
+ CVDB	VDB class handles the loading of a VDB file. Separates the attributes out and makes them accessible to other classes. Handles the templates used within the OpenVDB library as well as all the drawing of the different elements to the file. Adapts to files of different number of channels data. This is where all the OpenVDB
+ 
+ 
+ Link For Documentation
+ https://www.openvdb.org/documentation/doxygen/codeExamples.html
