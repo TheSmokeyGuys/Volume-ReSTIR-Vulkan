@@ -39,10 +39,9 @@ void Renderer::CreateVertexBuffer() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                stagingBuffer, stagingBufferMemory);
-  void* data;
   vkMapMemory(render_context_->Device().device, stagingBufferMemory, 0,
-              bufferSize, 0, &data);
-  memcpy(data, vertex_manager_->vertices_.data(), (size_t)bufferSize);
+              bufferSize, 0, &data_);
+  memcpy(data_, vertex_manager_->vertices_.data(), (size_t)bufferSize);
   vkUnmapMemory(render_context_->Device().device, stagingBufferMemory);
   CreateBuffer(
       bufferSize,
@@ -155,10 +154,9 @@ void Renderer::CreateIndexBuffer() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                stagingBuffer, stagingBufferMemory);
-  void* data;
   vkMapMemory(render_context_->Device().device, stagingBufferMemory, 0,
-              bufferSize, 0, &data);
-  memcpy(data, vertex_manager_->indices_.data(), (size_t)bufferSize);
+              bufferSize, 0, &data_);
+  memcpy(data_, vertex_manager_->indices_.data(), (size_t)bufferSize);
   vkUnmapMemory(render_context_->Device().device, stagingBufferMemory);
   CreateBuffer(
       bufferSize,
@@ -313,6 +311,19 @@ void Renderer::CreateGraphicsPipeline() {
 
   auto bindingDescription    = Vertex::getBindingDescription();
   auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+  
+
+  attributeDescriptions[0].binding  = 0;
+  attributeDescriptions[0].location = 0;
+  attributeDescriptions[0].format   = VK_FORMAT_R32G32_SFLOAT;
+  attributeDescriptions[0].offset   = offsetof(Vertex, pos);
+
+  attributeDescriptions[1].binding  = 0;
+  attributeDescriptions[1].location = 1;
+  attributeDescriptions[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
+  attributeDescriptions[1].offset   = offsetof(Vertex, col);
+
   vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount =
       static_cast<uint32_t>(attributeDescriptions.size());
@@ -499,6 +510,8 @@ void Renderer::RecordCommandBuffers() {
   for (size_t i = 0; i < command_buffers_.size(); i++) {
     VkCommandBufferBeginInfo begin_info = {};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags           = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    begin_info.pInheritanceInfo = nullptr;
 
     if (vkBeginCommandBuffer(command_buffers_[i], &begin_info) != VK_SUCCESS) {
       spdlog::error("Failed to begin command buffer!");
@@ -511,6 +524,7 @@ void Renderer::RecordCommandBuffers() {
     render_pass_info.framebuffer = framebuffers_[i];
     render_pass_info.renderArea.offset = {0, 0};
     render_pass_info.renderArea.extent = swapchain_->GetVkBSwapChain().extent;
+
     VkClearValue clearColor{{{0.0f, 0.0f, 0.0f, 1.0f}}};
     render_pass_info.clearValueCount = 1;
     render_pass_info.pClearValues    = &clearColor;
@@ -536,20 +550,19 @@ void Renderer::RecordCommandBuffers() {
     vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                       graphics_pipeline_);
 
-    VkBuffer vertexBuffers[] = {vertex_buffer_};
-    VkDeviceSize offsets[]   = {0};
-    vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
+    VkDeviceSize offsets[1]   = {0};
+    vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, &vertex_buffer_, offsets);
 
-    /*vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
-                         VK_INDEX_TYPE_UINT16);*/
+    vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
+                         VK_INDEX_TYPE_UINT32);
 
-    /*vkCmdDrawIndexed(command_buffers_[i],
+    vkCmdDrawIndexed(command_buffers_[i],
                      static_cast<uint32_t>(vertex_manager_->indices_.size()), 1,
-                     0, 0, 0);*/
+                     0, 0, 0);
 
-     vkCmdDraw(command_buffers_[i],
+     /*vkCmdDraw(command_buffers_[i],
               static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
-              0);
+              0);*/
 
     vkCmdEndRenderPass(command_buffers_[i]);
 
