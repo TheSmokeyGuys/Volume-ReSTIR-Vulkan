@@ -29,6 +29,9 @@ public:
   const vkb::Instance& Instance() const { return instance_; }
   const vkb::Device& Device() const { return device_; }
 
+  uint32_t MemoryTypeIndex(uint32_t type_bits,
+                           VkMemoryPropertyFlags properties) const;
+
 private:
   vkb::Instance instance_;
   vkb::PhysicalDevice phys_device_;
