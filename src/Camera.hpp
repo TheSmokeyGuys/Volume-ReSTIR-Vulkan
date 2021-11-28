@@ -38,6 +38,14 @@ public:
    */
   Camera(RenderContext* render_context, float fov, float aspect_ratio);
   ~Camera();
+
+  glm::vec3 GetPos() const { return pos_; }
+  glm::vec3 GetViewDir() const { return view_; }
+  glm::vec3 GetRightDir() const { return right_; }
+  glm::vec3 GetUpDir() const { return up_; }
+  glm::vec3 GetRefPt() const { return ref_; }
+
+  void UpdatePos(glm::vec3 new_pos);
   /**
    * @brief Allocates memory buffer on device
    *
