@@ -51,7 +51,8 @@ private:
   glm::vec3 view_;   // view direction of camera
   glm::vec3 right_;  // right direction of camera
   glm::vec3 up_;     // up direction of camera
-
+  glm::vec3 ref;     // The point in world space towards which the camera is
+                     // pointing
   // Device memory related
   bool has_device_memory_;
   CameraBufferObject buffer_object_;

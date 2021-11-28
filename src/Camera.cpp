@@ -12,19 +12,23 @@ namespace volume_restir {
 
 Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
     : metadata_({render_context, fov, aspect_ratio}),
-      pos_(0.f, 10.f, 10.f),
+      pos_(0.f, 2.0, -1.0f),
+      ref(0.f, 0.0, 0.0f),
       has_device_memory_(false),
       buffer_mapped_data_(nullptr) {
-  buffer_object_.view_matrix         = glm::lookAt(pos_, CENTER, UP);
+
+    //Initially Align with the world
+  view_  = FORWARD;
+  right_ = glm::cross(view_, UP);
+  up_    = glm::cross(right_, view_);
+
+
+
+  buffer_object_.view_matrix         = glm::lookAt(pos_, ref, up_);
   buffer_object_.view_matrix_inverse = glm::inverse(buffer_object_.view_matrix);
   buffer_object_.projection_matrix =
       glm::perspective(glm::radians(45.f), aspect_ratio, 0.1f, 100.f);
   buffer_object_.projection_matrix[1][1] *= -1;  // y-coordinate is flipped
-
-  view_  = glm::vec3(buffer_object_.view_matrix_inverse *
-                    glm::vec4(0.f, 0.f, -1.f, 0.f));
-  right_ = glm::cross(view_, UP);
-  up_    = glm::cross(right_, view_);
 
   spdlog::info("Created camera at position {}", pos_);
   spdlog::info("Camera is looking in direction {}", view_);
