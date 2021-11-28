@@ -11,6 +11,7 @@ extern const int kWindowWidth;
 extern const int kWindowHeight;
 extern const int kMaxFrameInFlight;
 extern const float kFOVInDegrees;
+extern const float kCameraMoveSpeed;
 
 }  // namespace static_config
 }  // namespace volume_restir

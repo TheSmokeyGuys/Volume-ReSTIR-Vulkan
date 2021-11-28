@@ -21,6 +21,8 @@ Renderer::Renderer() {
       RenderContextPtr(), static_config::kFOVInDegrees, aspect_ratio);
   scene_ = std::make_unique<Scene>(RenderContextPtr());
 
+  SingletonManager::GetWindow().BindCamera(camera_.get());
+
   // CreateSwapChain();  // CreateImageViews()
   InitQueues();
   CreateRenderPass();

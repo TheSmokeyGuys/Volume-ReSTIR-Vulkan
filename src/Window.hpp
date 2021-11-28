@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "Camera.hpp"
+
 namespace volume_restir {
 
 class Window {
@@ -26,11 +28,16 @@ public:
   int Height() const noexcept { return height_; }
   std::string Name() const noexcept { return name_; }
 
+  void BindCamera(Camera* camera) { camera_ = camera; }
+  void CameraMoveCallback(int key, int action);
+
 private:
   GLFWwindow* window_;
   int width_;
   int height_;
   std::string name_;
+
+  Camera* camera_;
 };
 
 }  // namespace volume_restir
