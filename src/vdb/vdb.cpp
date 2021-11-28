@@ -49,7 +49,7 @@ VDB::VDB(std::string _file) {
 
 VDB::~VDB() {
   // TODO
-  //m_vdbTreeVAO->remove();
+  // m_vdbTreeVAO->remove();
   m_gridNames->resize(0);
   m_gridDims->resize(0);
   m_numPoints.clear();
@@ -57,22 +57,22 @@ VDB::~VDB() {
 
   m_grid.reset();
 
-  //TODO
+  // TODO
   //// delete texture buffer
-  //glDeleteBuffers(1, &m_gridsTBO);
+  // glDeleteBuffers(1, &m_gridsTBO);
 
   m_loaded = false;
 
   delete m_gridDims;
   delete m_gridNames;
   // TODO
-  //delete m_vdbTreeVAO;
+  // delete m_vdbTreeVAO;
 
   // TODO
- /* if (m_extremesInit) {
-    m_channelExtremes->clear();
-    delete m_channelExtremes;
-  }*/
+  /* if (m_extremesInit) {
+     m_channelExtremes->clear();
+     delete m_channelExtremes;
+   }*/
 
   // TODO
   /*if (m_vdbGridsInitialized) {
@@ -334,23 +334,23 @@ bool VDB::loadExt() {
   // TODO : texture being Created Here
   // TODO
   // create a texture buffer
-  //GLuint channelID;
-  //glGenBuffers(1, &channelID);
+  // GLuint channelID;
+  // glGenBuffers(1, &channelID);
 
-  //glBindBuffer(GL_TEXTURE_BUFFER, channelID);
+  // glBindBuffer(GL_TEXTURE_BUFFER, channelID);
   //// set sixe of texture buffer and data from reading the grids
-  //glBufferData(GL_TEXTURE_BUFFER, m_tboSize * sizeof(openvdb::Vec4f), NULL,
+  // glBufferData(GL_TEXTURE_BUFFER, m_tboSize * sizeof(openvdb::Vec4f), NULL,
   //             GL_DYNAMIC_DRAW);
   //// create a subbuffer data set
-  //glBufferSubData(GL_TEXTURE_BUFFER, 0, m_tboSize * sizeof(openvdb::Vec4f),
+  // glBufferSubData(GL_TEXTURE_BUFFER, 0, m_tboSize * sizeof(openvdb::Vec4f),
   //                &m_channelValueData->at(0)[0]);  // Fill
 
-  //glGenTextures(1, &m_gridsTBO);
-  //glActiveTexture(GL_TEXTURE0);
+  // glGenTextures(1, &m_gridsTBO);
+  // glActiveTexture(GL_TEXTURE0);
   //// bind the texture
-  //glBindTexture(GL_TEXTURE_BUFFER, m_gridsTBO);
+  // glBindTexture(GL_TEXTURE_BUFFER, m_gridsTBO);
 
-  //glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, channelID);
+  // glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, channelID);
 
   // // the data stred in the TBO is no longer needed so remove
   m_channelValueData->clear();
@@ -379,11 +379,11 @@ bool VDB::loadExt() {
   return true;
 }
 
-  // TODO : Removing Old Mesh Data Happening Here
+// TODO : Removing Old Mesh Data Happening Here
 void VDB::removeMeshVAO() {
   // TODO
 
-  //if (m_vdbGridsInitialized)  // if grids have been initilaised go ahead and
+  // if (m_vdbGridsInitialized)  // if grids have been initilaised go ahead and
   //                            // remove them
   //{
   //  for (size_t i = 0; i < m_vdbGrids->size(); i++) {
@@ -394,7 +394,7 @@ void VDB::removeMeshVAO() {
   //  delete m_vdbGrids;  // delete the grids
   //}
 
-  //if (m_extremesInit) {  // if extremes have been initialised and used, clear
+  // if (m_extremesInit) {  // if extremes have been initialised and used, clear
   //                       // them
   //  m_channelExtremes->clear();
   //  delete m_channelExtremes;
@@ -434,7 +434,7 @@ int VDB::getNumPointsAtGrid(int _grid) {
   return -1;
 }
 
-  // TODO : Very Imp! Drawing of VDB Happening Here
+// TODO : Very Imp! Drawing of VDB Happening Here
 void VDB::drawVDB() {
   // TODO
   // bind VAO and texture buffer and then draw
@@ -447,7 +447,7 @@ void VDB::drawVDB() {
 }
 
 // TODO
-//void VDB::drawTree(ShaderLibrary *_shadLib) {
+// void VDB::drawTree(ShaderLibrary *_shadLib) {
 //  // set whether the tree levels are being drawn or not, bind and then draw
 //  _shadLib->setShaderParam4f(
 //      "loadLevels", float(m_drawTreeLevels[0]), float(m_drawTreeLevels[1]),
@@ -458,9 +458,10 @@ void VDB::drawVDB() {
 //}
 
 // TODO
-//void VDB::drawVectors(ShaderLibrary *_shadLib) {
+// void VDB::drawVectors(ShaderLibrary *_shadLib) {
 //  // set the colour,, bind the VAO and the texture buffer and then draw
-//  _shadLib->setShaderParam4f("u_colour", m_vectorColour.x(), m_vectorColour.y(),
+//  _shadLib->setShaderParam4f("u_colour", m_vectorColour.x(),
+//  m_vectorColour.y(),
 //                             m_vectorColour.z(), 1.0f);
 //  m_vdbGrids->at(m_currentActiveChannelVectors).bind();
 //  glBindTexture(GL_TEXTURE_BUFFER, m_gridsTBO);
@@ -469,7 +470,7 @@ void VDB::drawVDB() {
 //}
 
 // TODO
-//void VDB::drawCrop(ShaderLibrary *_shadLib) {
+// void VDB::drawCrop(ShaderLibrary *_shadLib) {
 //  for (int i = 0; i < m_numCropsToDraw; i++) {
 //    // draw all currently active crop boxes with their correct colour
 //    _shadLib->setShaderParam4f("u_colour", m_crop[i].colour().x(),
@@ -517,21 +518,21 @@ void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
 
 // TODO
 // set the crop box at a specific index multiple ways
-//void VDB::setCrop(openvdb::Vec3f _min, openvdb::Vec3f _max, int _index) {
+// void VDB::setCrop(openvdb::Vec3f _min, openvdb::Vec3f _max, int _index) {
 //  m_crop[_index].set(_min.x(), _max.x(), _min.y(), _max.y(), _min.z(),
 //                     _max.z());
 //  m_crop[_index].buildVAO();
 //}
 
 // TODO
-//void VDB::setCrop(float _minx, float _maxx, float _miny, float _maxy,
+// void VDB::setCrop(float _minx, float _maxx, float _miny, float _maxy,
 //                  float _minz, float _maxz, int _index) {
 //  m_crop[_index].set(_minx, _maxx, _miny, _maxy, _minz, _maxz);
 //  m_crop[_index].buildVAO();
 //}
 
 // TODO
-//void VDB::setCrop(openvdb::Vec3f _centre, float _w, float _h, float _d,
+// void VDB::setCrop(openvdb::Vec3f _centre, float _w, float _h, float _d,
 //                  int _index) {
 //  m_crop[_index].setCentre(_centre);
 //  m_crop[_index].setwdh(_w, _h, _d);
@@ -540,33 +541,33 @@ void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
 // -------------------------------------------------------------
 
 // TODO
-//void VDB::setCropW(float _w, int _index) {
+// void VDB::setCropW(float _w, int _index) {
 //  // set crop width at index
 //  m_crop[_index].setWidth(_w);
 //  m_crop[_index].buildVAO();
 //}
 
 // TODO
-//void VDB::setCropH(float _h, int _index) {
+// void VDB::setCropH(float _h, int _index) {
 //  // set crop height at index
 //  m_crop[_index].setHeight(_h);
 //  m_crop[_index].buildVAO();
 //}
 //
-//void VDB::setCropD(float _d, int _index) {
+// void VDB::setCropD(float _d, int _index) {
 //  // set depth width at index
 //  m_crop[_index].setDepth(_d);
 //  m_crop[_index].buildVAO();
 //}
 //
-//void VDB::setCrop(BoundBox _box, int _index) {
+// void VDB::setCrop(BoundBox _box, int _index) {
 //  // pass in a previous BoundBox and set this as the crop
 //  m_crop[_index] = _box;
 //  m_crop[_index].buildVAO();
 //}
 
 // TODO
-//void VDB::setAllCropStorage() {
+// void VDB::setAllCropStorage() {
 //  // set all crop boxes to storage
 //  for (int i = 0; i < m_numCropsToDraw; i++) {
 //    setCropStorage(i);
@@ -574,13 +575,13 @@ void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
 //}
 
 // TODO
-//void VDB::setCropStorage(int _index) {
+// void VDB::setCropStorage(int _index) {
 //  // set the specified crop box to storage
 //  m_cropStorage[_index] = m_crop[_index];
 //}
 
 // TODO
-//void VDB::returnAllFromStorage() {
+// void VDB::returnAllFromStorage() {
 //  // return all crop boxes from storage - normally after a scan
 //  for (int i = 0; i < m_numCropsToDraw; i++) {
 //    returnFromStorage(i);
@@ -588,7 +589,7 @@ void VDB::buildBBox(float _minx, float _maxx, float _miny, float _maxy,
 //}
 
 // TODO
-//void VDB::returnFromStorage(int _index) {
+// void VDB::returnFromStorage(int _index) {
 //  // return the specified crop from strorage
 //  m_crop[_index].setCentre(m_cropStorage[_index].centre());
 //  m_crop[_index].setwdh(m_cropStorage[_index].width(),
@@ -684,9 +685,9 @@ void VDB::initParams() {
   m_currentActiveChannelPoints = m_currentActiveChannelVectors = 0;
 
   // TODO
-  //m_crop[0].setBuildIndexed(false);
-  //m_crop[1].setBuildIndexed(false);
-  //m_crop[2].setBuildIndexed(false);
+  // m_crop[0].setBuildIndexed(false);
+  // m_crop[1].setBuildIndexed(false);
+  // m_crop[2].setBuildIndexed(false);
 
   m_initialised = false;
   m_fileOpened  = false;
@@ -706,8 +707,8 @@ void VDB::initParams() {
   m_numCropsToDraw = 1;
 
   // TODO
-  //m_total_GPU_mem_kb             = 0;
-  //m_current_available_GPU_mem_kb = 0;
+  // m_total_GPU_mem_kb             = 0;
+  // m_current_available_GPU_mem_kb = 0;
 
   for (int i = 0; i < 4; i++) {
     m_drawTreeLevels[i] = 1;
@@ -724,8 +725,8 @@ void VDB::resetParams() {
   m_loaded = false;
 }
 
-//TODO
-    // logic of this function taken from studying The GL viewer provided with the
+// TODO
+// logic of this function taken from studying The GL viewer provided with the
 // OpenVDB library
 template <typename GridType>
 void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
@@ -743,7 +744,7 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   openvdb::Vec4f channelTemp;
   channelTemp[3] = 1.0f;
 
-  //TODO
+  // TODO
   std::vector<vDat> pointStore;  // store point data and normal data
   pointStore.resize(0);
 
@@ -816,24 +817,25 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     }
   }
 
-   // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure
+  // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure
   // we do it in vulkan
-  //VAO temp(GL_POINTS);
-  //temp.create();
-
+  // VAO temp(GL_POINTS);
+  // temp.create();
+  // AllPoints.push_back(pointStore);
+  AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
   //// create VAO for this grid
-  //temp.bind();
-  //temp.setIndicesCount(j);
-  //temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
-  //temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  //temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-  //temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
-  //temp.unbind();
+  // temp.bind();
+  // temp.setIndicesCount(j);
+  // temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
+  // temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  // temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  // temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
+  // temp.unbind();
   // once created, push back into the vectors of VAOs
 
-  //TODO
-  ///VAO Object
-  //m_vdbGrids->push_back(temp);
+  // TODO
+  /// VAO Object
+  // m_vdbGrids->push_back(temp);
 
   // store the extremes for this channel
   m_channelExtremes->push_back(channelExtremes);
@@ -841,7 +843,7 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   pointStore.clear();
 }
 
-//TODO
+// TODO
 // logic of this function taken from studying The GL viewer provided with the
 // OpenVDB library this function is idnetical to the one above except it handles
 // vector types so has a few differences which are hihglighted
@@ -934,27 +936,27 @@ void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
     }
   }
 
-  // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure we do it in vulkan
-  //VAO temp(GL_POINTS);
-  //temp.create();
+  // TODO : Very Imp!!! pointStore are directly Being Pushed in VAO so make sure
+  // we do it in vulkan
+  // VAO temp(GL_POINTS);
+  // temp.create();
   //// bind and create the VAO for this gird
-  //temp.bind();
-  //temp.setIndicesCount(j);
-  //temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
-  //temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  //temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-  //temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
-  //temp.unbind();
+  // temp.bind();
+  // temp.setIndicesCount(j);
+  // temp.setData(pointStore.size() * sizeof(vDat), pointStore.at(0).u);
+  // temp.vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  // temp.vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  // temp.vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2, GL_TRUE);
+  // temp.unbind();
   //// store to vector of VAOs
-  //m_vdbGrids->push_back(temp);
+  // m_vdbGrids->push_back(temp);
   //// store extremes for this channel
-  //m_channelExtremes->push_back(channelExtremes);
+  // m_channelExtremes->push_back(channelExtremes);
 
   pointStore.clear();
 }
 
-
-//TODO : Some Stuff
+// TODO : Some Stuff
 // get the data values for the VDB tree
 template <typename GridType>
 void VDB::getTreeValues(typename GridType::Ptr _grid) {
@@ -973,9 +975,9 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
         m_levelCounts[i];  // calculatye the total voxels in the tree
   }
 
-  //TODO
- /* m_vdbTreeVAO = new VAO(GL_LINES);
-  m_vdbTreeVAO->create();*/
+  // TODO
+  /* m_vdbTreeVAO = new VAO(GL_LINES);
+   m_vdbTreeVAO->create();*/
   // create VAO for the tree - going to be indexed
 
   int level = -1;
@@ -1021,7 +1023,7 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
     level = it.getLevel();
 
     // get colour
-    colour       = Utilities::getColourFromLevel(level);
+    colour = Utilities::getColourFromLevel(level);
     // TODO
     pointVDat.nx = colour.x();  // store colour for this voxel level from pre
                                 // defined function
@@ -1031,8 +1033,8 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
     pointVDat.u = level;
     pointVDat.v = level;
 
-    //Rubbish
-     /**[0] (minX, minY, maxZ)
+    // Rubbish
+    /**[0] (minX, minY, maxZ)
      *[1] (maxX, minY, maxZ)
      *[2] (maxX, maxY, maxZ)
      *[3] (minX, maxY, maxZ)
@@ -1040,7 +1042,6 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
      *[5] (maxX, minY, minZ)
      *[6] (maxX, maxY, minZ)
      *[7] (minX, maxY, minZ)*/
-     
 
     // TODO
     // get and store vertices
@@ -1070,15 +1071,16 @@ void VDB::getTreeValues(typename GridType::Ptr _grid) {
     ++count;
   }
 
-  // TODO : Very Imp!!! Vertices are directly Being Pushed in VAO so make sure we do it in vulkan
-  //m_vdbTreeVAO->bind();
-  //m_vdbTreeVAO->setIndexedData(totalVertices * sizeof(vDat), vertices[0].u,
+  // TODO : Very Imp!!! Vertices are directly Being Pushed in VAO so make sure
+  // we do it in vulkan
+  // m_vdbTreeVAO->bind();
+  // m_vdbTreeVAO->setIndexedData(totalVertices * sizeof(vDat), vertices[0].u,
   //                             totalElements, &indexes[0], GL_UNSIGNED_INT);
-  //m_vdbTreeVAO->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  //m_vdbTreeVAO->vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
-  //m_vdbTreeVAO->vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2);
-  //m_vdbTreeVAO->setIndicesCount(totalElements);
-  //m_vdbTreeVAO->unbind();
+  // m_vdbTreeVAO->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  // m_vdbTreeVAO->vertexAttribPointer(1, 2, GL_FLOAT, sizeof(vDat), 0);
+  // m_vdbTreeVAO->vertexAttribPointer(2, 3, GL_FLOAT, sizeof(vDat), 2);
+  // m_vdbTreeVAO->setIndicesCount(totalElements);
+  // m_vdbTreeVAO->unbind();
 
   // TODO
   vertices.clear();
@@ -1105,7 +1107,7 @@ bool VDB::loadBBox() {
     max = openvdb::math::maxComponent(max, m_allG[i]->indexToWorld(b.max()));
   }
 
-  //TODO
+  // TODO
   buildBBox(min.x(), max.x(), min.y(), max.y(), min.z(), max.z());
 
   return true;
@@ -1129,8 +1131,8 @@ bool VDB::loadMesh() {
 
   m_vdbGridsInitialized = true;
   // TODO
-  //m_vdbGrids            = new std::vector<VAO>;
-  //m_vdbGrids->resize(0);
+  // m_vdbGrids            = new std::vector<VAO>;
+  // m_vdbGrids->resize(0);
 
   // TODO
   m_channelExtremes = new std::vector<BBoxBare>;
@@ -1230,8 +1232,8 @@ void VDB::callGetValuesTree(typename GridType::Ptr grid) {
 // http://www.openvdb.org/documentation/doxygen/codeExamples.html
 
 // TODO
-//// process the type of grid being passed to it using templates and then call the
-//// correct function for scalar or vector to get high res data values
+//// process the type of grid being passed to it using templates and then call
+///the / correct function for scalar or vector to get high res data values
 void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
   // scalar types
   if (grid->isType<openvdb::BoolGrid>())

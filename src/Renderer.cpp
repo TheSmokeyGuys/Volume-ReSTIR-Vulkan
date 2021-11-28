@@ -183,7 +183,7 @@ void Renderer::CreateGraphicsPipeline() {
   VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
   input_assembly.sType =
       VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-  input_assembly.topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  input_assembly.topology               = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
   input_assembly.primitiveRestartEnable = VK_FALSE;
 
   // Viewports and Scissors (rectangles that define in which regions pixels are

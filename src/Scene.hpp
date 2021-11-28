@@ -16,6 +16,7 @@
 
 #include "RenderContext.hpp"
 #include "model/ModelBase.hpp"
+#include "vdb/vdb.h"
 
 namespace volume_restir {
 
@@ -39,6 +40,7 @@ public:
 private:
   RenderContext* render_context_;
   std::vector<std::unique_ptr<ModelBase>> objects_;
+  std::vector<VDB> vdb_objects_;
 };
 
 }  // namespace volume_restir

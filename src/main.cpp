@@ -11,7 +11,8 @@
 #include <cstdlib>
 
 using namespace volume_restir;
-const std::string file = "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb";
+//const std::string file = "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb"; //Raymond
+const std::string file = "D:/GitHub/Volume-ReSTIR-Vulkan/assets/smoke.vdb"; // Shubham
 
 bool  m_vdbLoaded = false;
 VDB*  m_vdb;
