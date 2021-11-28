@@ -12,6 +12,7 @@
 #include "ShaderModule.hpp"
 #include "SwapChain.hpp"
 #include "VkBootstrap.h"
+#include "Window.hpp"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
 #include "utils/vkqueue_utils.hpp"
@@ -24,7 +25,9 @@ public:
   ~Renderer();
 
   RenderContext* RenderContextPtr() const noexcept;
+  void SetFrameBufferResized(bool val); 
   void Draw();
+  RenderContext& getRenderContext() const { return *render_context_; }
 
 private:
   using Queues = std::array<VkQueue, sizeof(vkb::QueueType)>;
@@ -35,11 +38,26 @@ private:
   void CreateFrameResources();
   void CreateCommandPools();
   void RecordCommandBuffers();
-  void RecreateSwapChain();
+
+  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                    VkDeviceMemory& bufferMemory);
+  void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+  uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+  void CreateVertexBuffer(); 
+  void CreateIndexBuffer(); 
+  uint32_t FineMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties); 
 
   void CreateDescriptorPool();
   void CreateCameraDiscriptorSetLayout();
   void CreateCameraDescriptorSet();
+
+  void CreateSwapChain();
+  void RecreateSwapChain();
+  void CleanupSwapChain(); 
+
+  void Cleanup(); 
 
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<SwapChain> swapchain_;
@@ -77,6 +95,20 @@ private:
   std::vector<VkCommandBuffer> command_buffers_;
 
   size_t current_frame_idx_ = 0;
+
+  bool frame_buffer_resized_ = false;
+
+  std::unique_ptr<VertexManager> vertex_manager_; 
+  VkBuffer vertex_buffer_;
+  VkDeviceMemory vertex_buffer_memory_;
+  VkMemoryRequirements mem_requirements_;
+  VkBuffer index_buffer_;
+  VkDeviceMemory index_buffer_memory_;
+
+
+  void* data_;
+
+
 };
 
 }  // namespace volume_restir
