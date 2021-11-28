@@ -13,7 +13,7 @@ namespace volume_restir {
  **********************************************************/
 
 void Window::CameraMoveCallback(int key, int action) {
-  if (action == GLFW_REPEAT) {
+  if (action == GLFW_REPEAT || action == GLFW_PRESS) {
     if (!camera_) {
       spdlog::warn("Camera class not bound to application window.");
       return;
