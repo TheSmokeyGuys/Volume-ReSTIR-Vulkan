@@ -27,7 +27,7 @@ public:
    *
    * @param render_context
    */
-  Scene(RenderContext* render_context);
+  Scene(RenderContext* render_context, VDB* p_vdb);
 
   const std::vector<std::unique_ptr<ModelBase>>& GetObjects() const {
     return objects_;
@@ -40,7 +40,6 @@ public:
 private:
   RenderContext* render_context_;
   std::vector<std::unique_ptr<ModelBase>> objects_;
-  std::vector<VDB> vdb_objects_;
 };
 
 }  // namespace volume_restir

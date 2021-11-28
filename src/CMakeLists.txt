@@ -57,7 +57,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 IF(MSVC)
   target_compile_options(${PROJECT_NAME}
     PRIVATE
-    /EHsc /W4 /WX
+    /EHsc /W4
   )
 ELSE(MSVC)
   target_compile_options(${PROJECT_NAME}

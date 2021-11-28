@@ -1233,7 +1233,7 @@ void VDB::callGetValuesTree(typename GridType::Ptr grid) {
 
 // TODO
 //// process the type of grid being passed to it using templates and then call
-///the / correct function for scalar or vector to get high res data values
+/// the / correct function for scalar or vector to get high res data values
 void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
   // scalar types
   if (grid->isType<openvdb::BoolGrid>())

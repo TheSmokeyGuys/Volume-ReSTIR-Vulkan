@@ -15,12 +15,13 @@
 #include "config/build_config.h"
 #include "config/static_config.hpp"
 #include "utils/vkqueue_utils.hpp"
+#include "vdb/vdb.h"
 
 namespace volume_restir {
 
 class Renderer {
 public:
-  Renderer();
+  Renderer(VDB* p_vdb);
   ~Renderer();
 
   RenderContext* RenderContextPtr() const noexcept;

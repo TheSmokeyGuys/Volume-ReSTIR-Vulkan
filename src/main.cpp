@@ -1,22 +1,29 @@
+#include <cstdio>
+#include <cstdlib>
+
 #include "Camera.hpp"
 #include "Renderer.hpp"
 #include "SingtonManager.hpp"
 #include "VkBootstrap.h"
 #include "config/static_config.hpp"
-#include "vdb/vdb.h"
 #include "spdlog/spdlog.h"
 #include "vdb/Utilities.h"
+#include "vdb/vdb.h"
 
-#include <cstdio>
-#include <cstdlib>
+#define DEBUG
 
 using namespace volume_restir;
-//const std::string file = "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb"; //Raymond
-const std::string file = "D:/GitHub/Volume-ReSTIR-Vulkan/assets/smoke.vdb"; // Shubham
+// const std::string file =
+// "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb";
+// //Raymond
+// const std::string file =
+//     "D:/GitHub/Volume-ReSTIR-Vulkan/assets/smoke.vdb";  // Shubham
+const std::string file =
+    "C:/Users/shine/repos/Volume-ReSTIR-Vulkan/assets/smoke.vdb";  // Zhihao
 
-bool  m_vdbLoaded = false;
-VDB*  m_vdb;
-bool  m_extLoaded = false;
+bool m_vdbLoaded = false;
+VDB* m_vdb;
+bool m_extLoaded = false;
 float m_s;
 
 void loadVDBFile(std::string _file) {
@@ -111,7 +118,7 @@ void loadVDBFile(std::string _file) {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -132,14 +139,14 @@ void loadVDBFile(std::string _file) {
 }
 
 int main() {
-#if DEBUG
+#ifdef DEBUG
   spdlog::set_level(spdlog::level::debug);
 #endif
   spdlog::info("Hello from Volumetric-ReSTIR project!");
 
-  loadVDBFile(file); 
+  loadVDBFile(file);
 
-  Renderer renderer;
+  Renderer renderer(m_vdb);
 
   while (!SingletonManager::GetWindow().ShouldQuit()) {
     glfwPollEvents();

@@ -294,10 +294,10 @@ void BoundBox::calculateVerts(bool _build) {
   if (_build) {
     // TODO
     // if set to build first remove any previous vao
-    //m_vao->remove();
+    // m_vao->remove();
     //// create the vao
-    //m_vao->create();
-    //if (m_buildIndexed) {
+    // m_vao->create();
+    // if (m_buildIndexed) {
     //  // build indexed if set to be indexed
     //  buildVAOIndexed();
     //} else {
@@ -346,8 +346,8 @@ void BoundBox::init() {
   m_colour = openvdb::Vec3f(1.0f, 1.0f, 1.0f);
 
   // init the VAO
- /* m_vao = new VAO(m_drawMode);
-  m_vao->create();*/
+  /* m_vao = new VAO(m_drawMode);
+   m_vao->create();*/
 }
 
 void BoundBox::buildVAO() {
@@ -383,13 +383,13 @@ void BoundBox::buildVAO() {
 
   // end of sets
 
-  //TODO
+  // TODO
   // bind and upload to GPU
-  //m_vao->bind();
-  //m_vao->setData(buffSize * sizeof(vDat), data[0].u);
-  //m_vao->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  //m_vao->setIndicesCount(buffSize);
-  //m_vao->unbind();
+  // m_vao->bind();
+  // m_vao->setData(buffSize * sizeof(vDat), data[0].u);
+  // m_vao->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  // m_vao->setIndicesCount(buffSize);
+  // m_vao->unbind();
 }
 
 void BoundBox::buildVAOIndexed() {
@@ -413,23 +413,23 @@ void BoundBox::buildVAOIndexed() {
   // manually worked out and set the edges needed
   static const GLuint elements[24] = {0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6,
                                       6, 7, 7, 4, 4, 0, 1, 5, 7, 3, 6, 2};
-  //TODO
+  // TODO
   // bind and set VAO data for indicies and verts
-  //m_vao->bind();
-  //m_vao->setIndexedData(buffSize * sizeof(vDat), data[0].u,
+  // m_vao->bind();
+  // m_vao->setIndexedData(buffSize * sizeof(vDat), data[0].u,
   //                      elementSize * sizeof(GLuint), &elements[0],
   //                      GL_UNSIGNED_INT);
-  //m_vao->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
-  //m_vao->setIndicesCount(elementSize);
-  //m_vao->unbind();
+  // m_vao->vertexAttribPointer(0, 3, GL_FLOAT, sizeof(vDat), 5);
+  // m_vao->setIndicesCount(elementSize);
+  // m_vao->unbind();
 }
 
 void BoundBox::draw() {
-    //TODO
+  // TODO
   // automatically bind and draw the VAO
- /* m_vao->bind();
-  m_vao->draw();
-  m_vao->unbind();*/
+  /* m_vao->bind();
+   m_vao->draw();
+   m_vao->unbind();*/
 }
 
 bool BoundBox::pointInside(openvdb::Vec3f _point) {

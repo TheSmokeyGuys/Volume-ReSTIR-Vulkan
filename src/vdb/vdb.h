@@ -116,15 +116,15 @@ public:
   // TODO
   ///// @brief Draw the VDB tree
   ///// @param [in] _shadLib ShaderLibrary* - active shader library to set
-  ///values
+  /// values
   // void drawTree(ShaderLibrary *_shadLib);
   ///// @brief Draw the vectors
   ///// @param [in] _shadLib ShaderLibrary* - active shader library to set
-  ///values
+  /// values
   // void drawVectors(ShaderLibrary *_shadLib);
   ///// @brief Draw active crop boxes
   ///// @param [in] _shadLib ShaderLibrary* - active shader library to set
-  ///values
+  /// values
   // void drawCrop(ShaderLibrary *_shadLib);
 
   /// @brief Return the opened filename - returns std::string
@@ -185,11 +185,11 @@ public:
     std::vector<volume_restir::Vertex> vertices;
     for (const auto &v : AllPoints) {
       volume_restir::Vertex vertex;
-      vertex.pos       = glm::vec3(v.x, v.y, v.z);
+      vertex.pos       = glm::vec3(0.f, 0.f, 0.f);
       vertex.normal    = glm::vec3(v.nx, v.ny, v.nz);
       vertex.tex_coord = glm::vec2(v.u, v.v);
       vertex.color     = glm::vec3(0.99, 0.99, 0.99);
-      vertices.push_back(std::move(vertex));
+      vertices.push_back(vertex);
     }
     return vertices;
   }

@@ -11,7 +11,7 @@
 
 namespace volume_restir {
 
-Renderer::Renderer() {
+Renderer::Renderer(VDB* p_vdb) {
   float aspect_ratio =
       static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
 
@@ -19,7 +19,7 @@ Renderer::Renderer() {
   swapchain_      = std::make_unique<SwapChain>(RenderContextPtr());
   camera_         = std::make_unique<Camera>(
       RenderContextPtr(), static_config::kFOVInDegrees, aspect_ratio);
-  scene_ = std::make_unique<Scene>(RenderContextPtr());
+  scene_ = std::make_unique<Scene>(RenderContextPtr(), p_vdb);
 
   SingletonManager::GetWindow().BindCamera(camera_.get());
 
@@ -231,7 +231,7 @@ void Renderer::CreateGraphicsPipeline() {
   colorBlendAttachment.colorWriteMask =
       VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
       VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachment.blendEnable         = VK_FALSE;
+  colorBlendAttachment.blendEnable         = VK_TRUE;
   colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
   colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
@@ -427,19 +427,20 @@ void Renderer::RecordCommandBuffers() {
       VkDeviceSize offsets[]   = {0};
       vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
 
-      vkCmdBindIndexBuffer(command_buffers_[i],
-                           scene_->GetObjects()[j]->GetIndexBuffer(), 0,
-                           VK_INDEX_TYPE_UINT32);
+      // vkCmdBindIndexBuffer(command_buffers_[i],
+      //                      scene_->GetObjects()[j]->GetIndexBuffer(), 0,
+      //                      VK_INDEX_TYPE_UINT32);
 
-      vkCmdDrawIndexed(
+      // vkCmdDrawIndexed(
+      //     command_buffers_[i],
+      //     static_cast<uint32_t>(scene_->GetObjects()[j]->GetIndices().size()),
+      //     1, 0, 0, 0);
+
+      vkCmdDraw(
           command_buffers_[i],
-          static_cast<uint32_t>(scene_->GetObjects()[j]->GetIndices().size()),
-          1, 0, 0, 0);
+          static_cast<uint32_t>(scene_->GetObjects()[j]->GetVertices().size()),
+          1, 0, 0);
     }
-
-    /*vkCmdDraw(command_buffers_[i],
-             static_cast<uint32_t>(vertex_manager_->vertices_.size()), 1, 0,
-             0);*/
 
     vkCmdEndRenderPass(command_buffers_[i]);
 
