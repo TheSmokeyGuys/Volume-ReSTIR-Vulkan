@@ -13,8 +13,6 @@
 #include <vulkan/vulkan.h>
 
 #include "VkBootstrap.h"
-#include "SingtonManager.hpp"
-#include "VertexManager.hpp"
 
 namespace volume_restir {
 

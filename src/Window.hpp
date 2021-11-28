@@ -18,8 +18,6 @@ namespace volume_restir {
 class Window {
 public:
   Window();
-  VkExtent2D chooseSwapExtend(
-      const VkSurfaceCapabilitiesKHR& capabilities);
   ~Window();
 
   bool ShouldQuit() const { return !!glfwWindowShouldClose(window_); }

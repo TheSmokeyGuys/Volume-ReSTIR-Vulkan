@@ -19,13 +19,16 @@ namespace volume_restir {
 class Cube : public ModelBase {
 public:
   Cube(RenderContext* render_context, VkCommandPool command_pool)
-      : ModelBase(render_context, command_pool) {}
+      : ModelBase(render_context, command_pool) {
+    DefaultInit();
+    CreateVertexBuffer(vertices_);
+    CreateIndexBuffer(indices_);
+    glm::mat4 model_matrix{1.0f};
+    CreateModelBuffer(model_matrix);
+  }
 
 private:
-  // TODO: write a function to create cube vertices & indices
-  //  could hard code default cube length in config/static_config.cpp
-  //  Call `ModelBase::CreateVertexBuffer() / CreateIndexBuffer()` to create
-  //  buffer once have the vertices
+  // TODO: could hard code default cube length in config/static_config.cpp
   void DefaultInit();
 };
 

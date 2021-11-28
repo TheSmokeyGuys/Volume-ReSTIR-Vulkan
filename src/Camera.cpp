@@ -16,13 +16,10 @@ Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
       ref(0.f, 0.0, 0.0f),
       has_device_memory_(false),
       buffer_mapped_data_(nullptr) {
-
-    //Initially Align with the world
+  // Initially Align with the world
   view_  = FORWARD;
   right_ = glm::cross(view_, UP);
   up_    = glm::cross(right_, view_);
-
-
 
   buffer_object_.view_matrix         = glm::lookAt(pos_, ref, up_);
   buffer_object_.view_matrix_inverse = glm::inverse(buffer_object_.view_matrix);

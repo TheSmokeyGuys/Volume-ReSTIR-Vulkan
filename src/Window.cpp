@@ -12,7 +12,7 @@ namespace volume_restir {
  * STEP01: Pg. 42, integrating GLFW
  **********************************************************/
 
-static void FrameBufferResizeCallback(GLFWwindow* window, int width, int height) {
+static void FrameBufferResizeCallback(GLFWwindow* window, int, int) {
   auto app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
   app->SetFrameBufferResized(true);
 }
@@ -45,18 +45,6 @@ Window::Window()
   }
 
   spdlog::info("Initialized window with size {}x{}", height_, width_);
-}
-
-VkExtent2D Window::chooseSwapExtend(
-    const VkSurfaceCapabilitiesKHR& capabilities) {
-  if (capabilities.currentExtent.width != UINT32_MAX) {
-    return capabilities.currentExtent;
-  } else {
-    glfwGetFramebufferSize(window_, &width_, &height_);
-
-    VkExtent2D actualExtend = {static_cast<uint32_t>(width_),
-                               static_cast<uint32_t>(height_)};
-  }
 }
 
 Window::~Window() {
