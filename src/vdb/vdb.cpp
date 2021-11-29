@@ -792,7 +792,7 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     } 
     else {
       glm::vec3 smokeColor =
-          glm::normalize(glm::vec3(132, 136, 132)) * (float)vec * 1000.0f;
+          glm::normalize(glm::vec3(50, 54, 50)) * (float)vec * 1000.0f;
     point.nx = smokeColor[0];  // set colour to normal for rendering on the shader
       point.ny = smokeColor[1];
     point.nz = smokeColor[2];
