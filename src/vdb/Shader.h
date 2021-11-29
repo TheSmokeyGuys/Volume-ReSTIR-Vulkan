@@ -34,7 +34,7 @@
 //// These enum definitions have been taken from Jon Maceys NGL Shader.h
 //// http://nccastaff.bmth.ac.uk/jmacey/GraphicsLib/
 ///// @enum SHADERTYPE
-//enum SHADERTYPE { VERTEX, FRAGMENT, GEOMETRY, TESSCONTROL, TESSEVAL };
+// enum SHADERTYPE { VERTEX, FRAGMENT, GEOMETRY, TESSCONTROL, TESSEVAL };
 //
 ///// @file Shader.h
 ///// @brief Class to handle one shader component and handle its compilation and
@@ -45,11 +45,12 @@
 ///// Revision History:
 ///// Initial Version 05/01/2014
 ///// @class Shader
-///// @brief Shader class to handle a single shader component as part of a larger
+///// @brief Shader class to handle a single shader component as part of a
+/// larger
 ///// shader family. Controls its compilation and loading and also the type of
 ///// shader that it is
-//class Shader {
-//public:
+// class Shader {
+// public:
 //  /// @brief Constructor of Shader class
 //  Shader();
 //  /// @brief Constructor of Shader class
@@ -89,7 +90,7 @@
 //  /// @brief Get the shader file path - returns std::string
 //  inline const std::string getShaderFilePath() const { return m_shaderFile; }
 //
-//private:
+// private:
 //  // name of the shader
 //  /// @brief The shader name
 //  std::string m_shaderName;
@@ -107,7 +108,8 @@
 //  /// @brief The shader handle for this shader
 //  GLuint m_shaderHandle;
 //
-//  // simple boolean flag to indicate whether the shader has been compiled or not
+//  // simple boolean flag to indicate whether the shader has been compiled or
+//  not
 //  /// @brief Boolean of if the shader is compiled or not
 //  bool m_compiled;
 //

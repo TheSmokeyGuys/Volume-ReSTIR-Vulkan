@@ -16,7 +16,6 @@
 
 #include "RenderContext.hpp"
 #include "model/ModelBase.hpp"
-#include "vdb/vdb.h"
 
 namespace volume_restir {
 
@@ -27,7 +26,7 @@ public:
    *
    * @param render_context
    */
-  Scene(RenderContext* render_context, VDB* p_vdb);
+  Scene(RenderContext* render_context);
 
   const std::vector<std::unique_ptr<ModelBase>>& GetObjects() const {
     return objects_;

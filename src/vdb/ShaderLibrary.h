@@ -28,7 +28,7 @@
 //
 ///// @struct NameID
 ///// @brief Simple structure to map the shader family names to their IDs
-//struct NameID {
+// struct NameID {
 //  std::string a_name;
 //  unsigned int a_id;
 //};
@@ -45,8 +45,8 @@
 ///// @brief ShaderLibrary class to store all compiled and linked shaders and
 ///// handle access to them for the setting of attributes and uniforms. Also
 ///// allows the switching of the currently actively shader
-//class ShaderLibrary {
-//public:
+// class ShaderLibrary {
+// public:
 //  /// @brief Constructor for ShaderLibrary class
 //  ShaderLibrary();
 //  /// @brief Destructor for ShaderLibrary class
@@ -76,7 +76,8 @@
 //  /// @param [in] _familyName std::string - name of family to add to
 //  /// @param [in] _type SHADERTYPE - type of shader to create
 //  /// @param [in] _file std::string - file of shader
-//  void addShader(std::string _familyName, SHADERTYPE _type, std::string _file);
+//  void addShader(std::string _familyName, SHADERTYPE _type, std::string
+//  _file);
 //  // add, load, compile and link shader to family
 //  /// @brief Add, load, compile and link a shader to a family
 //  /// @param [in] _familyName std::string - name of family to add to
@@ -211,7 +212,7 @@
 //  void setShaderParam4i(const std::string &_paramName, int _i1, int _i2,
 //                        int _i3, int _i4);
 //
-//private:
+// private:
 //  // map of all shader families stored in the library
 //  /// @brief All shader families stored in this library
 //  std::vector<ShaderFamily *> m_shaderFamilies;

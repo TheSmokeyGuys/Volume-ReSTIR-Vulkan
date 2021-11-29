@@ -11,7 +11,7 @@
 
 namespace volume_restir {
 
-Renderer::Renderer(VDB* p_vdb) {
+Renderer::Renderer() {
   float aspect_ratio =
       static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
 
@@ -19,7 +19,7 @@ Renderer::Renderer(VDB* p_vdb) {
   swapchain_      = std::make_unique<SwapChain>(RenderContextPtr());
   camera_         = std::make_unique<Camera>(
       RenderContextPtr(), static_config::kFOVInDegrees, aspect_ratio);
-  scene_ = std::make_unique<Scene>(RenderContextPtr(), p_vdb);
+  scene_ = std::make_unique<Scene>(RenderContextPtr());
 
   SingletonManager::GetWindow().BindCamera(camera_.get());
 
@@ -279,7 +279,6 @@ void Renderer::CreateGraphicsPipeline() {
   dynamic_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
   dynamic_info.pDynamicStates    = dynamic_states.data();
 
-  
   // Depth Pass
   VkPipelineDepthStencilStateCreateInfo depthStencil{};
   depthStencil.sType =

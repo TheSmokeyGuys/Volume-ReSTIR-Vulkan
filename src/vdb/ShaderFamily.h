@@ -25,7 +25,8 @@
 //#include "Shader.h"
 //
 //// use of the word family in this class is used to denote a collection of
-//// it is a direct rebranding of program used in GL and will mean the same thing
+//// it is a direct rebranding of program used in GL and will mean the same
+/// thing
 //
 ///// @file ShaderFamily.h
 ///// @brief ShaderFamily class represents one entire shader program and all
@@ -37,11 +38,12 @@
 ///// Initial Version 05/01/2014
 ///// @class ShaderFamily
 ///// @brief ShaderFamily class handles one shader program. It controls the
-///// linking and setting of shader attributes and uniforms within the family and
+///// linking and setting of shader attributes and uniforms within the family
+/// and
 ///// allows an easy encapsulation for the creation of shaders as well as using
 ///// them throughout the application
-//class ShaderFamily {
-//public:
+// class ShaderFamily {
+// public:
 //  /// @brief Constructor for the ShaderFamily class
 //  ShaderFamily();
 //  /// @brief Constructor for the ShaderFamily class
@@ -82,7 +84,8 @@
 //  /// @brief get the ID of this ShaderFamily - returns GLuint
 //  inline GLuint getID() const { return m_familyID; }
 //
-//  // returns the location of the attribute with the passed in name if it exists
+//  // returns the location of the attribute with the passed in name if it
+//  exists
 //  /// @brief Method to get a uniform location within the attached shaders -
 //  /// returns GLuint
 //  /// @param [in] _name const char* - the name of the uniform to find
@@ -259,7 +262,7 @@
 //  /// @param [in,out] o_i int* - return value
 //  void getUniformiv(const char* _name, int* o_i);
 //
-//private:
+// private:
 //  // list of all shaders belonging to this familt
 //  /// @brief Vector of all attached shaders
 //  std::vector<Shader*> m_shaders;
