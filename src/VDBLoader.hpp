@@ -9,7 +9,10 @@ namespace volume_restir {
 
 class VDBLoader {
 public:
-  VDBLoader() : is_vdb_loaded_(false) {}
+  VDBLoader()
+      : is_vdb_loaded_(false),
+        is_basic_loaded_(false),
+        is_detail_loaded_(false) {}
 
   VDB* GetPtr() { return vdb_.get(); }
   bool IsVDBLoaded() const { return is_vdb_loaded_; }
@@ -19,6 +22,8 @@ public:
 private:
   std::unique_ptr<VDB> vdb_;
   bool is_vdb_loaded_;
+  bool is_basic_loaded_;
+  bool is_detail_loaded_;
 };
 
 }  // namespace volume_restir

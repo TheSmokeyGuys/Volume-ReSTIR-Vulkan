@@ -5,7 +5,7 @@
 namespace volume_restir {
 
 void VDBLoader::Load(const std::string filename) {
-  spdlog::info("Loading VDB file from: {}", _file);
+  spdlog::info("Loading VDB file from: {}", filename);
 
   // give the user the option to load High resolution when first loading or wait
   // until later
@@ -40,6 +40,7 @@ void VDBLoader::Load(const std::string filename) {
   // load the basic information from the file
   if (vdb_->loadBasic()) {
     spdlog::info("Load complete!!");
+    is_basic_loaded_ = true;
   } else {
     spdlog::error("Error whilst loading file");
   }
@@ -59,9 +60,9 @@ void VDBLoader::Load(const std::string filename) {
   //  }
 
   // if it has been chosen to load high resolution, load
-  if (m_vdb->loadExt()) {
+  if (vdb_->loadExt()) {
     spdlog::info("High resolution load complete!!");
-    m_extLoaded = true;
+    is_detail_loaded_ = true;
   } else {
     spdlog::error("Error whilst loading high resolution volume");
   }
