@@ -16,7 +16,7 @@
 */
 
 #include "Utilities.h"
-#include<string>
+#include <string>
 #include <boost/lexical_cast.hpp>
 
 #ifdef DARWIN
@@ -71,7 +71,7 @@ openvdb::Vec3f Utilities::getColourFromLevel(int _level) {
 }
 
 // TODO
-//GLenum Utilities::checkGLError() {
+// GLenum Utilities::checkGLError() {
 //  GLenum errCode;
 //  errCode = glGetError();
 //  if (errCode != 0) {
