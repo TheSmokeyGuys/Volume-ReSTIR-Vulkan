@@ -29,6 +29,10 @@ void ModelBase::CreateVertexBuffer(std::vector<Vertex>& vertices) {
         vertex_buffer_, vertex_buffer_memory_);
     spdlog::debug("Successfully created vertex buffer");
   }
+  else
+  {
+    spdlog::debug("ModelBase::CreateVertexBuffer() failed, empty vertex array!"); 
+  }
 }
 
 void ModelBase::CreateIndexBuffer(std::vector<uint32_t>& indices) {

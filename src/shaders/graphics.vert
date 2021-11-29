@@ -12,10 +12,16 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in vec2 inUV;
 
+vec4 xaxis= vec4(0.1, 0, 0, 0);
+vec4 yaxis= vec4(0.0, 0.1 ,0, 0);
+vec4 zaxis= vec4(0.0, 0, 0.1, 0);
+vec4 abcaxis= vec4(0.0, 0, 0, 1);
+mat4 modelMat = mat4 (xaxis, yaxis, zaxis, abcaxis);
+
 layout(location = 0) out vec3 fragColor;
 
 void main() {
-  gl_PointSize = 5;  // TODO: set it from the CPU side
-  gl_Position  = proj * view * vec4(inPosition, 1.0);
-  fragColor    = inColor;
+ gl_PointSize  = 5;
+  gl_Position  = proj * view * modelMat * vec4(inPosition, 1.0);
+  fragColor    = normalize(inPosition);
 }

@@ -13,13 +13,13 @@
 #define DEBUG
 
 using namespace volume_restir;
-// const std::string file =
-// "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb";
-// //Raymond
+//const std::string file = std::string(BUILD_DIRECTORY) + "../assets/smoke.vdb";
+ const std::string file =
+ "C:/Users/yangr/Git_Repo/CIS565/Final/Volume-ReSTIR-Vulkan/assets/smoke.vdb"; //Raymond
 // const std::string file =
 //     "D:/GitHub/Volume-ReSTIR-Vulkan/assets/smoke.vdb";  // Shubham
-const std::string file =
-    "C:/Users/shine/repos/Volume-ReSTIR-Vulkan/assets/smoke.vdb";  // Zhihao
+//const std::string file =
+//    "C:/Users/shine/repos/Volume-ReSTIR-Vulkan/assets/smoke.vdb";  // Zhihao
 
 bool m_vdbLoaded = false;
 VDB* m_vdb;

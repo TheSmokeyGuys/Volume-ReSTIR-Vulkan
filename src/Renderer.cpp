@@ -427,14 +427,14 @@ void Renderer::RecordCommandBuffers() {
       VkDeviceSize offsets[]   = {0};
       vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
 
-      // vkCmdBindIndexBuffer(command_buffers_[i],
-      //                      scene_->GetObjects()[j]->GetIndexBuffer(), 0,
-      //                      VK_INDEX_TYPE_UINT32);
+      /*vkCmdBindIndexBuffer(command_buffers_[i],
+                           scene_->GetObjects()[j]->GetIndexBuffer(), 0,
+                           VK_INDEX_TYPE_UINT32);*/
 
-      // vkCmdDrawIndexed(
-      //     command_buffers_[i],
-      //     static_cast<uint32_t>(scene_->GetObjects()[j]->GetIndices().size()),
-      //     1, 0, 0, 0);
+      /*vkCmdDrawIndexed(
+          command_buffers_[i],
+          static_cast<uint32_t>(scene_->GetObjects()[j]->GetIndices().size()),
+          1, 0, 0, 0);*/
 
       vkCmdDraw(
           command_buffers_[i],

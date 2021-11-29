@@ -185,10 +185,10 @@ public:
     std::vector<volume_restir::Vertex> vertices;
     for (const auto &v : AllPoints) {
       volume_restir::Vertex vertex;
-      vertex.pos       = glm::vec3(0.f, 0.f, 0.f);
+      vertex.pos       = glm::vec3(v.x, v.y, v.z);
       vertex.normal    = glm::vec3(v.nx, v.ny, v.nz);
       vertex.tex_coord = glm::vec2(v.u, v.v);
-      vertex.color     = glm::vec3(0.99, 0.99, 0.99);
+      vertex.color     = glm::vec3(0.5, 0.5, 0.5);
       vertices.push_back(vertex);
     }
     return vertices;
