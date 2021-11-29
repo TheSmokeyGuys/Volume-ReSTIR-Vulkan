@@ -791,9 +791,11 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
       point.nz = flameColor[2];
     } 
     else {
-    point.nx = vec;  // set colour to normal for rendering on the shader
-    point.ny = vec;
-    point.nz = vec;
+      glm::vec3 smokeColor =
+          glm::normalize(glm::vec3(132, 136, 132)) * (float)vec * 1000.0f;
+    point.nx = smokeColor[0];  // set colour to normal for rendering on the shader
+      point.ny = smokeColor[1];
+    point.nz = smokeColor[2];
     }
 
     channelTemp[0] = vec;  // store value for texture buffer

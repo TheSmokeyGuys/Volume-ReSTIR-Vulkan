@@ -21,7 +21,7 @@ mat4 modelMat = mat4 (xaxis * scaleFactor, yaxis * scaleFactor, zaxis * scaleFac
 layout(location = 0) out vec3 fragColor;
 
 void main() {
- gl_PointSize  = 10;
+ gl_PointSize  = 30;
   gl_Position  = proj * view * modelMat * vec4(inPosition, 1.0);
   fragColor    = inColor;
 }
