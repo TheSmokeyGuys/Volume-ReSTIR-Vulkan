@@ -279,6 +279,21 @@ void Renderer::CreateGraphicsPipeline() {
   dynamic_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
   dynamic_info.pDynamicStates    = dynamic_states.data();
 
+  
+  // Depth Pass
+  VkPipelineDepthStencilStateCreateInfo depthStencil{};
+  depthStencil.sType =
+      VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencil.depthTestEnable       = VK_TRUE;
+  depthStencil.depthWriteEnable      = VK_TRUE;
+  depthStencil.depthCompareOp        = VK_COMPARE_OP_LESS;
+  depthStencil.depthBoundsTestEnable = VK_FALSE;
+  depthStencil.minDepthBounds        = 0.0f;  // Optional
+  depthStencil.maxDepthBounds        = 1.0f;  // Optional
+  depthStencil.stencilTestEnable     = VK_FALSE;
+  depthStencil.front                 = {};  // Optional
+  depthStencil.back                  = {};  // Optional
+
   VkGraphicsPipelineCreateInfo pipeline_info = {};
   pipeline_info.sType      = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
   pipeline_info.stageCount = 2;
@@ -294,6 +309,7 @@ void Renderer::CreateGraphicsPipeline() {
   pipeline_info.renderPass          = render_pass_;
   pipeline_info.subpass             = 0;
   pipeline_info.basePipelineHandle  = VK_NULL_HANDLE;
+  pipeline_info.pDepthStencilState  = &depthStencil;
 
   if (vkCreateGraphicsPipelines(render_context_->Device().device,
                                 VK_NULL_HANDLE, 1, &pipeline_info, nullptr,

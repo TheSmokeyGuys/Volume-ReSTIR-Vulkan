@@ -51,7 +51,7 @@ inline void GetYawPitch(const glm::mat4& transformation, float& yaw,
 
 Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
     : metadata_({render_context, fov, aspect_ratio}),
-      pos_(0.f, 10.0f, -20.0f),
+      pos_(0.f, 0.0f, -4.0f),
       yaw_(0.f),
       pitch_(0.f),
       has_device_memory_(false),
