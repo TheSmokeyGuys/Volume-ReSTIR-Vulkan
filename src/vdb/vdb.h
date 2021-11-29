@@ -188,7 +188,8 @@ public:
       vertex.pos       = glm::vec3(v.x, v.y, v.z);
       vertex.normal    = glm::vec3(v.nx, v.ny, v.nz);
       vertex.tex_coord = glm::vec2(v.u, v.v);
-      vertex.color     = glm::vec3(0.5, 0.5, 0.5);
+      vertex.color     = glm::vec3(v.nx, v.ny, v.nz); // For Some weird Reason Normal Values are same as Color values.
+      //vertex.color     = glm::vec3(1, 0, 0); // For Some weird Reason Normal Values are same as Color values.
       vertices.push_back(vertex);
     }
     return vertices;

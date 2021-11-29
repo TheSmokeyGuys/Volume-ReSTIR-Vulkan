@@ -748,6 +748,11 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   std::vector<vDat> pointStore;  // store point data and normal data
   pointStore.resize(0);
 
+  
+  /*if (pointChannel() >0) {
+    pointStore = AllPoints;
+  }*/
+
   vDat point;
 
   openvdb::Coord coord;  // coord to get from file
@@ -767,17 +772,29 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     ValueType vec = acc.getValue(coord);  // get vector value (colour)
     openvdb::Vec3d worldSpace =
         _grid->indexToWorld(coord);  // convert coordinate into world space
-
+   /* if (pointChannel() == 0) {
+      point.x = worldSpace[0];
+      point.y = worldSpace[1];
+      point.z = worldSpace[2];
+      point.u = j;
+    }*/
     point.x = worldSpace[0];
     point.y = worldSpace[1];
     point.z = worldSpace[2];
     point.u = j;
-
     j++;  // incremenet poin count
-
+    if (channelName(pointChannel()) == "temperature") 
+    {
+      glm::vec3 flameColor = glm::normalize(glm::vec3(226, 88, 34)) * (float)vec * 100.0f;
+      point.nx = flameColor[0];  // set colour to normal for rendering on the shader
+      point.ny = flameColor[1];
+      point.nz = flameColor[2];
+    } 
+    else {
     point.nx = vec;  // set colour to normal for rendering on the shader
     point.ny = vec;
     point.nz = vec;
+    }
 
     channelTemp[0] = vec;  // store value for texture buffer
     channelTemp[1] = vec;
@@ -822,6 +839,12 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   // VAO temp(GL_POINTS);
   // temp.create();
   // AllPoints.push_back(pointStore);
+  //if (pointChannel() == 0) {
+  //  AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
+  //} 
+  //else {
+  //  AllPoints = pointStore;
+  //}
   AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
   //// create VAO for this grid
   // temp.bind();
@@ -1149,7 +1172,7 @@ bool VDB::loadMesh() {
   pEnd   = m_grid->end();
 
   m_channel = 0;
-
+  setPointChannel(m_channel);
   // TODO
   m_channelValueData = new std::vector<openvdb::Vec4f>;
   m_channelValueData->resize(0);
@@ -1171,6 +1194,7 @@ bool VDB::loadMesh() {
     }
     ++pBegin;
     ++m_channel;
+    setPointChannel(m_channel);
   }
 
   return true;

@@ -12,16 +12,16 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in vec2 inUV;
 
-vec4 xaxis= vec4(0.1, 0, 0, 0);
-vec4 yaxis= vec4(0.0, 0.1 ,0, 0);
-vec4 zaxis= vec4(0.0, 0, 0.1, 0);
-vec4 abcaxis= vec4(0.0, 0, 0, 1);
-mat4 modelMat = mat4 (xaxis, yaxis, zaxis, abcaxis);
+float scaleFactor = 0.1;
+vec4 xaxis= vec4(1.0f, 0.0f, 0.0f, 0.0f);
+vec4 yaxis= vec4(0.0f, 1.0f ,0.0f, 0.0f);
+vec4 zaxis= vec4(0.0f, 0.0f, 1.0f, 0.0f);
+mat4 modelMat = mat4 (xaxis * scaleFactor, yaxis * scaleFactor, zaxis * scaleFactor, vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
 layout(location = 0) out vec3 fragColor;
 
 void main() {
- gl_PointSize  = 5;
+ gl_PointSize  = 10;
   gl_Position  = proj * view * modelMat * vec4(inPosition, 1.0);
   fragColor    = inColor;
 }

@@ -288,7 +288,7 @@ void Renderer::CreateGraphicsPipeline() {
   depthStencil.depthCompareOp        = VK_COMPARE_OP_LESS;
   depthStencil.depthBoundsTestEnable = VK_FALSE;
   depthStencil.minDepthBounds        = 0.0f;  // Optional
-  depthStencil.maxDepthBounds        = 1.0f;  // Optional
+  depthStencil.maxDepthBounds        = 1000.0f;  // Optional
   depthStencil.stencilTestEnable     = VK_FALSE;
   depthStencil.front                 = {};  // Optional
   depthStencil.back                  = {};  // Optional
