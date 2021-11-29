@@ -20,7 +20,9 @@ const fs::path asset_dir = fs::path(PROJECT_DIRECTORY) / fs::path("assets");
 const std::string file   = (asset_dir / vdb_filename).string();
 
 int main() {
-#ifdef DEBUG
+#ifdef NDEBUG
+  spdlog::set_level(spdlog::level::info);
+#else
   spdlog::set_level(spdlog::level::debug);
 #endif
   spdlog::info("Hello from Volumetric-ReSTIR project!");

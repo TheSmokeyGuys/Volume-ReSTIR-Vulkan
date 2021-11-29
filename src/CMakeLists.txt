@@ -13,6 +13,15 @@ file(GLOB_RECURSE SHADER_SOURCES
 
 source_group("Shaders" FILES ${SHADER_SOURCES})
 
+message(STATUS "OpenVDB include dir: ${OpenVDB_INCLUDE_DIR}")
+
+include_directories(
+  SYSTEM PUBLIC
+  ${GLM_INCLUDE_DIR}
+  ${STB_INCLUDE_DIR}
+  ${OpenVDB_INCLUDE_DIR}
+)
+
 if(WIN32)
   add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
   target_link_libraries(${PROJECT_NAME} ${WINLIBS})
@@ -40,6 +49,7 @@ foreach(SHADER_SOURCE ${SHADER_SOURCES})
 endforeach()
 
 target_link_libraries(${PROJECT_NAME} 
+  PUBLIC
   ${ASSIMP_LIBRARIES}
   Vulkan::Vulkan 
   glfw
@@ -49,8 +59,6 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${GLM_INCLUDE_DIR}
-  ${STB_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 

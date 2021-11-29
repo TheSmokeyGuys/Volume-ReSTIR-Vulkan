@@ -10,9 +10,17 @@ namespace volume_restir {
 RenderContext::RenderContext() {
   // create VkInstance
   vkb::InstanceBuilder instance_builder;
+
+#ifdef NDEBUG
+  auto instance_build_success = instance_builder.use_default_debug_messenger()
+                                    .request_validation_layers(false)
+                                    .build();
+#else
   auto instance_build_success = instance_builder.use_default_debug_messenger()
                                     .request_validation_layers()
                                     .build();
+#endif
+
   if (!instance_build_success) {
     spdlog::error("Failed to create Vulkan instance: {}",
                   instance_build_success.error().message());

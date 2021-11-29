@@ -16,6 +16,7 @@
 */
 
 #include "BoundBox.h"
+#include "utils/logging.hpp"
 
 BoundBox::BoundBox() {
   // default constructor
@@ -91,10 +92,11 @@ void BoundBox::set(float _minx, float _maxx, float _miny, float _maxy,
 }
 
 void BoundBox::setCentre(float _x, float _y, float _z) {
-#ifdef DEBUG
-  std::cout << "Warning: Centre of bounding box being set with no other "
-               "update, could cause erronous results"
-            << std::endl;
+#ifdef NDEBUG
+#else
+  spdlog::warn(
+      "Warning: Centre of bounding box being set with no other update, could "
+      "cause erroneous results");
 #endif
   m_centre[0] = _x;
   m_centre[1] = _y;
@@ -104,10 +106,11 @@ void BoundBox::setCentre(float _x, float _y, float _z) {
 }
 
 void BoundBox::setCentre(openvdb::Vec3f _centre) {
-#ifdef DEBUG
-  std::cout << "Warning: Centre of bounding box being set with no other "
-               "update, could cause erronous results"
-            << std::endl;
+#ifdef NDEBUG
+#else
+  spdlog::warn(
+      "Warning: Centre of bounding box being set with no other update, could "
+      "cause erroneous results");
 #endif
   m_centre = _centre;
   // recalculate vertices now it has changed
