@@ -23,5 +23,5 @@ layout(location = 0) out vec3 fragColor;
 void main() {
  gl_PointSize  = 5;
   gl_Position  = proj * view * modelMat * vec4(inPosition, 1.0);
-  fragColor    = normalize(inPosition);
+  fragColor    = inColor;
 }
