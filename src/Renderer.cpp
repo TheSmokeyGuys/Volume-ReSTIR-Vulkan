@@ -135,12 +135,23 @@ void Renderer::CreateRenderPass() {
 
 void Renderer::CreateGraphicsPipeline() {
   // Create shader module
-  VkShaderModule vert_module = ShaderModule::Create(
-      std::string(BUILD_DIRECTORY) + "/shaders/lambert.vert.spv",
-      render_context_->Device().device);
-  VkShaderModule frag_module = ShaderModule::Create(
-      std::string(BUILD_DIRECTORY) + "/shaders/lambert.frag.spv",
-      render_context_->Device().device);
+  VkShaderModule vert_module; 
+  VkShaderModule frag_module;
+  if (static_config::kShaderMode == 0) {
+    vert_module = ShaderModule::Create(
+        std::string(BUILD_DIRECTORY) + "/shaders/graphics.vert.spv",
+        render_context_->Device().device);
+    frag_module = ShaderModule::Create(
+        std::string(BUILD_DIRECTORY) + "/shaders/graphics.frag.spv",
+        render_context_->Device().device);
+  } else if (static_config::kShaderMode == 1) {
+    vert_module = ShaderModule::Create(
+        std::string(BUILD_DIRECTORY) + "/shaders/lambert.vert.spv",
+        render_context_->Device().device);
+    frag_module = ShaderModule::Create(
+        std::string(BUILD_DIRECTORY) + "/shaders/lambert.frag.spv",
+        render_context_->Device().device);
+  }
   if (vert_module == VK_NULL_HANDLE || frag_module == VK_NULL_HANDLE) {
     spdlog::error("Failed to create shader module!");
     throw std::runtime_error("Failed to create shader module");

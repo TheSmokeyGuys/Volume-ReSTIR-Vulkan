@@ -11,5 +11,10 @@ const float kFOVInDegrees            = 45.0f;
 const float kCameraMoveSpeed         = 0.05f;
 const float kCameraRotateSensitivity = 0.1f;
 
+
+// kShaderMode = 0 for graphics
+// kShaderMode = 1 for lambert
+const int kShaderMode = 0; 
+
 }  // namespace static_config
 }  // namespace volume_restir
