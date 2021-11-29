@@ -136,10 +136,10 @@ void Renderer::CreateRenderPass() {
 void Renderer::CreateGraphicsPipeline() {
   // Create shader module
   VkShaderModule vert_module = ShaderModule::Create(
-      std::string(BUILD_DIRECTORY) + "/shaders/graphics.vert.spv",
+      std::string(BUILD_DIRECTORY) + "/shaders/lambert.vert.spv",
       render_context_->Device().device);
   VkShaderModule frag_module = ShaderModule::Create(
-      std::string(BUILD_DIRECTORY) + "/shaders/graphics.frag.spv",
+      std::string(BUILD_DIRECTORY) + "/shaders/lambert.frag.spv",
       render_context_->Device().device);
   if (vert_module == VK_NULL_HANDLE || frag_module == VK_NULL_HANDLE) {
     spdlog::error("Failed to create shader module!");

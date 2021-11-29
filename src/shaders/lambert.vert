@@ -14,7 +14,7 @@ layout(location = 3) in vec2 inUV;
 
 vec4 lightPos = vec4(0.0, 10.0, 0.0, 1.0);
 
-float scaleFactor = 0.001;
+float scaleFactor = 0.01;
 vec4 xaxis= vec4(1.0f, 0.0f, 0.0f, 0.0f);
 vec4 yaxis= vec4(0.0f, 1.0f ,0.0f, 0.0f);
 vec4 zaxis= vec4(0.0f, 0.0f, 1.0f, 0.0f);
@@ -26,14 +26,14 @@ layout(location = 1) out vec4 fs_Nor;            // The array of normals that ha
 layout(location = 2) out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 
 void main() {
-  gl_PointSize  = 20;
+  gl_PointSize  = 0.1;
 
  vec4 modelposition = modelMat * vec4(inPosition, 1.0); 
   gl_Position  = proj * view * modelposition;
 
   fs_Nor = vec4( inNormal, 1.0);
 
-  lightPos = viewInv * lightPos;
+  lightPos = viewInv * vec4(0,0,-1,1);
   fs_LightVec = lightPos - modelposition; 
 
   fragColor    = inColor;

@@ -15,7 +15,7 @@
 namespace fs = std::filesystem;
 using namespace volume_restir;
 
-const std::string vdb_filename = "explosion.vdb";
+const std::string vdb_filename = "fire.vdb";
 const fs::path asset_dir = fs::path(PROJECT_DIRECTORY) / fs::path("assets");
 const std::string file   = (asset_dir / vdb_filename).string();
 

@@ -1277,6 +1277,23 @@ void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
   else if (grid->isType<openvdb::Int64Grid>())
     callGetValuesGridScalar<openvdb::Int64Grid>(
         openvdb::gridPtrCast<openvdb::Int64Grid>(grid));
+
+  else if (grid->isType<openvdb::MaskGrid>())
+    callGetValuesGridScalar<openvdb::MaskGrid>(
+        openvdb::gridPtrCast<openvdb::MaskGrid>(grid));
+
+  else if (grid->isType<openvdb::ScalarGrid>())
+    callGetValuesGridScalar<openvdb::ScalarGrid>(
+        openvdb::gridPtrCast<openvdb::ScalarGrid>(grid));
+
+  else if (grid->isType<openvdb::TopologyGrid>())
+    callGetValuesGridScalar<openvdb::TopologyGrid>(
+        openvdb::gridPtrCast<openvdb::TopologyGrid>(grid));
+
+  else if (grid->isType<openvdb::VectorGrid>())
+    callGetValuesGridVector<openvdb::VectorGrid>(
+        openvdb::gridPtrCast<openvdb::VectorGrid>(grid));
+
   // vector types
   else if (grid->isType<openvdb::Vec3IGrid>())
     callGetValuesGridVector<openvdb::Vec3IGrid>(
@@ -1290,6 +1307,12 @@ void VDB::processTypedGrid(openvdb::GridBase::Ptr grid) {
   // std::string currently not supported so just report error
   else if (grid->isType<openvdb::StringGrid>())
     reportStringGridTypeError();
+  else {
+    std::cerr << "File contain grid of type std::string - std::string is "
+                 "currently not supported, closing application"
+              << std::endl;
+    /*exit(EXIT_FAILURE);*/
+  }
 }
 
 // TODO
