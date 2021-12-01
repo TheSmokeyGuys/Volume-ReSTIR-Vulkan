@@ -185,11 +185,15 @@ public:
     std::vector<volume_restir::Vertex> vertices;
     for (const auto &v : AllPoints) {
       volume_restir::Vertex vertex;
-      vertex.pos       = glm::vec3(v.x, v.y, v.z);
-      vertex.normal    = glm::normalize(glm::vec3(v.x, v.y, v.z)); // using positions as normal for now
+      vertex.pos    = glm::vec3(v.x, v.y, v.z);
+      vertex.normal = glm::normalize(
+          glm::vec3(v.x, v.y, v.z));  // using positions as normal for now
       vertex.tex_coord = glm::vec2(v.u, v.v);
-      vertex.color     = glm::vec3(v.nx, v.ny, v.nz); // For Some weird Reason Normal Values are same as Color values.
-      //vertex.color     = glm::vec3(1, 0, 0); // For Some weird Reason Normal Values are same as Color values.
+      vertex.color =
+          glm::vec3(v.nx, v.ny, v.nz);  // For Some weird Reason Normal Values
+                                        // are same as Color values.
+      // vertex.color     = glm::vec3(1, 0, 0); // For Some weird Reason Normal
+      // Values are same as Color values.
       vertices.push_back(vertex);
     }
     return vertices;
