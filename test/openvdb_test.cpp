@@ -3,9 +3,11 @@
 #endif
 
 #include "openvdb/openvdb.h"
-#include "../src/vdb/vdb.h"
+
 #include <iostream>
-#include "../src/vdb/Utilities.h"
+
+#include "vdb/Utilities.h"
+#include "vdb/vdb.h"
 
 bool m_vdbLoaded = false;
 VDB *m_vdb;
@@ -16,7 +18,6 @@ bool m_extLoaded = false;
 float m_s;
 
 void loadVDBFile(std::string _file) {
-  
   if (m_vdbLoaded) {
     // remove an old file if it has been loaded
     delete m_vdb;
@@ -25,17 +26,17 @@ void loadVDBFile(std::string _file) {
 
   // give the user the option to load High resolution when first loading or wait
   // unitl later
- /* QMessageBox::StandardButton replyLoad, replyCont;
-  QMessageBox *loadHigh = new QMessageBox(this);
-  loadHigh->setWindowFlags(Qt::WindowStaysOnTopHint);
-  loadHigh->setWindowModality(Qt::WindowModal);
-  replyLoad =
-      loadHigh->question(this, "Loading VDB File", "Load High Resolution",
-                         QMessageBox::Yes | QMessageBox::No);*/
+  /* QMessageBox::StandardButton replyLoad, replyCont;
+   QMessageBox *loadHigh = new QMessageBox(this);
+   loadHigh->setWindowFlags(Qt::WindowStaysOnTopHint);
+   loadHigh->setWindowModality(Qt::WindowModal);
+   replyLoad =
+       loadHigh->question(this, "Loading VDB File", "Load High Resolution",
+                          QMessageBox::Yes | QMessageBox::No);*/
   // bring to the top
-  //loadHigh->raise();
+  // loadHigh->raise();
 
-  //if (replyLoad == QMessageBox::Yes) {
+  // if (replyLoad == QMessageBox::Yes) {
   //  // if the user has chosen to load the high resolution data, show them the
   //  // performance warning and check to make sure they are happy with their
   //  // decision
@@ -52,9 +53,9 @@ void loadVDBFile(std::string _file) {
 
   m_vdb = new VDB(_file);
 
-  //TODO
-  //Set Total GPU Memory need to check what we use this for
-  //m_vdb->setTotalGPUMemKB(m_total_GPU_mem_kb);
+  // TODO
+  // Set Total GPU Memory need to check what we use this for
+  // m_vdb->setTotalGPUMemKB(m_total_GPU_mem_kb);
 
   // load the basic iformation from the file
   if (m_vdb->loadBasic()) {
@@ -67,19 +68,20 @@ void loadVDBFile(std::string _file) {
 
   // TODO : Update this value whenever you want to laod extra data
   m_extLoaded = true;
-//  if (replyLoad == QMessageBox::Yes && replyCont == QMessageBox::Yes) {
-//    // if it has been chosen to load high resolution, load
-//    if (m_vdb->loadExt()) {
-//#ifdef DEBUG
-//      std::cout << "High resolution load complete!!" << std::endl;
-//#endif
-//      m_extLoaded = true;
-//    } else {
-//      std::cerr << "Error whilst loading high resolution volume" << std::endl;
-//    }
-//  }
+  //  if (replyLoad == QMessageBox::Yes && replyCont == QMessageBox::Yes) {
+  //    // if it has been chosen to load high resolution, load
+  //    if (m_vdb->loadExt()) {
+  //#ifdef DEBUG
+  //      std::cout << "High resolution load complete!!" << std::endl;
+  //#endif
+  //      m_extLoaded = true;
+  //    } else {
+  //      std::cerr << "Error whilst loading high resolution volume" <<
+  //      std::endl;
+  //    }
+  //  }
 
-    // if it has been chosen to load high resolution, load
+  // if it has been chosen to load high resolution, load
   if (m_vdb->loadExt()) {
 #ifdef DEBUG
     std::cout << "High resolution load complete!!" << std::endl;
@@ -106,23 +108,23 @@ void loadVDBFile(std::string _file) {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
   // Initialise all crop boxes
   //=====================================================
-  //m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 0);
-  //m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 1);
-  //m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 2);
-  //m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 3);
-  //m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 4);
+  // m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 0);
+  // m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 1);
+  // m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 2);
+  // m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 3);
+  // m_vdb->setCrop(-1.0f, 1.0f, 0.0f, 20.0f, -5.0f, 5.0f, 4);
 
-  //m_vdb->setCropColour(openvdb::Vec3f(0.0f, 1.0f, 1.0f), 0);
-  //m_vdb->setCropColour(openvdb::Vec3f(0.5f, 1.0f, 0.5f), 1);
-  //m_vdb->setCropColour(openvdb::Vec3f(1.0f, 0.5f, 1.0f), 2);
-  //m_vdb->setCropColour(openvdb::Vec3f(1.0f, 0.5f, 0.5f), 3);
-  //m_vdb->setCropColour(openvdb::Vec3f(0.5f, 1.0f, 0.0f), 4);
+  // m_vdb->setCropColour(openvdb::Vec3f(0.0f, 1.0f, 1.0f), 0);
+  // m_vdb->setCropColour(openvdb::Vec3f(0.5f, 1.0f, 0.5f), 1);
+  // m_vdb->setCropColour(openvdb::Vec3f(1.0f, 0.5f, 1.0f), 2);
+  // m_vdb->setCropColour(openvdb::Vec3f(1.0f, 0.5f, 0.5f), 3);
+  // m_vdb->setCropColour(openvdb::Vec3f(0.5f, 1.0f, 0.0f), 4);
   //=====================================================
 
   // I want to frame the entire file in shot when loaded
@@ -154,33 +156,33 @@ void loadVDBFile(std::string _file) {
 
   openvdb::Vec3f to(halfWay);
 
-  //TODO
-  //openvdb::Vec4f currentEye  = m_camera->getEye();
-  //openvdb::Vec4f currentLook = m_camera->getLook();
+  // TODO
+  // openvdb::Vec4f currentEye  = m_camera->getEye();
+  // openvdb::Vec4f currentLook = m_camera->getLook();
 
   // find the difference between the new position an the current positions
- /* m_currentBaseCameraFrom =
-      openvdb::Vec4f(from.x(), from.y(), from.z(), 1.0) - currentEye;
-  m_currentBaseCameraTo =
-      openvdb::Vec4f(to.x(), to.y(), to.z(), 1.0) - currentLook;
+  /* m_currentBaseCameraFrom =
+       openvdb::Vec4f(from.x(), from.y(), from.z(), 1.0) - currentEye;
+   m_currentBaseCameraTo =
+       openvdb::Vec4f(to.x(), to.y(), to.z(), 1.0) - currentLook;
 
-  m_camera->moveEye(m_currentBaseCameraFrom.x(), m_currentBaseCameraFrom.y(),
-                    m_currentBaseCameraFrom.z());
-  m_camera->moveLook(m_currentBaseCameraTo.x(), m_currentBaseCameraTo.y(),
-                     m_currentBaseCameraTo.z());*/
+   m_camera->moveEye(m_currentBaseCameraFrom.x(), m_currentBaseCameraFrom.y(),
+                     m_currentBaseCameraFrom.z());
+   m_camera->moveLook(m_currentBaseCameraTo.x(), m_currentBaseCameraTo.y(),
+                      m_currentBaseCameraTo.z());*/
 
   // set base vectors so that the camera can be returned to these values on a
   // reset once a transformation has taken place
-  //m_currentBaseCameraFrom = m_camera->getEye();
-  //m_currentBaseCameraTo   = m_camera->getLook();
+  // m_currentBaseCameraFrom = m_camera->getEye();
+  // m_currentBaseCameraTo   = m_camera->getLook();
 
-  //updateGL();
+  // updateGL();
 }
 
-
-//void paintGL() {
+// void paintGL() {
 //  // update the wheel move amount depending on the distance from the centre of
-//  // the bounding box the closer the smaller the amount to move, the further the
+//  // the bounding box the closer the smaller the amount to move, the further
+//  the
 //  // greater
 //  setWheelZoomSpeed();
 //
@@ -258,7 +260,8 @@ void loadVDBFile(std::string _file) {
 //    // if using crop boxes, draw the crop boxes
 //    if (m_useCrop) {
 //      // here I will set the limits required to the correct values
-//      // these will then be used outside this if statement to actually crop the
+//      // these will then be used outside this if statement to actually crop
+//      the
 //      // drawing
 //      openvdb::Mat4s localM;
 //      localM.setIdentity();
@@ -273,8 +276,8 @@ void loadVDBFile(std::string _file) {
 //    m_shaderLib->setActive(shaderToUse);
 //
 //    if (m_useCrop) {
-//      m_shaderLib->setShaderUniformFromMat4("u_transform", m_vdb->transform());
-//      uploadCropBoxesToShader();
+//      m_shaderLib->setShaderUniformFromMat4("u_transform",
+//      m_vdb->transform()); uploadCropBoxesToShader();
 //    }
 //
 //    m_shaderLib->setShaderUniformFromMat4("MVP", MVP);
@@ -295,8 +298,8 @@ void loadVDBFile(std::string _file) {
 //        m_shaderLib->setShaderParam1i("u_rampPoints", m_rampPoints);
 //        if (m_rampPoints) {
 //          if (!m_userDefinedRamp) {
-//            // automatic ramping so get extremes of the bounding box of the file
-//            m_channelRampExtremes = m_vdb->getBBox().asBBoxBare();
+//            // automatic ramping so get extremes of the bounding box of the
+//            file m_channelRampExtremes = m_vdb->getBBox().asBBoxBare();
 //          }
 //          m_shaderLib->setShaderParam3f("u_Min", m_channelRampExtremes.minx,
 //                                        m_channelRampExtremes.miny,
@@ -309,7 +312,8 @@ void loadVDBFile(std::string _file) {
 //            // automatic ramping
 //            m_channelRampExtremes = m_vdb->getCurrentChannelExtremes();
 //            if (m_colourMapOnCull) {
-//              // if ramping onto a cull, upload the correct data to the correct
+//              // if ramping onto a cull, upload the correct data to the
+//              correct
 //              // location
 //              setMapOnCullValues();
 //            }
@@ -403,33 +407,33 @@ void loadVDBFile(std::string _file) {
 int main() {
   // Initialize the OpenVDB library.  This must be called at least
   // once per program and may safely be called multiple times.
-  //openvdb::initialize();
+  // openvdb::initialize();
   //// Create an empty floating-point grid with background value 0.
-  //openvdb::FloatGrid::Ptr grid = openvdb::FloatGrid::create();
-  //std::cout << "Testing random access:" << std::endl;
+  // openvdb::FloatGrid::Ptr grid = openvdb::FloatGrid::create();
+  // std::cout << "Testing random access:" << std::endl;
   //// Get an accessor for coordinate-based access to voxels.
-  //openvdb::FloatGrid::Accessor accessor = grid->getAccessor();
+  // openvdb::FloatGrid::Accessor accessor = grid->getAccessor();
   //// Define a coordinate with large signed indices.
-  //openvdb::Coord xyz(1000, -200000000, 30000000);
+  // openvdb::Coord xyz(1000, -200000000, 30000000);
   //// Set the voxel value at (1000, -200000000, 30000000) to 1.
-  //accessor.setValue(xyz, 1.0);
+  // accessor.setValue(xyz, 1.0);
   //// Verify that the voxel value at (1000, -200000000, 30000000) is 1.
-  //std::cout << "Grid" << xyz << " = " << accessor.getValue(xyz) << std::endl;
+  // std::cout << "Grid" << xyz << " = " << accessor.getValue(xyz) << std::endl;
   //// Reset the coordinates to those of a different voxel.
-  //xyz.reset(1000, 200000000, -30000000);
+  // xyz.reset(1000, 200000000, -30000000);
   //// Verify that the voxel value at (1000, 200000000, -30000000) is
   //// the background value, 0.
-  //std::cout << "Grid" << xyz << " = " << accessor.getValue(xyz) << std::endl;
+  // std::cout << "Grid" << xyz << " = " << accessor.getValue(xyz) << std::endl;
   //// Set the voxel value at (1000, 200000000, -30000000) to 2.
-  //accessor.setValue(xyz, 2.0);
+  // accessor.setValue(xyz, 2.0);
   //// Set the voxels at the two extremes of the available coordinate space.
   //// For 32-bit signed coordinates these are (-2147483648, -2147483648,
   //// -2147483648) and (2147483647, 2147483647, 2147483647).
-  //accessor.setValue(openvdb::Coord::min(), 3.0f);
-  //accessor.setValue(openvdb::Coord::max(), 4.0f);
-  //std::cout << "Testing sequential access:" << std::endl;
+  // accessor.setValue(openvdb::Coord::min(), 3.0f);
+  // accessor.setValue(openvdb::Coord::max(), 4.0f);
+  // std::cout << "Testing sequential access:" << std::endl;
   //// Print all active ("on") voxels by means of an iterator.
-  //for (openvdb::FloatGrid::ValueOnCIter iter = grid->cbeginValueOn(); iter;
+  // for (openvdb::FloatGrid::ValueOnCIter iter = grid->cbeginValueOn(); iter;
   //     ++iter) {
   //  std::cout << "Grid" << iter.getCoord() << " = " << *iter << std::endl;
   //}
