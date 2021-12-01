@@ -22,12 +22,16 @@ include_directories(
   ${OpenVDB_INCLUDE_DIR}
 )
 
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 if(WIN32)
   add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
   target_link_libraries(${PROJECT_NAME} ${WINLIBS})
 else(WIN32)
   add_executable(${PROJECT_NAME} ${SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
 message(STATUS "Compiling shader sources:")
@@ -70,7 +74,7 @@ IF(MSVC)
 ELSE(MSVC)
   target_compile_options(${PROJECT_NAME}
     PRIVATE
-    -Wall -Werror -Wno-unused-variable
+    -Wall -Werror -Wno-unused-variable -Wno-deprecated-declarations
   )
 ENDIF(MSVC)
 

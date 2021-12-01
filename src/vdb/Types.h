@@ -22,8 +22,14 @@
 #ifdef DARWIN
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
-#else
+#endif
+
+#ifdef _WIN32
 #include <windows.h>
+#include <GL/gl.h>
+#endif
+
+#ifdef __linux__
 #include <GL/gl.h>
 #endif
 

@@ -135,8 +135,8 @@ void Renderer::CreateRenderPass() {
 
 void Renderer::CreateGraphicsPipeline() {
   // Create shader module
-  VkShaderModule vert_module; 
-  VkShaderModule frag_module;
+  VkShaderModule vert_module = VK_NULL_HANDLE;
+  VkShaderModule frag_module = VK_NULL_HANDLE;
   if (static_config::kShaderMode == 0) {
     vert_module = ShaderModule::Create(
         std::string(BUILD_DIRECTORY) + "/shaders/graphics.vert.spv",
@@ -298,7 +298,7 @@ void Renderer::CreateGraphicsPipeline() {
   depthStencil.depthWriteEnable      = VK_TRUE;
   depthStencil.depthCompareOp        = VK_COMPARE_OP_LESS;
   depthStencil.depthBoundsTestEnable = VK_FALSE;
-  depthStencil.minDepthBounds        = 0.0f;  // Optional
+  depthStencil.minDepthBounds        = 0.0f;     // Optional
   depthStencil.maxDepthBounds        = 1000.0f;  // Optional
   depthStencil.stencilTestEnable     = VK_FALSE;
   depthStencil.front                 = {};  // Optional
@@ -507,7 +507,7 @@ void Renderer::RecreateSwapChain() {
 }
 
 void Renderer::CleanupSwapChain() {
-  for (size_t i = 0; i < static_config::kMaxFrameInFlight; i++) {
+  for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
     vkDestroyFramebuffer(render_context_->Device().device, framebuffers_[i],
                          nullptr);
   }

@@ -25,8 +25,10 @@
 #ifdef DARWIN
 #include <OpenGL/gl3.h>
 #include <OpenGL/glext.h>
-#else
+#elif defined(_WIN32)
 #include <windows.h>
+#include <GL/gl.h>
+#else
 #include <GL/gl.h>
 #endif
 
@@ -85,7 +87,7 @@ inline void printNoExtGPU() {
             << std::endl;
 }
 /// @brief Report that AMD is not currently supported in this application for
-/// memeory querying
+/// memory querying
 inline void printAMDNotSupported() {
   std::cout << "AMD graphic cards currently not supported" << std::endl;
 }
