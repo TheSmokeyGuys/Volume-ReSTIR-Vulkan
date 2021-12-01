@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "VDB.h"
+#include "vdb.h"
 
 #include <openvdb/tools/VolumeToMesh.h>
 
@@ -23,6 +23,7 @@
 
 #include "Utilities.h"
 #include "math.h"
+#include "spdlog/spdlog.h"
 
 #ifdef NVIDIA
 #include "NVidiaDefines.h"
@@ -83,13 +84,20 @@ VDB::~VDB() {
     delete m_vdbGrids;
   }*/
   // uninit openvdb system
-  openvdb::uninitialize();
+  if (m_initialised) {
+    spdlog::debug("Destroying global OpenVDB instance...");
+    openvdb::uninitialize();
+    m_initialised = false;
+  }
 }
 
 void VDB::init() {
   // init the openvdb system
-  openvdb::initialize();
-  m_initialised = true;
+  if (!m_initialised) {
+    spdlog::debug("Creating global OpenVDB instance...");
+    openvdb::initialize();
+    m_initialised = true;
+  }
 }
 
 void VDB::openFile(std::string _file) {
@@ -222,7 +230,7 @@ bool VDB::loadBasic() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -246,7 +254,7 @@ bool VDB::loadBasic() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -270,7 +278,7 @@ bool VDB::loadBasic() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -294,7 +302,7 @@ bool VDB::loadBasic() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -327,7 +335,7 @@ bool VDB::loadExt() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -370,7 +378,7 @@ bool VDB::loadExt() {
 #endif
 #else
 #ifdef DEBUG
-  printNoExtGPU();
+  // printNoExtGPU();
 #endif
 #endif
 
@@ -717,6 +725,7 @@ void VDB::initParams() {
 }
 
 void VDB::resetParams() {
+  spdlog::debug("OpenVDB: resetting parameters...");
   m_variableNames.resize(0);
   m_variableTypes.resize(0);
   m_channel   = 1;
@@ -748,7 +757,6 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   std::vector<vDat> pointStore;  // store point data and normal data
   pointStore.resize(0);
 
-  
   /*if (pointChannel() >0) {
     pointStore = AllPoints;
   }*/
@@ -772,30 +780,31 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     ValueType vec = acc.getValue(coord);  // get vector value (colour)
     openvdb::Vec3d worldSpace =
         _grid->indexToWorld(coord);  // convert coordinate into world space
-   /* if (pointChannel() == 0) {
-      point.x = worldSpace[0];
-      point.y = worldSpace[1];
-      point.z = worldSpace[2];
-      point.u = j;
-    }*/
+                                     /* if (pointChannel() == 0) {
+                                        point.x = worldSpace[0];
+                                        point.y = worldSpace[1];
+                                        point.z = worldSpace[2];
+                                        point.u = j;
+                                      }*/
     point.x = worldSpace[0];
     point.y = worldSpace[1];
     point.z = worldSpace[2];
     point.u = j;
     j++;  // incremenet poin count
-    if (channelName(pointChannel()) == "temperature") 
-    {
-      glm::vec3 flameColor = glm::normalize(glm::vec3(226, 88, 34)) * (float)vec * 100.0f;
-      point.nx = flameColor[0];  // set colour to normal for rendering on the shader
+    if (channelName(pointChannel()) == "temperature") {
+      glm::vec3 flameColor =
+          glm::normalize(glm::vec3(226, 88, 34)) * (float)vec * 100.0f;
+      point.nx =
+          flameColor[0];  // set colour to normal for rendering on the shader
       point.ny = flameColor[1];
       point.nz = flameColor[2];
-    } 
-    else {
+    } else {
       glm::vec3 smokeColor =
           glm::normalize(glm::vec3(50, 54, 50)) * (float)vec * 1000.0f;
-    point.nx = smokeColor[0];  // set colour to normal for rendering on the shader
+      point.nx =
+          smokeColor[0];  // set colour to normal for rendering on the shader
       point.ny = smokeColor[1];
-    point.nz = smokeColor[2];
+      point.nz = smokeColor[2];
     }
 
     channelTemp[0] = vec;  // store value for texture buffer
@@ -841,10 +850,10 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   // VAO temp(GL_POINTS);
   // temp.create();
   // AllPoints.push_back(pointStore);
-  //if (pointChannel() == 0) {
+  // if (pointChannel() == 0) {
   //  AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
-  //} 
-  //else {
+  //}
+  // else {
   //  AllPoints = pointStore;
   //}
   AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
