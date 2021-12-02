@@ -10,6 +10,10 @@ extern const std::string kApplicationName;
 extern const int kWindowWidth;
 extern const int kWindowHeight;
 extern const int kMaxFrameInFlight;
+extern const float kFOVInDegrees;
+extern const float kCameraMoveSpeed;
+extern const float kCameraRotateSensitivity;
+extern const int   kShaderMode;
 
 }  // namespace static_config
 }  // namespace volume_restir

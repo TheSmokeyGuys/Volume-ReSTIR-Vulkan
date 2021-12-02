@@ -13,12 +13,25 @@ file(GLOB_RECURSE SHADER_SOURCES
 
 source_group("Shaders" FILES ${SHADER_SOURCES})
 
+message(STATUS "OpenVDB include dir: ${OpenVDB_INCLUDE_DIR}")
+
+include_directories(
+  SYSTEM PUBLIC
+  ${GLM_INCLUDE_DIR}
+  ${STB_INCLUDE_DIR}
+  ${OpenVDB_INCLUDE_DIR}
+)
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 if(WIN32)
   add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
   target_link_libraries(${PROJECT_NAME} ${WINLIBS})
 else(WIN32)
   add_executable(${PROJECT_NAME} ${SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
 message(STATUS "Compiling shader sources:")
@@ -40,29 +53,28 @@ foreach(SHADER_SOURCE ${SHADER_SOURCES})
 endforeach()
 
 target_link_libraries(${PROJECT_NAME} 
+  PUBLIC
   ${ASSIMP_LIBRARIES}
   Vulkan::Vulkan 
   glfw
-  spdlog::spdlog_header_only
+  spdlog::spdlog
   vk-bootstrap::vk-bootstrap
-  # OpenVDB::openvdb
+  OpenVDB::openvdb
 )
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${GLM_INCLUDE_DIR}
-  ${STB_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 IF(MSVC)
   target_compile_options(${PROJECT_NAME}
     PRIVATE
-    /EHsc /W4 /WX
+    /EHsc /W4
   )
 ELSE(MSVC)
   target_compile_options(${PROJECT_NAME}
     PRIVATE
-    -Wall -Werror -Wno-unused-variable
+    -Wall -Werror -Wno-unused-variable -Wno-deprecated-declarations
   )
 ENDIF(MSVC)
 

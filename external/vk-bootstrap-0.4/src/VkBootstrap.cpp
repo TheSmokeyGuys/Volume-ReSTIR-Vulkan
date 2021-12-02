@@ -570,6 +570,9 @@ InstanceBuilder::InstanceBuilder(PFN_vkGetInstanceProcAddr fp_vkGetInstanceProcA
 }
 InstanceBuilder::InstanceBuilder() {}
 
+/*********************************************************
+ * STEP02: Pg. 45, creating instance
+ **********************************************************/
 detail::Result<Instance> InstanceBuilder::build() const {
 
 	auto sys_info_ret = SystemInfo::get_system_info();
@@ -746,87 +749,107 @@ InstanceBuilder& InstanceBuilder::set_app_name(const char* app_name) {
 	info.app_name = app_name;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_engine_name(const char* engine_name) {
 	if (!engine_name) return *this;
 	info.engine_name = engine_name;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_app_version(uint32_t major, uint32_t minor, uint32_t patch) {
 	info.application_version = VK_MAKE_VERSION(major, minor, patch);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_engine_version(uint32_t major, uint32_t minor, uint32_t patch) {
 	info.engine_version = VK_MAKE_VERSION(major, minor, patch);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::require_api_version(uint32_t major, uint32_t minor, uint32_t patch) {
 	info.required_api_version = VK_MAKE_VERSION(major, minor, patch);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::desire_api_version(uint32_t major, uint32_t minor, uint32_t patch) {
 	info.desired_api_version = VK_MAKE_VERSION(major, minor, patch);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::enable_layer(const char* layer_name) {
 	if (!layer_name) return *this;
 	info.layers.push_back(layer_name);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::enable_extension(const char* extension_name) {
 	if (!extension_name) return *this;
 	info.extensions.push_back(extension_name);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::enable_validation_layers(bool enable_validation) {
 	info.enable_validation_layers = enable_validation;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::request_validation_layers(bool enable_validation) {
 	info.request_validation_layers = enable_validation;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::use_default_debug_messenger() {
 	info.use_debug_messenger = true;
 	info.debug_callback = default_debug_callback;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_debug_callback(PFN_vkDebugUtilsMessengerCallbackEXT callback) {
 	info.use_debug_messenger = true;
 	info.debug_callback = callback;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_headless(bool headless) {
 	info.headless_context = headless;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_debug_messenger_severity(VkDebugUtilsMessageSeverityFlagsEXT severity) {
 	info.debug_message_severity = severity;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::add_debug_messenger_severity(VkDebugUtilsMessageSeverityFlagsEXT severity) {
 	info.debug_message_severity = info.debug_message_severity | severity;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_debug_messenger_type(VkDebugUtilsMessageTypeFlagsEXT type) {
 	info.debug_message_type = type;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::add_debug_messenger_type(VkDebugUtilsMessageTypeFlagsEXT type) {
 	info.debug_message_type = info.debug_message_type | type;
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::add_validation_disable(VkValidationCheckEXT check) {
 	info.disabled_validation_checks.push_back(check);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::add_validation_feature_enable(VkValidationFeatureEnableEXT enable) {
 	info.enabled_validation_features.push_back(enable);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::add_validation_feature_disable(VkValidationFeatureDisableEXT disable) {
 	info.disabled_validation_features.push_back(disable);
 	return *this;
 }
+
 InstanceBuilder& InstanceBuilder::set_allocation_callbacks(VkAllocationCallbacks* callbacks) {
 	info.allocation_callbacks = callbacks;
 	return *this;
