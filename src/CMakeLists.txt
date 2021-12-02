@@ -9,6 +9,22 @@ file(GLOB_RECURSE SHADER_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/*.comp
   ${CMAKE_CURRENT_SOURCE_DIR}/*.tese
   ${CMAKE_CURRENT_SOURCE_DIR}/*.tesc
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rchit
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rahit
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rint
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rmiss
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rgen
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.rcall
+)
+
+file(GLOB_RECURSE GLSL_HEADER_FILES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.h 
+  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.glsl
+)
+
+file(GLOB_RECURSE GLSL_STRUCTURE_FILES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.h 
+  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.glsl
 )
 
 source_group("Shaders" FILES ${SHADER_SOURCES})
@@ -34,33 +50,41 @@ else(WIN32)
   target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
 
+
+#--------------------------------------------------------------------------------------------------
+# GLSL to SPIR-V custom build
+#
 message(STATUS "Compiling shader sources:")
+set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+SET(VULKAN_TARGET_ENV vulkan1.2)
+UNSET(SPV_OUTPUT)
+foreach(GLSL ${SHADER_SOURCES})
+  message(STATUS "\t${GLSL}")
+  get_filename_component(FILE_NAME ${GLSL} NAME)
+  _compile_GLSL(${GLSL} ${SHADER_DIR}/${FILE_NAME}.spv GLSL_SOURCES SPV_OUTPUT)
+endforeach(GLSL)
+# list(APPEND SHADER_SOURCES ${GLSL_HEADER_FILES})
 
-foreach(SHADER_SOURCE ${SHADER_SOURCES})
-  message(STATUS "\t${SHADER_SOURCE}")
-
-  set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-
-  get_filename_component(fname ${SHADER_SOURCE} NAME)
-  add_custom_target(${fname}.spv
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_DIR} && 
-    ${GLSL_VALIDATOR} -V ${SHADER_SOURCE} -o ${SHADER_DIR}/${fname}.spv
-    SOURCES ${SHADER_SOURCE}
-  )
-
-  ExternalTarget("Shaders" ${fname}.spv)
-  add_dependencies(${PROJECT_NAME} ${fname}.spv)
-endforeach()
+message(STATUS "Shader output: ${SPV_OUTPUT}")
 
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC
   ${ASSIMP_LIBRARIES}
-  Vulkan::Vulkan 
-  glfw
+  ${PLATFORM_LIBRARIES} 
+  shared_sources 
   spdlog::spdlog
   vk-bootstrap::vk-bootstrap
   OpenVDB::openvdb
 )
+
+foreach(DEBUGLIB ${LIBRARIES_DEBUG})
+  target_link_libraries(${PROJECT_NAME} PUBLIC debug ${DEBUGLIB})
+endforeach(DEBUGLIB)
+
+foreach(RELEASELIB ${LIBRARIES_OPTIMIZED})
+  target_link_libraries(${PROJECT_NAME} PUBLIC optimized ${RELEASELIB})
+endforeach(RELEASELIB)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
