@@ -1,6 +1,17 @@
 #ifndef __VOLUME_RESTIR_RENDERER_HPP__
 #define __VOLUME_RESTIR_RENDERER_HPP__
 
+#define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#include "nvvk/debug_util_vk.hpp"
+#include "nvvk/descriptorsets_vk.hpp"
+#include "nvvk/context_vk.hpp"
+#include "nvvk/profiler_vk.hpp"
+#include "nvvk/raytraceKHR_vk.hpp"
+// #VKRay
+#include "nvh/gltfscene.hpp"
+#include "nvvk/raytraceKHR_vk.hpp"
+
 #include <array>
 #include <memory>
 #include <vector>
@@ -41,6 +52,9 @@ private:
   void RecreateSwapChain();
   void CleanupSwapChain();
 
+  void CreateScene(std::string scene);
+
+
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<nvvk::SwapChain> swapchain_;
   std::unique_ptr<Camera> camera_;
@@ -76,6 +90,12 @@ private:
 
   size_t current_frame_idx_  = 0;
   bool frame_buffer_resized_ = false;
+
+
+  //NVVK Stuff
+  nvvk::AllocatorDedicated m_alloc;
+  nvvk::DebugUtil m_debug;
+
 };
 
 }  // namespace volume_restir

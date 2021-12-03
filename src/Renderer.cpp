@@ -6,8 +6,11 @@
 #include "ShaderModule.hpp"
 #include "SingtonManager.hpp"
 #include "config/static_config.hpp"
+#include "config/build_config.h"
 #include "model/Cube.hpp"
 #include "spdlog/spdlog.h"
+#include"nvh/fileoperations.hpp"
+
 namespace volume_restir {
 
 Renderer::Renderer() {
@@ -41,7 +44,46 @@ Renderer::Renderer() {
   CreateGraphicsPipeline();
   CreateCommandPools();
   RecordCommandBuffers();
+
+  //NVVK Stuff
+  m_alloc.init(render_context_->GetNvvkContext().m_device,
+               render_context_->GetNvvkContext().m_physicalDevice);
+  m_debug.setup(render_context_->GetNvvkContext().m_device);
 };
+
+void Renderer::CreateScene(std::string scenefile) {
+
+    
+
+    std::vector<std::string> prjctDir{PROJECT_DIRECTORY};
+
+  std::string filename = nvh::findFile(scenefile, prjctDir);
+  _loadScene(filename);
+  if (IgnorePointLight) {
+    m_gltfScene.m_lights.clear();
+  }
+  _createDescriptorPool();
+
+  m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
+                        m_physicalDevice, m_graphicsQueueIndex);
+
+  m_sceneBuffers.createDescriptorSet(m_descStaticPool);
+
+  for (std::size_t i = 0; i < numGBuffers; i++) {
+    m_gBuffers[i].create(&m_alloc, m_device, m_graphicsQueueIndex, m_size,
+                         m_renderPass);
+    // m_gBuffers[i].transitionLayout();
+  }
+
+  const float aspectRatio = m_size.width / static_cast<float>(m_size.height);
+  m_sceneUniforms.prevFrameProjectionViewMatrix =
+      CameraManip.getMatrix() *
+      nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
+
+  _createUniformBuffer();
+  _createDescriptorSet();
+}
+
 
 void Renderer::SetFrameBufferResized(bool val) {
   this->frame_buffer_resized_ = val;
