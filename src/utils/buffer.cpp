@@ -15,15 +15,15 @@ void CreateBuffer(const RenderContext* render_context, VkDeviceSize size,
   bufferInfo.usage              = usage;
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (vkCreateBuffer(render_context->Device().device, &bufferInfo, nullptr,
-                     &buffer) != VK_SUCCESS) {
+  if (vkCreateBuffer(render_context->GetNvvkContext().m_device, &bufferInfo,
+                     nullptr, &buffer) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create vertex buffer");
   }
 
   // Query buffer's memory requirements
   VkMemoryRequirements memRequirements;
-  vkGetBufferMemoryRequirements(render_context->Device().device, buffer,
-                                &memRequirements);
+  vkGetBufferMemoryRequirements(render_context->GetNvvkContext().m_device,
+                                buffer, &memRequirements);
 
   // Allocate memory in device
   VkMemoryAllocateInfo allocInfo = {};
@@ -32,13 +32,14 @@ void CreateBuffer(const RenderContext* render_context, VkDeviceSize size,
   allocInfo.memoryTypeIndex      = render_context->MemoryTypeIndex(
       memRequirements.memoryTypeBits, properties);
 
-  if (vkAllocateMemory(render_context->Device().device, &allocInfo, nullptr,
-                       &bufferMemory) != VK_SUCCESS) {
+  if (vkAllocateMemory(render_context->GetNvvkContext().m_device, &allocInfo,
+                       nullptr, &bufferMemory) != VK_SUCCESS) {
     throw std::runtime_error("Failed to allocate vertex buffer");
   }
 
   // Associate allocated memory with vertex buffer
-  vkBindBufferMemory(render_context->Device().device, buffer, bufferMemory, 0);
+  vkBindBufferMemory(render_context->GetNvvkContext().m_device, buffer,
+                     bufferMemory, 0);
 }
 
 void CopyBuffer(const RenderContext* render_context, VkCommandPool commandPool,
@@ -50,8 +51,8 @@ void CopyBuffer(const RenderContext* render_context, VkCommandPool commandPool,
   allocInfo.commandBufferCount = 1;
 
   VkCommandBuffer commandBuffer;
-  vkAllocateCommandBuffers(render_context->Device().device, &allocInfo,
-                           &commandBuffer);
+  vkAllocateCommandBuffers(render_context->GetNvvkContext().m_device,
+                           &allocInfo, &commandBuffer);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -70,18 +71,12 @@ void CopyBuffer(const RenderContext* render_context, VkCommandPool commandPool,
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers    = &commandBuffer;
 
-  auto graphics_queue =
-      render_context->Device().get_queue(vkb::QueueType::graphics);
-  if (!graphics_queue.has_value()) {
-    spdlog::error("Failed to get graphics queue while copying buffer: {}",
-                  graphics_queue.error().message());
-    throw std::runtime_error("Failed to get graphics queue");
-  }
+  auto graphics_queue = render_context->GetQueues()[QueueFlags::GRAPHICS];
 
-  vkQueueSubmit(graphics_queue.value(), 1, &submitInfo, VK_NULL_HANDLE);
-  vkQueueWaitIdle(graphics_queue.value());
-  vkFreeCommandBuffers(render_context->Device().device, commandPool, 1,
-                       &commandBuffer);
+  vkQueueSubmit(graphics_queue, 1, &submitInfo, VK_NULL_HANDLE);
+  vkQueueWaitIdle(graphics_queue);
+  vkFreeCommandBuffers(render_context->GetNvvkContext().m_device, commandPool,
+                       1, &commandBuffer);
 }
 
 void CreateBufferFromData(const RenderContext* render_context,
@@ -102,10 +97,10 @@ void CreateBufferFromData(const RenderContext* render_context,
 
   // Fill the staging buffer
   void* data;
-  vkMapMemory(render_context->Device().device, stagingBufferMemory, 0,
+  vkMapMemory(render_context->GetNvvkContext().m_device, stagingBufferMemory, 0,
               bufferSize, 0, &data);
   memcpy(data, bufferData, static_cast<size_t>(bufferSize));
-  vkUnmapMemory(render_context->Device().device, stagingBufferMemory);
+  vkUnmapMemory(render_context->GetNvvkContext().m_device, stagingBufferMemory);
 
   // Create the buffer
   VkBufferUsageFlags usage    = VK_BUFFER_USAGE_TRANSFER_DST_BIT | bufferUsage;
@@ -116,8 +111,10 @@ void CreateBufferFromData(const RenderContext* render_context,
   CopyBuffer(render_context, commandPool, stagingBuffer, buffer, bufferSize);
 
   // No need for the staging buffer anymore
-  vkDestroyBuffer(render_context->Device().device, stagingBuffer, nullptr);
-  vkFreeMemory(render_context->Device().device, stagingBufferMemory, nullptr);
+  vkDestroyBuffer(render_context->GetNvvkContext().m_device, stagingBuffer,
+                  nullptr);
+  vkFreeMemory(render_context->GetNvvkContext().m_device, stagingBufferMemory,
+               nullptr);
 }
 
 }  // namespace buffer

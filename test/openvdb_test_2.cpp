@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#pragma comment(linker, "/subsystem:console")
+#endif
+
 #include <openvdb/openvdb.h>
 #include <openvdb/points/PointConversion.h>
 #include <openvdb/points/PointCount.h>

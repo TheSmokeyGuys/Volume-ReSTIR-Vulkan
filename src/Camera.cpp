@@ -79,9 +79,11 @@ Camera::Camera(RenderContext* render_context, float fov, float aspect_ratio)
 
 Camera::~Camera() {
   if (has_device_memory_) {
-    vkUnmapMemory(metadata_.context->Device().device, buffer_memory_);
-    vkDestroyBuffer(metadata_.context->Device().device, buffer_, nullptr);
-    vkFreeMemory(metadata_.context->Device().device, buffer_memory_, nullptr);
+    vkUnmapMemory(metadata_.context->GetNvvkContext().m_device, buffer_memory_);
+    vkDestroyBuffer(metadata_.context->GetNvvkContext().m_device, buffer_,
+                    nullptr);
+    vkFreeMemory(metadata_.context->GetNvvkContext().m_device, buffer_memory_,
+                 nullptr);
   } else {
     spdlog::info(
         "Camera has not allocated device memory. No memory destruction needed");
@@ -95,7 +97,7 @@ void Camera::CreateDeviceBuffer() {
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                        buffer_, buffer_memory_);
-  vkMapMemory(metadata_.context->Device().device, buffer_memory_, 0,
+  vkMapMemory(metadata_.context->GetNvvkContext().m_device, buffer_memory_, 0,
               sizeof(CameraBufferObject), 0, &buffer_mapped_data_);
   std::memcpy(buffer_mapped_data_, &buffer_object_, sizeof(CameraBufferObject));
 

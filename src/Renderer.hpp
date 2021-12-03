@@ -1,20 +1,19 @@
 #ifndef __VOLUME_RESTIR_RENDERER_HPP__
 #define __VOLUME_RESTIR_RENDERER_HPP__
 
-#include <vulkan/vulkan.h>
-
 #include <array>
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 #include "Camera.hpp"
 #include "RenderContext.hpp"
 #include "Scene.hpp"
-#include "SwapChain.hpp"
-#include "VkBootstrap.h"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
 #include "utils/vkqueue_utils.hpp"
+
+#include "nvvk/swapchain_vk.hpp"
 
 namespace volume_restir {
 
@@ -28,9 +27,6 @@ public:
   void Draw();
 
 private:
-  using Queues = std::array<VkQueue, sizeof(vkb::QueueType)>;
-
-  void InitQueues();
   void CreateRenderPass();
   void CreateGraphicsPipeline();
   void CreateFrameResources();
@@ -46,15 +42,12 @@ private:
   void CleanupSwapChain();
 
   std::unique_ptr<RenderContext> render_context_;
-  std::unique_ptr<SwapChain> swapchain_;
+  std::unique_ptr<nvvk::SwapChain> swapchain_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<Scene> scene_;
 
-  // render queues
-  Queues queues_;
-
   // image views & frame buffers
-  std::vector<VkImageView> swapchain_image_views_;
+  /*std::vector<VkImageView> swapchain_image_views_;*/
   std::vector<VkFramebuffer> framebuffers_;
 
   // descriptor set layouts

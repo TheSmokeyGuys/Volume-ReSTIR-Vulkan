@@ -5,7 +5,6 @@
 #include "Camera.hpp"
 #include "Renderer.hpp"
 #include "SingtonManager.hpp"
-#include "VkBootstrap.h"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
 #include "spdlog/spdlog.h"
