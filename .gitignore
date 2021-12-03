@@ -663,4 +663,5 @@ FodyWeavers.xsd
 build
 bin
 .vscode
+!external/shared_external/glfw3/**
 
