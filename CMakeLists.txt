@@ -1,16 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-if(WIN32)
-  SET(Vcpkg_ROOT "C:\\vcpkg" CACHE STRING "Root dir for Vcpkg")
-  message(STATUS "Using Vcpkg_ROOT: ${Vcpkg_ROOT}")
-  set(CMAKE_TOOLCHAIN_FILE "${Vcpkg_ROOT}\\scripts\\buildsystems\\vcpkg.cmake")
-else(WIN32)
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
-endif(WIN32)
-
 project(volume_restir)
-
-OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
 # presets and utility functions used in all CMakeLists
 include(utilities.cmake)
@@ -41,6 +30,17 @@ _add_package_OpenGL()
 _add_package_ImGUI()
 _add_package_ZLIB()
 _add_shared_sources_lib()
+
+OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+if(WIN32)
+  SET(Vcpkg_ROOT "C:\\vcpkg" CACHE STRING "Root dir for Vcpkg")
+  message(STATUS "Using Vcpkg_ROOT: ${Vcpkg_ROOT}")
+  set(CMAKE_TOOLCHAIN_FILE "${Vcpkg_ROOT}\\scripts\\buildsystems\\vcpkg.cmake")
+else(WIN32)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
+endif(WIN32)
 
 find_package(OpenVDB)
 
