@@ -2,6 +2,11 @@
 
 #include <vulkan/vulkan.hpp>
 
+#ifndef NVVK_ALLOC_DEDICATED
+#define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#endif
+
 #include "GLTFSceneBuffers.h"
 #include "nvh/alignment.hpp"
 #include "nvh/fileoperations.hpp"

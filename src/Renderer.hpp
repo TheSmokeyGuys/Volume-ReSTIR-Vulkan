@@ -3,7 +3,11 @@
 
 #include <vulkan/vulkan.hpp>
 
+#ifndef NVVK_ALLOC_DEDICATED
 #define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#endif
+
 #include "nvvk/context_vk.hpp"
 #include "nvvk/debug_util_vk.hpp"
 #include "nvvk/descriptorsets_vk.hpp"
@@ -24,14 +28,13 @@
 #include "config/static_config.hpp"
 #include "loader/GLTFLoader.hpp"
 #include "nvh/gltfscene.hpp"
+#include "nvvk/pipeline_vk.hpp"
 #include "nvvk/raytraceKHR_vk.hpp"
 #include "nvvk/swapchain_vk.hpp"
-#include "shaders/Headers/binding.glsl"
-#include "utils/vkqueue_utils.hpp"
-
 #include "passes/restirPass.h"
 #include "passes/spatialReusePass.h"
-#include "nvvk/pipeline_vk.hpp"
+#include "shaders/Headers/binding.glsl"
+#include "utils/vkqueue_utils.hpp"
 
 namespace volume_restir {
 
@@ -68,8 +71,8 @@ private:
   void _createPostPipeline();
   void _updateRestirDescriptorSet();
 
-  //Testing Functions
-  void render(); // Function just to test the pipeline
+  // Testing Functions
+  void render();  // Function just to test the pipeline
   void destroyResources();
   void _drawPost(vk::CommandBuffer cmdBuf, uint32_t currentGFrame);
   void _submitMainCommand();
@@ -168,7 +171,7 @@ private:
   vk::Pipeline m_postPipeline;
   vk::PipelineLayout m_postPipelineLayout;
 
-  	vk::Fence m_mainFence;
+  vk::Fence m_mainFence;
 };
 
 }  // namespace volume_restir

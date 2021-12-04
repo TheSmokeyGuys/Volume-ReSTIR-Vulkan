@@ -23,9 +23,10 @@ Renderer::Renderer() {
 
   // Initialise AppBase
   this->setup(render_context_->GetInstance(), render_context_->GetDevice(),
-              render_context_->GetPhysicalDevice(), render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS ));
+              render_context_->GetPhysicalDevice(),
+              render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
 
-      swapchain_ = std::make_unique<nvvk::SwapChain>(
+  swapchain_ = std::make_unique<nvvk::SwapChain>(
       render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueues()[QueueFlags::GRAPHICS],
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS],
@@ -710,7 +711,7 @@ void Renderer::RecordCommandBuffers() {
     }
   }
 
-  //Create Fence
+  // Create Fence
   vk::FenceCreateInfo fenceInfo;
   fenceInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
   m_mainFence = m_device.createFence(fenceInfo);
@@ -1433,14 +1434,14 @@ void Renderer::_drawPost(vk::CommandBuffer cmdBuf, uint32_t currentGFrame) {
   m_debug.endLabel(cmdBuf);
 }
 
-//Imp: this doesn't work fix m_mainCommandBuffer in the main Project 
+// Imp: this doesn't work fix m_mainCommandBuffer in the main Project
 void Renderer::_submitMainCommand() {
   while (m_device.waitForFences(m_mainFence, VK_TRUE, 10000) ==
          vk::Result::eTimeout) {
   }
   m_device.resetFences(m_mainFence);
   vk::SubmitInfo submitInfo;
-  submitInfo.setCommandBuffers(command_buffers_[0]); //m_mainCommandBuffer
+  submitInfo.setCommandBuffers(command_buffers_[0]);  // m_mainCommandBuffer
   m_queue.submit(submitInfo, m_mainFence);
 }
 

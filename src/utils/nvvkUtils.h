@@ -1,31 +1,33 @@
 #pragma once
-#pragma once
-#define NVVK_ALLOC_DEDICATED
 
-#include <vulkan/vulkan.hpp>
 #include <nvmath/nvmath.h>
 #include <nvmath/nvmath_glsltypes.h>
-#include "nvvk/allocator_vk.hpp"
-#include "nvvk/appbase_vkpp.hpp"
-#include "nvh/gltfscene.hpp"
-#include "nvvk/descriptorsets_vk.hpp"
 
-#include "shaderIncludes.h"
-#include "nvh/gltfscene.hpp"
-#include <unordered_set>
-#include <vector>
 #include <filesystem>
 #include <iostream>
 #include <optional>
 #include <random>
+#include <unordered_set>
+#include <vector>
+#include <vulkan/vulkan.hpp>
 
+#ifndef NVVK_ALLOC_DEDICATED
+#define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#endif
 
-[[nodiscard]] std::vector<shader::pointLight> collectPointLights(const nvh::GltfScene&);
+#include "nvh/gltfscene.hpp"
+#include "nvvk/appbase_vkpp.hpp"
+#include "nvvk/descriptorsets_vk.hpp"
+#include "shaderIncludes.h"
+
+[[nodiscard]] std::vector<shader::pointLight> collectPointLights(
+    const nvh::GltfScene&);
 [[nodiscard]] std::vector<shader::pointLight> generatePointLights(
-	nvmath::vec3 min, nvmath::vec3 max
-);
+    nvmath::vec3 min, nvmath::vec3 max);
 
-[[nodiscard]] std::vector<shader::triangleLight> collectTriangleLights(const nvh::GltfScene&);
+[[nodiscard]] std::vector<shader::triangleLight> collectTriangleLights(
+    const nvh::GltfScene&);
 
-[[nodiscard]] std::vector<shader::aliasTableCell> createAliasTable(std::vector<float>&);
-
+[[nodiscard]] std::vector<shader::aliasTableCell> createAliasTable(
+    std::vector<float>&);

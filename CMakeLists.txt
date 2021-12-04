@@ -70,6 +70,7 @@ endif(MSVC)
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 set(CMAKE_CXX_STANDARD 17)
+_add_project_definitions(${PROJECT_NAME})
 
 message(STATUS "Using C++ standard: ${CMAKE_CXX_STANDARD}")
 

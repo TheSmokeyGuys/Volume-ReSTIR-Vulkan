@@ -155,8 +155,7 @@ void RenderContext::InitQueues() {
       nvvk_context_.m_physicalDevice, requiredQueues, surface_);
   for (unsigned int i = 0; i < requiredQueues.size(); ++i) {
     if (requiredQueues[i]) {
-      vkGetDeviceQueue(nvvk_context_.m_device, queue_family_indices_[i], 0,
-                       &queues_[i]);
+      queues_[i] = device_.getQueue(queue_family_indices_[i], 0);
     }
   }
   spdlog::debug("Initialized all queues");

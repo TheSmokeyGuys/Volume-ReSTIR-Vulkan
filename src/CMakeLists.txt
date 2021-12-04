@@ -49,7 +49,6 @@ else(WIN32)
   add_executable(${PROJECT_NAME} ${SOURCES})
   target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif(WIN32)
-_add_project_definitions(${PROJECT_NAME})
 
 
 #--------------------------------------------------------------------------------------------------

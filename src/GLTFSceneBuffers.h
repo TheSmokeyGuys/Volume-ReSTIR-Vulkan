@@ -5,6 +5,11 @@
 #include <queue>
 #include <vulkan/vulkan.hpp>
 
+#ifndef NVVK_ALLOC_DEDICATED
+#define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#endif
+
 #include "nvh/gltfscene.hpp"
 #include "nvvk/appbase_vkpp.hpp"
 #include "nvvk/commands_vk.hpp"

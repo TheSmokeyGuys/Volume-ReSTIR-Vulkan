@@ -1,4 +1,11 @@
+#pragma once
+
 #include <vulkan/vulkan.hpp>
+
+#ifndef NVVK_ALLOC_DEDICATED
+#define NVVK_ALLOC_DEDICATED
+#include "nvvk/allocator_vk.hpp"
+#endif
 
 #include "GLTFSceneBuffers.h"
 #include "shaders/headers/binding.glsl"
