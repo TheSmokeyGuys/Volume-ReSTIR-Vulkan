@@ -12,6 +12,7 @@
 #include "vdb/vdb.h"
 #include "config/build_config.h"
 
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace fs = std::filesystem;
 using namespace volume_restir;
@@ -19,6 +20,10 @@ using namespace volume_restir;
 const std::string vdb_filename = "fire.vdb";
 const fs::path asset_dir = fs::path(PROJECT_DIRECTORY) / fs::path("assets");
 const std::string file   = (asset_dir / vdb_filename).string();
+
+//TODO : Need to see where these are initialised
+std::vector<std::string> defaultSearchPaths;
+std::string environmentalTextureFile = "media/daytime.hdr";
 
 int main() {
 #ifdef NDEBUG

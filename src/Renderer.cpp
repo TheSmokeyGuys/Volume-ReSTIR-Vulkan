@@ -76,8 +76,6 @@ void Renderer::CreateScene(std::string scenefile) {
       render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
 
-  // CreateSceneBuffers();
-  CreateDescriptorSetScene();
 
   for (std::size_t i = 0; i < numGBuffers; i++) {
     m_gBuffers[i].create(

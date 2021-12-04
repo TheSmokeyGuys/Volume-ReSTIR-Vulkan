@@ -58,10 +58,9 @@ private:
   void CreateCameraDiscriptorSetLayout();
   void CreateCameraDescriptorSet();
 
-  void CreateSwapChain();
+  //void CreateSwapChain();
   void RecreateSwapChain();
   void CleanupSwapChain();
-  void CreateDescriptorSetScene();
   void CreateScene(std::string scene);
 
   // nvvk functions
