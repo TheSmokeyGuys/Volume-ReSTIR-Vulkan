@@ -30,9 +30,13 @@
 #include "shaders/Headers/binding.glsl"
 #include "utils/vkqueue_utils.hpp"
 
+#include "passes/restirPass.h"
+#include "passes/spatialReusePass.h"
+#include "nvvk/pipeline_vk.hpp"
+
 namespace volume_restir {
 
-class Renderer {
+class Renderer : public nvvk::AppBase {
 public:
   Renderer();
   ~Renderer();
@@ -62,6 +66,9 @@ private:
   void _createUniformBuffer();
   void _createDescriptorSet();
   void _updateUniformBuffer(const vk::CommandBuffer& cmdBuf);
+  void _createPostPipeline();
+  void _updateRestirDescriptorSet();
+
 
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<nvvk::SwapChain> swapchain_;
@@ -145,6 +152,12 @@ private:
   std::vector<vk::DescriptorSet> m_restirSets;
 
   GLTFSceneBuffers m_sceneBuffers;
+
+  RestirPass m_restirPass;
+  SpatialReusePass m_spatialReusePass;
+
+  vk::Pipeline m_postPipeline;
+  vk::PipelineLayout m_postPipelineLayout;
 };
 
 }  // namespace volume_restir

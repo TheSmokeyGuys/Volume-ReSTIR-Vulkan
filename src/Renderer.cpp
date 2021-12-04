@@ -15,8 +15,7 @@ namespace volume_restir {
 
 bool IgnorePointLight = true;
 
-Renderer::Renderer()
-    : m_windowSize(static_config::kWindowWidth, static_config::kWindowHeight) {
+Renderer::Renderer() {
   float aspect_ratio =
       static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
 
@@ -79,12 +78,12 @@ void Renderer::CreateScene(std::string scenefile) {
     m_gBuffers[i].create(
         &m_alloc, render_context_->GetDevice(),
         render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS),
-        m_windowSize, render_pass_);
+        m_size, render_pass_);
     // m_gBuffers[i].transitionLayout();
   }
 
   // const float aspectRatio =
-  //    m_windowSize.width / static_cast<float>(m_windowSize.height);
+  //    m_size.width / static_cast<float>(m_size.height);
   // m_sceneUniforms.prevFrameProjectionViewMatrix =
   //    CameraManip.getMatrix() *
   //    nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
@@ -94,40 +93,35 @@ void Renderer::CreateScene(std::string scenefile) {
 
   // LOGI("Create Restir Pass\n");
 
-  // m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
-  //                   &m_alloc);
-  // m_restirPass.createRenderPass(m_size);
-  // m_restirPass.createPipeline(m_sceneSetLayout,
-  // m_sceneBuffers.getDescLayout(),
-  //                            m_lightSetLayout, m_restirSetLayout);
+  m_restirPass.setup(
+      render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
+      render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS), &m_alloc);
+  m_restirPass.createRenderPass(m_size);
+  m_restirPass.createPipeline(m_sceneSetLayout, m_sceneBuffers.getDescLayout(),
+                              m_lightSetLayout, m_restirSetLayout);
 
   // LOGI("Create SpatialReuse Pass\n");
 
-  // m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
-  //                         &m_alloc);
-  // m_spatialReusePass.createRenderPass(m_size);
-  // m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
-  //                                  m_restirSetLayout);
+  m_spatialReusePass.setup(
+      render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
+      render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS), &m_alloc);
+  m_spatialReusePass.createRenderPass(m_size);
+  m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
+                                    m_restirSetLayout);
 
-  // createDepthBuffer();
-  // createRenderPass();
-  // initGUI(0);
-  // createFrameBuffers();
-  //_createPostPipeline();
+  createDepthBuffer();
+  createRenderPass();
+  initGUI(0);
+  createFrameBuffers();
+  _createPostPipeline();
 
-  //_updateRestirDescriptorSet();
+  _updateRestirDescriptorSet();
 
-  // m_pushC.initialize = 1;
-  //_createMainCommandBuffer();
+  m_pushC.initialize = 1;
+  _createMainCommandBuffer();
 
-  // m_device.waitIdle();
+  m_device.waitIdle();
   // LOGI("Prepared\n");
-
-  // TODO Create buffers for scene
-  // m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
-  //                      m_physicalDevice, m_graphicsQueueIndex);
-
-  //
 }
 
 //[[nodiscard]] void CreateSceneBuffers(const nvh::GltfScene& gltfScene,
@@ -933,7 +927,7 @@ void Renderer::_createUniformBuffer() {
   m_sceneUniforms.debugMode = 0;
   m_sceneUniforms.gamma     = 2.2;
   m_sceneUniforms.screenSize =
-      nvmath::uvec2(m_windowSize.width, m_windowSize.height);
+      nvmath::uvec2(m_size.width, m_size.height);
   m_sceneUniforms.flags = RESTIR_VISIBILITY_REUSE_FLAG |
                           RESTIR_TEMPORAL_REUSE_FLAG |
                           RESTIR_SPATIAL_REUSE_FLAG;
@@ -968,7 +962,7 @@ void Renderer::_createUniformBuffer() {
 
   _updateUniformBuffer(cmdBuf);
   auto colorCreateInfo = nvvk::makeImage2DCreateInfo(
-      m_windowSize, vk::Format::eR32G32B32A32Sfloat,
+      m_size, vk::Format::eR32G32B32A32Sfloat,
       vk::ImageUsageFlagBits::eColorAttachment |
           vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage);
   vk::SamplerCreateInfo samplerCreateInfo{{},
@@ -1163,7 +1157,7 @@ void Renderer::_createDescriptorSet() {
 void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
   // Prepare new UBO contents on host.
   const float aspectRatio =
-      m_windowSize.width / static_cast<float>(m_windowSize.height);
+      m_size.width / static_cast<float>(m_size.height);
 
   m_sceneUniforms.prevFrameProjectionViewMatrix =
       m_sceneUniforms.projectionViewMatrix;
@@ -1231,6 +1225,89 @@ void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
   cmdBuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, uboUsageStages,
                          vk::DependencyFlagBits::eDeviceGroup, {},
                          {afterBarrier}, {});
+}
+
+void Renderer::_createPostPipeline() {
+  // Push constants in the fragment shader
+  vk::PushConstantRange pushConstantRanges = {
+      vk::ShaderStageFlagBits::eFragment, 0, sizeof(shader::PushConstant)};
+
+  // Creating the pipeline layout
+  std::vector<vk::DescriptorSetLayout> layouts = {
+      m_sceneSetLayout, m_lightSetLayout, m_restirSetLayout};
+  vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+  // pipelineLayoutCreateInfo.setSetLayoutCount(1);
+  pipelineLayoutCreateInfo.setSetLayouts(layouts);
+  pipelineLayoutCreateInfo.setPushConstantRangeCount(1);
+  pipelineLayoutCreateInfo.setPPushConstantRanges(&pushConstantRanges);
+  m_postPipelineLayout =
+      render_context_->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);
+
+  // Pipeline: completely generic, no vertices
+  std::vector<std::string> paths = {BUILD_DIRECTORY};
+
+  nvvk::GraphicsPipelineGeneratorCombined pipelineGenerator(
+      render_context_->GetDevice(), m_postPipelineLayout, render_pass_);
+  pipelineGenerator.addShader(
+      nvh::loadFile("/shaders/quad.vert.spv", true, paths, true),
+      vk::ShaderStageFlagBits::eVertex);
+  pipelineGenerator.addShader(
+      nvh::loadFile("/shaders/post.frag.spv", true, paths, true),
+      vk::ShaderStageFlagBits::eFragment);
+  pipelineGenerator.rasterizationState.setCullMode(vk::CullModeFlagBits::eNone);
+  m_postPipeline = pipelineGenerator.createPipeline();
+  m_debug.setObjectName(m_postPipeline, "post");
+}
+
+void Renderer::_updateRestirDescriptorSet() {
+  std::vector<vk::WriteDescriptorSet> writes;
+
+  for (uint32_t i = 0; i < numGBuffers; i++) {
+    vk::DescriptorSet& set = m_restirSets[i];
+    const GBuffer& buf     = m_gBuffers[i];
+    const GBuffer& bufprev = m_gBuffers[(numGBuffers + i - 1) % numGBuffers];
+
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_FRAME_WORLD_POSITION, &buf.getWorldPosTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_FRAME_ALBEDO, &buf.getAlbedoTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_FRAME_NORMAL, &buf.getNormalTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_FRAME_MATERIAL_PROPS,
+        &buf.getMaterialPropertiesTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PERV_FRAME_WORLD_POSITION,
+        &bufprev.getWorldPosTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PERV_FRAME_ALBEDO, &bufprev.getAlbedoTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PERV_FRAME_NORMAL, &bufprev.getNormalTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PREV_FRAME_MATERIAL_PROPS,
+        &bufprev.getMaterialPropertiesTexture().descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_STORAGE_IMAGE, &m_storageImage.descriptor));
+
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_RESERVIORS_INFO, &m_reservoirInfoBuffers[i].descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_RESERVIORS_WEIGHT, &m_reservoirWeightBuffers[i].descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PREV_RESERVIORS_INFO,
+        &m_reservoirInfoBuffers[(numGBuffers + i - 1) % numGBuffers]
+             .descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_PREV_RESERVIORS_WEIGHT,
+        &m_reservoirWeightBuffers[(numGBuffers + i - 1) % numGBuffers]
+             .descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_TMP_RESERVIORS_INFO, &m_reservoirTmpInfoBuffer.descriptor));
+    writes.emplace_back(m_restirSetLayoutBind.makeWrite(
+        set, B_TMP_RESERVIORS_WEIGHT, &m_reservoirTmpWeightBuffer.descriptor));
+  }
+  m_device.updateDescriptorSets(static_cast<uint32_t>(writes.size()),
+                                writes.data(), 0, nullptr);
 }
 
 }  // namespace volume_restir

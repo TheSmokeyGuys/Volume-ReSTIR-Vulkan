@@ -10,6 +10,8 @@
 #include "spdlog/spdlog.h"
 #include "vdb/Utilities.h"
 #include "vdb/vdb.h"
+#include "config/build_config.h"
+
 
 namespace fs = std::filesystem;
 using namespace volume_restir;
