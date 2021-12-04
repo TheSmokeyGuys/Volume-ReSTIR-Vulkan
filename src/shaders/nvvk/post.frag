@@ -4,12 +4,12 @@
 #extension GL_EXT_scalar_block_layout : enable
 
 
-#include "structs/sceneStructs.glsl"
-#include "structs/light.glsl"
-#include "structs/restirStructs.glsl"
+#include "../structs/sceneStructs.glsl"
+#include "../structs/light.glsl"
+#include "../structs/restirStructs.glsl"
 
-#include "headers/binding.glsl"
-#include "headers/DebugConstants.glsl"
+#include "../headers/binding.glsl"
+#include "../headers/DebugConstants.glsl"
 
 layout(set = 0, binding = B_SCENE) uniform Uniforms{
 	SceneUniforms uniforms;
@@ -41,9 +41,9 @@ layout(location = 0) in vec2 inUv;
 
 layout(location = 0) out vec3 outColor;
 
-#include "headers/random.glsl"
-#include "headers/restirUtils.glsl"
-#include "headers/reservoir.glsl"
+#include "../headers/random.glsl"
+#include "../headers/restirUtils.glsl"
+#include "../headers/reservoir.glsl"
 
 #define PI 3.1415926
 

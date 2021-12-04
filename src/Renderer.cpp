@@ -21,7 +21,11 @@ Renderer::Renderer() {
 
   render_context_ = std::make_unique<RenderContext>();
 
-  swapchain_ = std::make_unique<nvvk::SwapChain>(
+  // Initialise AppBase
+  this->setup(render_context_->GetInstance(), render_context_->GetDevice(),
+              render_context_->GetPhysicalDevice(), render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS ));
+
+      swapchain_ = std::make_unique<nvvk::SwapChain>(
       render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueues()[QueueFlags::GRAPHICS],
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS],
@@ -77,8 +81,8 @@ void Renderer::CreateScene(std::string scenefile) {
   for (std::size_t i = 0; i < numGBuffers; i++) {
     m_gBuffers[i].create(
         &m_alloc, render_context_->GetDevice(),
-        render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS),
-        m_size, render_pass_);
+        render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS), m_size,
+        render_pass_);
     // m_gBuffers[i].transitionLayout();
   }
 
@@ -118,7 +122,7 @@ void Renderer::CreateScene(std::string scenefile) {
   _updateRestirDescriptorSet();
 
   m_pushC.initialize = 1;
-  _createMainCommandBuffer();
+  //_createMainCommandBuffer(); // Already Created
 
   m_device.waitIdle();
   // LOGI("Prepared\n");
@@ -705,6 +709,11 @@ void Renderer::RecordCommandBuffers() {
       throw std::runtime_error("Failed to record command buffer");
     }
   }
+
+  //Create Fence
+  vk::FenceCreateInfo fenceInfo;
+  fenceInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
+  m_mainFence = m_device.createFence(fenceInfo);
 }
 
 void Renderer::RecreateSwapChain() {
@@ -924,11 +933,10 @@ void Renderer::_createUniformBuffer() {
   using vkBU = vk::BufferUsageFlagBits;
   using vkMP = vk::MemoryPropertyFlagBits;
 
-  m_sceneUniforms.debugMode = 0;
-  m_sceneUniforms.gamma     = 2.2;
-  m_sceneUniforms.screenSize =
-      nvmath::uvec2(m_size.width, m_size.height);
-  m_sceneUniforms.flags = RESTIR_VISIBILITY_REUSE_FLAG |
+  m_sceneUniforms.debugMode  = 0;
+  m_sceneUniforms.gamma      = 2.2;
+  m_sceneUniforms.screenSize = nvmath::uvec2(m_size.width, m_size.height);
+  m_sceneUniforms.flags      = RESTIR_VISIBILITY_REUSE_FLAG |
                           RESTIR_TEMPORAL_REUSE_FLAG |
                           RESTIR_SPATIAL_REUSE_FLAG;
   // if (_enableTemporalReuse) {
@@ -1156,8 +1164,7 @@ void Renderer::_createDescriptorSet() {
 
 void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
   // Prepare new UBO contents on host.
-  const float aspectRatio =
-      m_size.width / static_cast<float>(m_size.height);
+  const float aspectRatio = m_size.width / static_cast<float>(m_size.height);
 
   m_sceneUniforms.prevFrameProjectionViewMatrix =
       m_sceneUniforms.projectionViewMatrix;
@@ -1240,8 +1247,8 @@ void Renderer::_createPostPipeline() {
   pipelineLayoutCreateInfo.setSetLayouts(layouts);
   pipelineLayoutCreateInfo.setPushConstantRangeCount(1);
   pipelineLayoutCreateInfo.setPPushConstantRanges(&pushConstantRanges);
-  m_postPipelineLayout =
-      render_context_->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);
+  m_postPipelineLayout = render_context_->GetDevice().createPipelineLayout(
+      pipelineLayoutCreateInfo);
 
   // Pipeline: completely generic, no vertices
   std::vector<std::string> paths = {BUILD_DIRECTORY};
@@ -1309,5 +1316,161 @@ void Renderer::_updateRestirDescriptorSet() {
   m_device.updateDescriptorSets(static_cast<uint32_t>(writes.size()),
                                 writes.data(), 0, nullptr);
 }
+
+void Renderer::render() {
+  _updateFrame();
+  m_queue.waitIdle();
+
+  {
+    const vk::CommandBuffer& cmdBuf = command_buffers_[0];
+    cmdBuf.begin({vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
+    _updateUniformBuffer(cmdBuf);
+    m_restirPass.run(cmdBuf, m_sceneSet, m_sceneBuffers.getDescSet(),
+                     m_lightSet, m_restirSets[m_currentGBufferFrame]);
+    m_spatialReusePass.run(cmdBuf, m_sceneSet, m_lightSet,
+                           m_restirSets[m_currentGBufferFrame]);
+    cmdBuf.end();
+    _submitMainCommand();
+  }
+
+  // ImGui_ImplGlfw_NewFrame();
+  // ImGui::NewFrame();
+
+  // _renderUI();
+  prepareFrame();
+
+  auto curFrame                   = getCurFrame();
+  const vk::CommandBuffer& cmdBuf = getCommandBuffers()[curFrame];
+  cmdBuf.begin({vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
+  {
+    vk::ClearValue clearValues[2];
+    clearValues[0].setColor(std::array<float, 4>({0.0, 0.0, 0.0, 0.0}));
+    clearValues[1].setDepthStencil({1.0f, 0});
+
+    vk::RenderPassBeginInfo postRenderPassBeginInfo;
+    postRenderPassBeginInfo.setClearValueCount(2);
+    postRenderPassBeginInfo.setPClearValues(clearValues);
+    postRenderPassBeginInfo.setRenderPass(getRenderPass());
+    postRenderPassBeginInfo.setFramebuffer(getFramebuffers()[curFrame]);
+    postRenderPassBeginInfo.setRenderArea({{}, getSize()});
+
+    cmdBuf.beginRenderPass(postRenderPassBeginInfo,
+                           vk::SubpassContents::eInline);
+    cmdBuf.pushConstants<shader::PushConstant>(
+        m_postPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, m_pushC);
+    // Rendering tonemapper
+    _drawPost(cmdBuf, m_currentGBufferFrame);
+    // Rendering UI
+    ImGui::Render();
+    ImGui::RenderDrawDataVK(cmdBuf, ImGui::GetDrawData());
+    ImGui::EndFrame();
+    cmdBuf.endRenderPass();
+  }
+  // Submit for display
+  cmdBuf.end();
+  submitFrame();
+  // m_device.waitIdle();
+
+  m_currentGBufferFrame = (m_currentGBufferFrame + 1) % numGBuffers;
+  if (m_pushC.frame > 10) {
+    m_pushC.initialize = 0;
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+// Destroying all allocations
+//
+void Renderer::destroyResources() {
+  m_device.destroy(m_sceneSetLayout);
+  m_alloc.destroy(m_sceneUniformBuffer);
+
+  m_device.destroy(descriptor_pool_);
+
+  m_device.destroy(m_lightSetLayout);
+  m_device.destroy(m_restirSetLayout);
+
+  for (auto& t : m_reservoirInfoBuffers) {
+    m_alloc.destroy(t);
+  }
+  for (auto& t : m_reservoirWeightBuffers) {
+    m_alloc.destroy(t);
+  }
+  m_alloc.destroy(m_storageImage);
+  m_alloc.destroy(m_reservoirTmpInfoBuffer);
+  m_alloc.destroy(m_reservoirTmpWeightBuffer);
+  //#Post
+  m_device.destroy(m_postPipeline);
+  m_device.destroy(m_postPipelineLayout);
+
+  m_device.destroy(m_mainFence);
+
+  m_sceneBuffers.destroy();
+
+  m_restirPass.destroy();
+  m_spatialReusePass.destroy();
+
+  for (auto& gBuf : m_gBuffers) {
+    gBuf.destroy();
+  }
+  m_alloc.deinit();
+}
+
+//--------------------------------------------------------------------------------------------------
+// Draw a full screen quad with the attached image
+//
+void Renderer::_drawPost(vk::CommandBuffer cmdBuf, uint32_t currentGFrame) {
+  m_debug.beginLabel(cmdBuf, "Post");
+
+  cmdBuf.setViewport(
+      0, {vk::Viewport(0, 0, (float)m_size.width, (float)m_size.height, 0, 1)});
+  cmdBuf.setScissor(0, {{{0, 0}, {m_size.width, m_size.height}}});
+  cmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, m_postPipeline);
+  cmdBuf.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, m_postPipelineLayout, 0,
+      {m_sceneSet, m_lightSet, m_restirSets[currentGFrame]}, {});
+  cmdBuf.draw(3, 1, 0, 0);
+
+  m_debug.endLabel(cmdBuf);
+}
+
+//Imp: this doesn't work fix m_mainCommandBuffer in the main Project 
+void Renderer::_submitMainCommand() {
+  while (m_device.waitForFences(m_mainFence, VK_TRUE, 10000) ==
+         vk::Result::eTimeout) {
+  }
+  m_device.resetFences(m_mainFence);
+  vk::SubmitInfo submitInfo;
+  submitInfo.setCommandBuffers(command_buffers_[0]); //m_mainCommandBuffer
+  m_queue.submit(submitInfo, m_mainFence);
+}
+
+void Renderer::onResize(int /*w*/, int /*h*/) {
+  /*createOffscreenRender();
+  updatePostDescriptorSet();
+  updateRtDescriptorSet();*/
+  _resetFrame();
+}
+
+//--------------------------------------------------------------------------------------------------
+// If the camera matrix has changed, resets the frame.
+// otherwise, increments frame.
+//
+void Renderer::_updateFrame() {
+  static nvmath::mat4f refCamMatrix;
+  static float refFov{CameraManip.getFov()};
+
+  const auto& m  = CameraManip.getMatrix();
+  const auto fov = CameraManip.getFov();
+
+  if (memcmp(&refCamMatrix.a00, &m.a00, sizeof(nvmath::mat4f)) != 0 ||
+      refFov != fov) {
+    _resetFrame();
+    refCamMatrix = m;
+    refFov       = fov;
+  }
+  m_pushC.frame++;
+}
+
+void Renderer::_resetFrame() { m_pushC.frame = -1; }
 
 }  // namespace volume_restir

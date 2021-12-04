@@ -3,9 +3,9 @@
 #extension GL_EXT_ray_tracing : enable
 // Align structure layout to scalar
 #extension GL_EXT_scalar_block_layout : enable
-#include "structs/sceneStructs.glsl"
-#include "headers/binding.glsl"
-#include "structs/restirStructs.glsl"
+#include "../structs/sceneStructs.glsl"
+#include "../headers/binding.glsl"
+#include "../structs/restirStructs.glsl"
 
 layout(location = 0) rayPayloadInEXT Payload prd;
 

@@ -5,11 +5,11 @@
 #extension GL_ARB_shader_clock : enable
 
 
-#include "structs/light.glsl"
-#include "structs/sceneStructs.glsl"
-#include "structs/restirStructs.glsl"
+#include "../structs/light.glsl"
+#include "../structs/sceneStructs.glsl"
+#include "../structs/restirStructs.glsl"
 
-#include "headers/binding.glsl"
+#include "../headers/binding.glsl"
 
 
 
@@ -53,9 +53,9 @@ layout(set = 3, binding = B_PREV_RESERVIORS_WEIGHT, rgba32f) uniform image2D pre
 
 layout(location = 0) rayPayloadEXT Payload prd;
 layout(location = 1) rayPayloadEXT bool isShadowed;
-#include "headers/random.glsl"
-#include "headers/restirUtils.glsl"
-#include "headers/reservoir.glsl"
+#include "../headers/random.glsl"
+#include "../headers/restirUtils.glsl"
+#include "../headers/reservoir.glsl"
 
 bool testVisibility(vec3 p1, vec3 p2, vec3 n, int lightKind) {
 	float tMin = 0.03f;

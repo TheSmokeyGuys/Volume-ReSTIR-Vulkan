@@ -6,7 +6,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include "nvh/gltfscene.hpp"
-#include "nvvk/allocator_vk.hpp"
 #include "nvvk/appbase_vkpp.hpp"
 #include "nvvk/commands_vk.hpp"
 #include "nvvk/descriptorsets_vk.hpp"

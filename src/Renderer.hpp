@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.hpp>
 
 #define NVVK_ALLOC_DEDICATED
-#include "nvvk/allocator_vk.hpp"
 #include "nvvk/context_vk.hpp"
 #include "nvvk/debug_util_vk.hpp"
 #include "nvvk/descriptorsets_vk.hpp"
@@ -69,6 +68,14 @@ private:
   void _createPostPipeline();
   void _updateRestirDescriptorSet();
 
+  //Testing Functions
+  void render(); // Function just to test the pipeline
+  void destroyResources();
+  void _drawPost(vk::CommandBuffer cmdBuf, uint32_t currentGFrame);
+  void _submitMainCommand();
+  void onResize(int /*w*/, int /*h*/) override;
+  void _updateFrame();
+  void _resetFrame();
 
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<nvvk::SwapChain> swapchain_;
@@ -129,6 +136,8 @@ private:
   GBuffer m_gBuffers[numGBuffers];
   vk::Extent2D m_windowSize{0, 0};
 
+  uint32_t m_currentGBufferFrame = 0;
+  shader::PushConstant m_pushC;
   shader::SceneUniforms m_sceneUniforms;
   nvvk::Buffer m_sceneUniformBuffer;
   std::vector<nvvk::Texture> m_textures;
@@ -158,6 +167,8 @@ private:
 
   vk::Pipeline m_postPipeline;
   vk::PipelineLayout m_postPipelineLayout;
+
+  	vk::Fence m_mainFence;
 };
 
 }  // namespace volume_restir

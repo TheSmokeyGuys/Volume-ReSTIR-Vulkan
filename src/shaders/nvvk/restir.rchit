@@ -5,8 +5,8 @@
 #extension GL_ARB_shader_clock : enable
 #extension GL_EXT_nonuniform_qualifier : require
 
-#include "structs/sceneStructs.glsl"
-#include "headers/binding.glsl"
+#include "../structs/sceneStructs.glsl"
+#include "../headers/binding.glsl"
 
 
 layout(location = 0) rayPayloadInEXT Payload prd;
@@ -26,7 +26,7 @@ layout(set = 1, binding = B_MATRICES) buffer _Matrices { ModelMatrices matrices[
 layout(set = 1, binding = B_PLIM_LOOK_UP) readonly buffer _InstanceInfo { RtPrimitiveLookup primInfo[]; };
 
 hitAttributeEXT vec2 bary;
-#include "headers/raycommon.glsl"
+#include "../headers/raycommon.glsl"
 
 HitState GetState()
 {
