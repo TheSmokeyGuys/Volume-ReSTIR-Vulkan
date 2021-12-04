@@ -52,32 +52,24 @@ void ModelBase::CreateModelBuffer(glm::mat4& model_matrix) {
 
 ModelBase::~ModelBase() {
   if (!indices_.empty()) {
-    vkDestroyBuffer(render_context_->GetNvvkContext().m_device, index_buffer_,
-                    nullptr);
-    vkFreeMemory(render_context_->GetNvvkContext().m_device,
-                 index_buffer_memory_, nullptr);
+    vkDestroyBuffer(render_context_->GetDevice(), index_buffer_, nullptr);
+    vkFreeMemory(render_context_->GetDevice(), index_buffer_memory_, nullptr);
   }
 
   if (!vertices_.empty()) {
-    vkDestroyBuffer(render_context_->GetNvvkContext().m_device, vertex_buffer_,
-                    nullptr);
-    vkFreeMemory(render_context_->GetNvvkContext().m_device,
-                 vertex_buffer_memory_, nullptr);
+    vkDestroyBuffer(render_context_->GetDevice(), vertex_buffer_, nullptr);
+    vkFreeMemory(render_context_->GetDevice(), vertex_buffer_memory_, nullptr);
   }
 
-  vkDestroyBuffer(render_context_->GetNvvkContext().m_device, model_buffer_,
-                  nullptr);
-  vkFreeMemory(render_context_->GetNvvkContext().m_device, model_buffer_memory_,
-               nullptr);
+  vkDestroyBuffer(render_context_->GetDevice(), model_buffer_, nullptr);
+  vkFreeMemory(render_context_->GetDevice(), model_buffer_memory_, nullptr);
 
   if (texture_view_ != VK_NULL_HANDLE) {
-    vkDestroyImageView(render_context_->GetNvvkContext().m_device,
-                       texture_view_, nullptr);
+    vkDestroyImageView(render_context_->GetDevice(), texture_view_, nullptr);
   }
 
   if (texture_sampler_ != VK_NULL_HANDLE) {
-    vkDestroySampler(render_context_->GetNvvkContext().m_device,
-                     texture_sampler_, nullptr);
+    vkDestroySampler(render_context_->GetDevice(), texture_sampler_, nullptr);
   }
 }
 

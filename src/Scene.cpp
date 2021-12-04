@@ -14,9 +14,8 @@ Scene::Scene(RenderContext* render_context) : render_context_(render_context) {
   transferPoolInfo.flags = 0;
 
   VkCommandPool transferCommandPool;
-  if (vkCreateCommandPool(render_context_->GetNvvkContext().m_device,
-                          &transferPoolInfo, nullptr,
-                          &transferCommandPool) != VK_SUCCESS) {
+  if (vkCreateCommandPool(render_context_->GetDevice(), &transferPoolInfo,
+                          nullptr, &transferCommandPool) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create command pool");
   }
 
@@ -30,8 +29,8 @@ Scene::Scene(RenderContext* render_context) : render_context_(render_context) {
     AddObject(vdb_model);
   }
 
-  vkDestroyCommandPool(render_context_->GetNvvkContext().m_device,
-                       transferCommandPool, nullptr);
+  vkDestroyCommandPool(render_context_->GetDevice(), transferCommandPool,
+                       nullptr);
 
   // AddObject(cube);
 }
