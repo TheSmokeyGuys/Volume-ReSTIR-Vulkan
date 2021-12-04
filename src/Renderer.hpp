@@ -145,18 +145,6 @@ private:
   std::vector<vk::DescriptorSet> m_restirSets;
 
   GLTFSceneBuffers m_sceneBuffers;
-
-  ////GLTF Scene Stuff
-  // nvvk::Buffer m_primlooks;
-  // nvvk::Buffer m_vertices;
-  // nvvk::Buffer m_normals;
-  // nvvk::Buffer m_texcoords;
-  // nvvk::Buffer m_indices;
-  // nvvk::Buffer m_materials;
-  // nvvk::Buffer m_matrices;
-  // std::vector<nvvk::Texture> m_textures;
-  // nvvk::Buffer m_tangents;
-  // nvvk::Buffer m_colors;
 };
 
 }  // namespace volume_restir
