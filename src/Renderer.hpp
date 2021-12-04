@@ -28,6 +28,7 @@
 #include "nvvk/swapchain_vk.hpp"
 #include "shaders/Headers/binding.glsl"
 #include "utils/vkqueue_utils.hpp"
+#include "GBuffer.hpp"
 
 namespace volume_restir {
 
@@ -101,6 +102,10 @@ private:
   GLTFLoader m_gltfLoad;
   std::vector<nvvk::Texture> m_textures;
   nvvk::RaytracingBuilderKHR m_rtBuilder;
+  constexpr static std::size_t numGBuffers = 2;
+  GBuffer m_gBuffers[numGBuffers];
+  vk::Extent2D m_windowSize{0, 0}; 
+
 
   GLTFSceneBuffers m_sceneBuffers;
 

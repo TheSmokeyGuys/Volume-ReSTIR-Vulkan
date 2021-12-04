@@ -15,7 +15,8 @@ namespace volume_restir {
 
 bool IgnorePointLight = true;
 
-Renderer::Renderer() {
+Renderer::Renderer()
+    : m_windowSize(static_config::kWindowWidth, static_config::kWindowHeight) {
   float aspect_ratio =
       static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
 
@@ -75,6 +76,54 @@ void Renderer::CreateScene(std::string scenefile) {
 
   // CreateSceneBuffers();
   CreateDescriptorSetScene();
+
+  for (std::size_t i = 0; i < numGBuffers; i++) {
+    m_gBuffers[i].create(
+        &m_alloc, render_context_->GetNvvkContext().m_device,
+        render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS),
+        m_windowSize,
+        render_pass_);
+    // m_gBuffers[i].transitionLayout();
+  }
+
+  const float aspectRatio =
+      m_windowSize.width / static_cast<float>(m_windowSize.height);
+  m_sceneUniforms.prevFrameProjectionViewMatrix =
+      CameraManip.getMatrix() *
+      nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
+
+  //_createUniformBuffer();
+  //_createDescriptorSet();
+
+  //LOGI("Create Restir Pass\n");
+
+  //m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  //                   &m_alloc);
+  //m_restirPass.createRenderPass(m_size);
+  //m_restirPass.createPipeline(m_sceneSetLayout, m_sceneBuffers.getDescLayout(),
+  //                            m_lightSetLayout, m_restirSetLayout);
+
+  //LOGI("Create SpatialReuse Pass\n");
+
+  //m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  //                         &m_alloc);
+  //m_spatialReusePass.createRenderPass(m_size);
+  //m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
+  //                                  m_restirSetLayout);
+
+  //createDepthBuffer();
+  //createRenderPass();
+  //initGUI(0);
+  //createFrameBuffers();
+  //_createPostPipeline();
+
+  //_updateRestirDescriptorSet();
+
+  //m_pushC.initialize = 1;
+  //_createMainCommandBuffer();
+
+  //m_device.waitIdle();
+  //LOGI("Prepared\n");
 
   // TODO Create buffers for scene
   // m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,

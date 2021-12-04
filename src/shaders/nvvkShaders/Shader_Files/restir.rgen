@@ -1,0 +1,319 @@
+#version 460 core
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : enable
+#extension GL_EXT_scalar_block_layout : enable
+#extension GL_ARB_shader_clock : enable
+
+
+#include "structs/light.glsl"
+#include "structs/sceneStructs.glsl"
+#include "structs/restirStructs.glsl"
+
+#include "headers/binding.glsl"
+
+
+
+layout(set = 0, binding = B_SCENE) uniform Restiruniforms{
+	SceneUniforms uniforms;
+};
+
+layout(set = 1, binding = B_ACCELERATION_STRUCTURE) uniform accelerationStructureEXT acc;
+
+
+layout(set = 2, binding = B_ALIAS_TABLE, scalar) buffer AliasTable {
+	aliasTableCell aliasCol[];
+} aliasTable;
+layout(set = 2, binding = B_POINT_LIGHTS, scalar) buffer PointLights {
+	pointLight lights[];
+} pointLights;
+layout(set = 2, binding = B_TRIANGLE_LIGHTS, scalar) buffer TriangleLights {
+	triangleLight lights[];
+} triangleLights;
+layout(set = 2, binding = B_ENVIRONMENTAL_MAP) uniform sampler2D environmentalTexture;
+layout(set = 2, binding = B_ENVIRONMENTAL_ALIAS_MAP) uniform sampler2D environmentalAliasMap;
+
+
+
+layout(set = 3, binding = B_FRAME_WORLD_POSITION, rgba32f) uniform image2D frameWorldPosition;
+layout(set = 3, binding = B_FRAME_ALBEDO, rgba32f) uniform image2D frameAlbedo;
+layout(set = 3, binding = B_FRAME_NORMAL, rgba32f) uniform image2D frameNormal;
+layout(set = 3, binding = B_FRAME_MATERIAL_PROPS, rgba32f) uniform image2D frameRoughnessMetallic;
+
+layout(set = 3, binding = B_PERV_FRAME_WORLD_POSITION, rgba32f) uniform image2D prevFrameWorldPosition;
+layout(set = 3, binding = B_PERV_FRAME_ALBEDO, rgba32f) uniform image2D prevFrameAlbedo;
+layout(set = 3, binding = B_PERV_FRAME_NORMAL, rgba32f) uniform image2D prevFrameNormal;
+layout(set = 3, binding = B_PREV_FRAME_MATERIAL_PROPS, rgba32f) uniform image2D prevFrameRoughnessMetallic;
+
+layout(set = 3, binding = B_TMP_RESERVIORS_INFO, rgba32f) uniform image2D reservoirInfoBuf;
+layout(set = 3, binding = B_TMP_RESERVIORS_WEIGHT, rgba32f) uniform image2D reservoirWeightBuf;
+
+layout(set = 3, binding = B_PREV_RESERVIORS_INFO, rgba32f) uniform image2D prevReservoirInfoBuf;
+layout(set = 3, binding = B_PREV_RESERVIORS_WEIGHT, rgba32f) uniform image2D prevReservoirWeightBuf;
+
+
+layout(location = 0) rayPayloadEXT Payload prd;
+layout(location = 1) rayPayloadEXT bool isShadowed;
+#include "headers/random.glsl"
+#include "headers/restirUtils.glsl"
+#include "headers/reservoir.glsl"
+
+bool testVisibility(vec3 p1, vec3 p2, vec3 n, int lightKind) {
+	float tMin = 0.03f;
+	vec3 origin = OffsetRay(p1, n);
+	vec3 dir = p2 - p1;
+	float curTMax = length(dir);
+	dir /= curTMax;
+
+	curTMax = max(tMin, curTMax - 2.0f * tMin);
+
+	if (lightKind == LIGHT_KIND_ENVIRONMENT) {
+		curTMax = 100000.0; //infinite
+	}
+	uint rayFlags = gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT;
+
+	isShadowed = true;
+	traceRayEXT(
+		acc,            // acceleration structure
+		rayFlags,       // rayFlags
+		0xFF,           // cullMask
+		0,              // sbtRecordOffset
+		0,              // sbtRecordStride
+		1,              // missIndex
+		origin,             // ray origin
+		0.0,           // ray min range
+		dir,            // ray direction
+		curTMax,           // ray max
+		1               // payload (location = 0)
+	);
+
+	return isShadowed;
+
+}
+
+
+
+void aliasTableSample(float r1, float r2, out uint index, out float probability) {
+	uint selected_column = min(uint(uniforms.aliasTableCount * r1), uniforms.aliasTableCount - 1);
+	aliasTableCell col = aliasTable.aliasCol[selected_column];
+	if (col.prob > r2) {
+		index = selected_column;
+		probability = col.pdf;
+	}
+	else {
+		index = col.alias;
+		probability = col.aliasPdf;
+	}
+	//probability *= uniforms.aliasTableCount; //scaling
+}
+
+void SceneSample(inout uint seed, vec3 worldPos, out vec3 lightSamplePos, out vec4 lightNormal, out float lightSampleLum, out uint selected_idx, out int lightKind, out float lightSamplePdf) {
+	aliasTableSample(rnd(seed), rnd(seed), selected_idx, lightSamplePdf);
+	if (uniforms.pointLightCount != 0) {
+		pointLight light = pointLights.lights[selected_idx];
+		lightSamplePos = light.pos.xyz;
+		lightSampleLum = light.emission_luminance.w;
+		lightKind = LIGHT_KIND_POINT;
+		lightNormal = vec4(0.0f);
+	}
+	else {
+		triangleLight light = triangleLights.lights[selected_idx];
+		lightSamplePos = getTrianglePoint(rnd(seed), rnd(seed), light.p1.xyz, light.p2.xyz, light.p3.xyz);
+		lightSampleLum = light.emission_luminance.w;
+		lightKind = LIGHT_KIND_TRIANGLE;
+		vec3 wi = normalize(worldPos - lightSamplePos);
+		vec3 normal = light.normalArea.xyz;
+		lightSamplePdf /= abs(dot(wi, normal)) * light.normalArea.w;
+		lightNormal = vec4(normal, 1.0f);
+	}
+}
+
+
+void EnvironmentSample(inout uint seed, vec3 worldPos, out vec3 to_light, out vec3 lightSamplePos, out vec4 lightNormal, out float lightSampleLum, out uint selected_idx, out int lightKind, out float lightSamplePdf)
+{
+	lightKind = LIGHT_KIND_ENVIRONMENT;
+	vec3 rd = vec3(rnd(seed), rnd(seed), rnd(seed));
+	uvec2 tsize = textureSize(environmentalTexture, 0);
+	uint  width = tsize.x;
+	uint  height = tsize.y;
+
+	const uint size = width * height;
+	uint idx = min(uint(rnd(seed) * float(size)), size - 1);
+
+	uint  px = idx % width;
+	uint  py = idx / width;
+	//py            = height - py - 1;
+	const float dw = 1.0f / float(width);
+	const float dh = 1.0f / float(height);
+	const float u = float(px) * dw;
+	const float phi = (u + 0.5f * dw) * (2.0f * M_PI) - M_PI;
+	float       sin_phi = sin(phi);
+	float       cos_phi = cos(phi);
+
+	const float v = float(py) * dh;
+	const float theta = (v + 0.5f * dh) * M_PI;
+	const float cos_theta = cos(theta);
+	const float sin_theta = sin(theta);
+	to_light = vec3(cos_phi * sin_theta, cos_theta, sin_phi * sin_theta);
+
+	lightSamplePos = worldPos + to_light;
+	lightNormal = vec4(0.0f);
+	lightSampleLum = texture(environmentalTexture, vec2(u, 1.0f - v)).a;
+	const float theta1 = (v)*M_PI;
+	const float theta2 = (v + dh) * M_PI;
+
+	//const float area = sin(theta);
+	const float area = (cos(theta1) - cos(theta2)) * float(height);
+	lightSamplePdf = area;
+	//lightSamplePdf*=(size*uniforms.environmentalPower); //scaling 0wari?
+}
+
+
+
+void main() {
+	uvec2 pixelCoord = gl_LaunchIDEXT.xy;
+	ivec2 coordImage = ivec2(gl_LaunchIDEXT.xy);
+	uvec2 s = pcg2d(coordImage * int(clockARB()));
+	uint  seed = s.x + s.y;
+
+
+
+	const vec2 pixelCenter = vec2(pixelCoord);
+	const vec2 inUV = pixelCenter / vec2(uniforms.screenSize);
+	vec2       d = inUV * 2.0 - 1.0;
+
+	vec4 origin = uniforms.viewInverse * vec4(0, 0, 0, 1);
+	vec4 target = uniforms.projInverse * vec4(d.x, d.y, 1, 1);
+	vec4 direction = uniforms.viewInverse * vec4(normalize(target.xyz), 0);
+
+	prd.albedo = vec4(0.0);
+	prd.worldPos = vec4(0.0);
+	prd.worldNormal = vec3(0.0);
+	prd.emissive = vec3(0.0);
+	prd.roughness = 0.0;
+	prd.metallic = 0.0;
+	prd.exist = false;
+	traceRayEXT(
+		acc,            // acceleration structure
+		gl_RayFlagsNoneEXT,       // rayFlags
+		0xFF,           // cullMask
+		0,              // sbtRecordOffset
+		0,              // sbtRecordStride
+		0,              // missIndex
+		origin.xyz,             // ray origin
+		0.0001,           // ray min range
+		direction.xyz,            // ray direction
+		100000.0,           // ray max
+		0               // payload (location = 0)
+	);
+
+	GeometryInfo gInfo;
+	gInfo.albedo = prd.albedo;
+	gInfo.normal = prd.worldNormal;
+	gInfo.worldPos = prd.worldPos.xyz;
+	gInfo.metallic = prd.metallic;
+	gInfo.roughness = prd.roughness;
+	gInfo.emissive = prd.emissive;
+	gInfo.albedoLum = luminance(gInfo.albedo.r, gInfo.albedo.g, gInfo.albedo.b);
+	gInfo.camPos = uniforms.cameraPos.xyz;
+
+	bool exist = prd.exist;
+	if (length(gInfo.emissive.xyz) > 0.0) {
+		gInfo.albedo.xyz *= gInfo.emissive.xyz;
+		gInfo.albedo.w = 1.0;
+	}
+	else {
+		gInfo.albedo.w = 0.0;
+
+	}
+
+	imageStore(frameWorldPosition, coordImage, prd.worldPos);
+	imageStore(frameAlbedo, coordImage, gInfo.albedo);
+	imageStore(frameNormal, coordImage, vec4(gInfo.normal, 1.f));
+	imageStore(frameRoughnessMetallic, coordImage, vec4(gInfo.roughness, gInfo.metallic, 1.f, 1.f));
+
+	if (!exist) {
+		return;
+	}
+	Reservoir res = newReservoir();
+
+	if (dot(gInfo.normal, gInfo.normal) != 0.0f) {
+		for (int i = 0; i < uniforms.initialLightSampleCount; ++i) {
+			uint selected_idx;
+			int lightKind;
+			vec3 lightSamplePos, lightDir;
+			vec4 lightNormal;
+			float lightSampleLum;
+			float lightSamplePdf;
+			gInfo.sampleSeed = seed;
+
+			if ((uniforms.flags & USE_ENVIRONMENT_FLAG) != 0) {
+				EnvironmentSample(seed, gInfo.worldPos, lightDir, lightSamplePos, lightNormal, lightSampleLum, selected_idx, lightKind, lightSamplePdf);
+
+			}
+			else {
+				SceneSample(seed, gInfo.worldPos, lightSamplePos, lightNormal, lightSampleLum, selected_idx, lightKind, lightSamplePdf);
+			}
+			addSampleToReservoir(res, selected_idx, lightKind, lightSamplePdf, lightSamplePos, gInfo, seed);
+		}
+	}
+
+
+	if ((uniforms.flags & RESTIR_VISIBILITY_REUSE_FLAG) != 0) {
+		bool shadowed = testVisibility(gInfo.worldPos, res.lightPos, gInfo.normal, res.lightKind);
+		if (shadowed) {
+			res.w = 0.0f;
+
+		}
+
+	}
+
+	if ((uniforms.flags & RESTIR_TEMPORAL_REUSE_FLAG) != 0) {
+		vec4 prevFramePos = uniforms.prevFrameProjectionViewMatrix * vec4(gInfo.worldPos, 1.0f);
+		prevFramePos.xyz /= prevFramePos.w;
+		prevFramePos.xy = (prevFramePos.xy + 1.0f) * 0.5f * vec2(uniforms.screenSize);
+		if (
+			all(greaterThan(prevFramePos.xy, vec2(0.0f))) &&
+			all(lessThan(prevFramePos.xy, vec2(uniforms.screenSize)))
+			) {
+			ivec2 prevFrag = ivec2(prevFramePos.xy);
+			GeometryInfo prevGInfo;
+
+			prevGInfo.worldPos = imageLoad(prevFrameWorldPosition, ivec2(prevFrag)).xyz;
+			prevGInfo.albedo = imageLoad(prevFrameAlbedo, ivec2(prevFrag));
+			prevGInfo.normal = imageLoad(prevFrameNormal, ivec2(prevFrag)).xyz;
+			vec2 prevRoughnessMetallic = imageLoad(prevFrameRoughnessMetallic, ivec2(prevFrag)).xy;
+			prevGInfo.roughness = prevRoughnessMetallic.x;
+			prevGInfo.metallic = prevRoughnessMetallic.y;
+			prevGInfo.camPos = gInfo.camPos;
+			prevGInfo.albedoLum = luminance(prevGInfo.albedo.r, prevGInfo.albedo.g, prevGInfo.albedo.b);
+
+			vec3 positionDiff = gInfo.worldPos - prevGInfo.worldPos;
+			if (dot(positionDiff, positionDiff) < 0.01f) {
+				vec3 albedoDiff = gInfo.albedo.xyz - prevGInfo.albedo.xyz;
+				if (dot(albedoDiff, albedoDiff) < 0.01f) {
+					float normalDot = dot(gInfo.normal, prevGInfo.normal);
+					if (normalDot > 0.5f) {
+						vec4 prevResovirInfo = imageLoad(prevReservoirInfoBuf, coordImage);
+						vec4 prevResovirWeight = imageLoad(prevReservoirWeightBuf, coordImage);
+						Reservoir prevRes = unpackResovirStruct(prevResovirInfo, prevResovirWeight);
+
+						// clamp the number of samples
+						prevRes.numStreamSamples = min(
+							prevRes.numStreamSamples, uniforms.temporalSampleCountMultiplier * res.numStreamSamples
+						);
+
+						combineReservoirs(res, prevRes, gInfo, prevGInfo, seed);
+
+					}
+				}
+			}
+		}
+	}
+
+	vec4 resovirInfo, resovirWeight;
+	packResovirStruct(res, resovirInfo, resovirWeight);
+	imageStore(reservoirInfoBuf, coordImage, resovirInfo);
+	imageStore(reservoirWeightBuf, coordImage, resovirWeight);
+	//
+
+}
