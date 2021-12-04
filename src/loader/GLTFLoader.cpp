@@ -1,13 +1,14 @@
 #include "GLTFLoader.hpp"
+
 #include "utils/logging.hpp"
-namespace volume_restir{
+namespace volume_restir {
 
 void GLTFLoader::LoadScene(const std::string& filename) {
   using vkBU = vk::BufferUsageFlagBits;
   tinygltf::TinyGLTF tcontext;
   std::string warn, error;
 
-   spdlog::info("Loading file: {}", filename.c_str());
+  spdlog::info("Loading file: {}", filename.c_str());
   if (!tcontext.LoadASCIIFromFile(&m_tmodel, &error, &warn, filename)) {
     assert(!"Error while loading scene");
   }
@@ -20,10 +21,9 @@ void GLTFLoader::LoadScene(const std::string& filename) {
                     nvh::GltfAttributes::Color_0 |
                     nvh::GltfAttributes::Tangent);
 
-
- // No clue what this is
-  //ImGuiH::SetCameraJsonFile(fs::path(filename).stem().string());
-  //if (!m_gltfScene.m_cameras.empty()) {
+  // No clue what this is
+  // ImGuiH::SetCameraJsonFile(fs::path(filename).stem().string());
+  // if (!m_gltfScene.m_cameras.empty()) {
   //  auto& c = m_gltfScene.m_cameras[0];
   //  CameraManip.setCamera(
   //      {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
@@ -36,8 +36,9 @@ void GLTFLoader::LoadScene(const std::string& filename) {
   //  }
   //} else {
   //  // Re-adjusting camera to fit the new scene
-  //  CameraManip.fit(m_gltfScene.m_dimensions.min, m_gltfScene.m_dimensions.max,
+  //  CameraManip.fit(m_gltfScene.m_dimensions.min,
+  //  m_gltfScene.m_dimensions.max,
   //                  true);
   //}
 }
-}  // namespace
+}  // namespace volume_restir
