@@ -831,9 +831,8 @@ void Renderer::RecreateSwapChain() {
                          nullptr);
   }
 
-  vkFreeCommandBuffers(render_context_->GetDevice(), graphics_command_pool_,
-                       static_cast<uint32_t>(command_buffers_.size()),
-                       command_buffers_.data());
+  render_context_->GetDevice().freeCommandBuffers(graphics_command_pool_,
+                                                  command_buffers_);
 
   vkDestroyPipeline(render_context_->GetDevice(), graphics_pipeline_, nullptr);
   vkDestroyPipelineLayout(render_context_->GetDevice(),
@@ -850,12 +849,12 @@ void Renderer::Draw() {
     return;
   }
 
-  VkSubmitInfo submitInfo = {};
-  submitInfo.sType        = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  vk::SubmitInfo submitInfo = {};
+  submitInfo.sType          = vk::StructureType::eSubmitInfo;
 
-  VkSemaphore wait_semaphores[]      = {swapchain_->getActiveReadSemaphore()};
-  VkPipelineStageFlags wait_stages[] = {
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  vk::Semaphore wait_semaphores[]      = {swapchain_->getActiveReadSemaphore()};
+  vk::PipelineStageFlags wait_stages[] = {
+      vk::PipelineStageFlagBits::eColorAttachmentOutput};
   submitInfo.waitSemaphoreCount = 1;
   submitInfo.pWaitSemaphores    = wait_semaphores;
   submitInfo.pWaitDstStageMask  = wait_stages;
@@ -864,15 +863,11 @@ void Renderer::Draw() {
   submitInfo.pCommandBuffers =
       &command_buffers_[swapchain_->getActiveImageIndex()];
 
-  VkSemaphore signal_semaphores[] = {swapchain_->getActiveWrittenSemaphore()};
-  submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores    = signal_semaphores;
+  vk::Semaphore signal_semaphores[] = {swapchain_->getActiveWrittenSemaphore()};
+  submitInfo.signalSemaphoreCount   = 1;
+  submitInfo.pSignalSemaphores      = signal_semaphores;
 
-  if (vkQueueSubmit(render_context_->GetQueues()[QueueFlags::GRAPHICS], 1,
-                    &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
-    spdlog::error("Failed to submit draw command buffer");
-    throw std::runtime_error("Failed to submit draw command buffer");
-  }
+  render_context_->GetQueues()[QueueFlags::GRAPHICS].submit(submitInfo);
 
   swapchain_->present();
 
@@ -1045,7 +1040,7 @@ void Renderer::_createUniformBuffer() {
   m_reservoirWeightBuffers.resize(numGBuffers);
 
   nvvk::CommandPool cmdBufGet(
-      render_context_->GetNvvkContext().m_device,
+      render_context_->GetDevice(),
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS]);
   vk::CommandBuffer cmdBuf = cmdBufGet.createCommandBuffer();
 
@@ -1135,10 +1130,10 @@ void Renderer::_createDescriptorSet() {
                                        vkSS::eVertex | vkSS::eFragment |
                                            vkSS::eRaygenKHR | vkSS::eCompute |
                                            vkSS::eMissKHR));
-  m_sceneSetLayout = m_sceneSetLayoutBind.createLayout(render_context_->GetNvvkContext().m_device);
-  m_sceneSet =
-      nvvk::allocateDescriptorSet(render_context_->GetNvvkContext().m_device,
-                                  descriptor_pool_, m_sceneSetLayout);
+  m_sceneSetLayout =
+      m_sceneSetLayoutBind.createLayout(render_context_->GetDevice());
+  m_sceneSet = nvvk::allocateDescriptorSet(render_context_->GetDevice(),
+                                           descriptor_pool_, m_sceneSetLayout);
   vk::DescriptorBufferInfo dbiUnif{m_sceneUniformBuffer.buffer, 0,
                                    VK_WHOLE_SIZE};
   writes.emplace_back(
@@ -1160,11 +1155,10 @@ void Renderer::_createDescriptorSet() {
       vkDS(B_ENVIRONMENTAL_ALIAS_MAP, vkDT::eCombinedImageSampler, 1,
            vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute));
 
-  m_lightSetLayout = m_lightSetLayoutBind.createLayout(
-      render_context_->GetNvvkContext().m_device);
-  m_lightSet =
-      nvvk::allocateDescriptorSet(render_context_->GetNvvkContext().m_device,
-                                  descriptor_pool_, m_lightSetLayout);
+  m_lightSetLayout =
+      m_lightSetLayoutBind.createLayout(render_context_->GetDevice());
+  m_lightSet = nvvk::allocateDescriptorSet(render_context_->GetDevice(),
+                                           descriptor_pool_, m_lightSetLayout);
 
   vk::DescriptorBufferInfo pointLightUnif{m_sceneBuffers.getPtLights().buffer,
                                           0, VK_WHOLE_SIZE};
@@ -1234,15 +1228,14 @@ void Renderer::_createDescriptorSet() {
   m_restirSetLayoutBind.addBinding(
       vkDS(B_STORAGE_IMAGE, vkDT::eStorageImage, 1,
            vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
-  m_restirSetLayout = m_restirSetLayoutBind.createLayout(
-      render_context_->GetNvvkContext().m_device);
+  m_restirSetLayout =
+      m_restirSetLayoutBind.createLayout(render_context_->GetDevice());
   m_restirSets.resize(numGBuffers);
-  nvvk::allocateDescriptorSets(render_context_->GetNvvkContext().m_device,
-                               descriptor_pool_, m_restirSetLayout,
-                               numGBuffers, m_restirSets);
+  nvvk::allocateDescriptorSets(render_context_->GetDevice(), descriptor_pool_,
+                               m_restirSetLayout, numGBuffers, m_restirSets);
 
-  render_context_->GetDevice().updateDescriptorSets(static_cast<uint32_t>(writes.size()),
-                                writes.data(), 0, nullptr);
+  render_context_->GetDevice().updateDescriptorSets(
+      static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 }
 
 void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
@@ -1316,6 +1309,6 @@ void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
   cmdBuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, uboUsageStages,
                          vk::DependencyFlagBits::eDeviceGroup, {},
                          {afterBarrier}, {});
-    }
+}
 
 }  // namespace volume_restir
