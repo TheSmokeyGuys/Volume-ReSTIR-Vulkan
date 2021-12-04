@@ -42,14 +42,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(WIN32)
-  add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${WINLIBS})
-else(WIN32)
-  add_executable(${PROJECT_NAME} ${SOURCES})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-endif(WIN32)
-
+add_executable(${PROJECT_NAME})
 
 #--------------------------------------------------------------------------------------------------
 # GLSL to SPIR-V custom build
@@ -68,11 +61,18 @@ endforeach(GLSL)
 message(STATUS "Shader output: ${SPV_OUTPUT}")
 
 #--------------------------------------------------------------------------------------------------
-# Shader management in Visual Studio
-# 
+# Sources
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
+target_sources(${PROJECT_NAME} PUBLIC ${PACKAGE_SOURCE_FILES})
 target_sources(${PROJECT_NAME} PUBLIC ${GLSL_SOURCES})
 target_sources(${PROJECT_NAME} PUBLIC ${GLSL_HEADER_FILES})
 target_sources(${PROJECT_NAME} PUBLIC ${GLSL_STRUCTURE_FILES})
+
+#--------------------------------------------------------------------------------------------------
+# Sub-folders in Visual Studio
+#
+source_group("Sources"      FILES ${SOURCES})
+source_group("Common"       FILES ${PACKAGE_SOURCE_FILES})
 source_group("Shader_Files" FILES ${GLSL_SOURCES})
 source_group("Shader_Headers" FILES ${GLSL_HEADER_FILES})
 source_group("Shader_Structures" FILES ${GLSL_STRUCTURE_FILES})
@@ -112,8 +112,6 @@ ELSE(MSVC)
     -Wall -Werror -Wno-unused-variable -Wno-deprecated-declarations
   )
 ENDIF(MSVC)
-
-InternalTarget("" ${PROJECT_NAME})
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/config/build_config.h.in"

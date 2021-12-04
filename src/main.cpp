@@ -20,8 +20,6 @@ const std::string vdb_filename = "fire.vdb";
 const fs::path asset_dir = fs::path(PROJECT_DIRECTORY) / fs::path("assets");
 const std::string file   = (asset_dir / vdb_filename).string();
 
-// TODO : Need to see where these are initialised
-
 int main() {
 #ifdef NDEBUG
   spdlog::set_level(spdlog::level::info);

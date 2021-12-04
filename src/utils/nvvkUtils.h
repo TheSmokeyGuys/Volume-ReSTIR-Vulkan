@@ -16,10 +16,10 @@
 #include "nvvk/allocator_vk.hpp"
 #endif
 
-#include "ShaderIncludes.h"
 #include "nvh/gltfscene.hpp"
 #include "nvvk/appbase_vkpp.hpp"
 #include "nvvk/descriptorsets_vk.hpp"
+#include "utils/ShaderIncludes.h"
 
 namespace volume_restir {
 

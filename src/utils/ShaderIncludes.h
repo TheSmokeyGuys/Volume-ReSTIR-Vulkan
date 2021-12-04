@@ -1,6 +1,5 @@
 #pragma once
 
-#pragma once
 #include <nvmath/nvmath.h>
 #include <nvmath/nvmath_glsltypes.h>
 
@@ -8,6 +7,7 @@ namespace shader {
 
 #define uint  ::std::uint32_t
 #define vec2  ::nvmath::vec2
+#define vec3  ::nvmath::vec3
 #define vec4  ::nvmath::vec4
 #define ivec2 ::nvmath::ivec2
 #define ivec4 ::nvmath::ivec4
@@ -17,13 +17,14 @@ namespace shader {
 
 #define CPP_FUNCTION inline
 
-#include "shaders/headers/common.glsl"
+#include "shaders/Headers/common.glsl"
 #include "shaders/structs/light.glsl"
 #include "shaders/structs/restirStructs.glsl"
 #include "shaders/structs/sceneStructs.glsl"
 
 #undef uint
 #undef vec2
+#undef vec3
 #undef vec4
 #undef ivec2
 #undef ivec4
