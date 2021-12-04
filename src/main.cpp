@@ -28,7 +28,7 @@ int main() {
 #endif
   spdlog::info("Hello from Volumetric-ReSTIR project!");
 
-  SingletonManager::GetVDBLoader().Load(file);
+  //SingletonManager::GetVDBLoader().Load(file);
 
   Renderer renderer;
 

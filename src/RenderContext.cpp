@@ -138,6 +138,13 @@ RenderContext::RenderContext() {
   instance_    = nvvk_context_.m_instance;
   phys_device_ = nvvk_context_.m_physicalDevice;
 
+      vk::DynamicLoader dl;
+  PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+      dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(device_);
+
   // create queues
   InitQueues();
 }
@@ -151,8 +158,10 @@ void RenderContext::InitQueues() {
   QueueFlagBits requiredQueues =
       vkq_index::kComputeIdx | vkq_index::kGraphicsIdx |
       vkq_index::kPresentIdx | vkq_index::kTransferIdx;
+
   queue_family_indices_ = checkDeviceQueueSupport(
       nvvk_context_.m_physicalDevice, requiredQueues, surface_);
+
   for (unsigned int i = 0; i < requiredQueues.size(); ++i) {
     if (requiredQueues[i]) {
       queues_[i] = device_.getQueue(queue_family_indices_[i], 0);
