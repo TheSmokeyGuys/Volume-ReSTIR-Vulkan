@@ -73,18 +73,20 @@ void RestirPass::createPipeline(
     const vk::DescriptorSetLayout& lightDescSetLayout,
     const vk::DescriptorSetLayout& restirDescSetLayout) {
   std::vector<std::string> paths = static_config::kDefaultSearchPaths;
+  std::string p =
+      nvh::loadFile("shaders/restir.rgen.spv", true, paths, true);
   vk::ShaderModule raygenSM      = nvvk::createShaderModule(
       m_device,  //
-      nvh::loadFile("src/shaders/restir.rgen.spv", true, paths, true));
+      nvh::loadFile("shaders/restir.rgen.spv", true, paths, true));
   vk::ShaderModule missSM = nvvk::createShaderModule(
       m_device,  //
-      nvh::loadFile("src/shaders/restir.rmiss.spv", true, paths, true));
+      nvh::loadFile("shaders/restir.rmiss.spv", true, paths, true));
 
   // The second miss shader is invoked when a shadow ray misses the geometry. It
   // simply indicates that no occlusion has been found
   vk::ShaderModule shadowmissSM = nvvk::createShaderModule(
       m_device,
-      nvh::loadFile("src/shaders/restirShadow.rmiss.spv", true, paths, true));
+      nvh::loadFile("shaders/restirShadow.rmiss.spv", true, paths, true));
 
   std::vector<vk::PipelineShaderStageCreateInfo> stages;
   // Raygen
@@ -109,7 +111,7 @@ void RestirPass::createPipeline(
 
   vk::ShaderModule chitSM = nvvk::createShaderModule(
       m_device,  //
-      nvh::loadFile("src/shaders/restir.rchit.spv", true, paths, true));
+      nvh::loadFile("shaders/restir.rchit.spv", true, paths, true));
 
   vk::RayTracingShaderGroupCreateInfoKHR hg{
       vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup,

@@ -55,7 +55,7 @@ void SpatialReusePass::createPipeline(
 
   computePipelineCreateInfo.stage = nvvk::createShaderStageInfo(
       m_device,
-      nvh::loadFile("src/shaders/spatialReuse.comp.spv", true, paths, true),
+      nvh::loadFile("shaders/spatialReuse.comp.spv", true, paths, true),
       VK_SHADER_STAGE_COMPUTE_BIT);
   m_pipeline = static_cast<const vk::Pipeline&>(
       m_device.createComputePipeline({}, computePipelineCreateInfo));

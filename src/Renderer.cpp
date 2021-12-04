@@ -11,6 +11,18 @@
 #include "nvh/fileoperations.hpp"
 #include "spdlog/spdlog.h"
 
+static std::string cornellBox = "media/cornellBox/cornellBox.gltf";
+static std::string sponza     = "media/Sponza/glTF/Sponza.gltf";
+
+// Since these files are too heavy, please download them yourself
+// And make .gltf file by using Blender, etc.
+// https://developer.nvidia.com/ue4-sun-temple
+static std::string tample = "media/sun_tample/tample.gltf";
+// https://www.dropbox.com/s/ka378kmu62i669m/Bistro_Godot.glb?dl=0
+static std::string bistro = "media/bistro/bistro.gltf";
+
+static std::string loadScene = sponza;
+
 namespace volume_restir {
 
 bool IgnorePointLight = true;
@@ -20,6 +32,7 @@ Renderer::Renderer() {
       static_config::kWindowWidth * 1.0f / static_config::kWindowHeight;
 
   render_context_ = std::make_unique<RenderContext>();
+  setupGlfwCallbacks(SingletonManager::GetWindow().WindowPtr());
 
   // Initialise AppBase
   this->setup(render_context_->GetInstance(), render_context_->GetDevice(),
@@ -55,6 +68,7 @@ Renderer::Renderer() {
   m_alloc.init(render_context_->GetDevice(),
                render_context_->GetPhysicalDevice());
   m_debug.setup(render_context_->GetDevice());
+  CreateScene(loadScene);
 };
 
 void Renderer::CreateScene(std::string scenefile) {
@@ -62,7 +76,7 @@ void Renderer::CreateScene(std::string scenefile) {
 
   std::string filename = nvh::findFile(scenefile, project_dir);
 
-  m_gltfLoad.LoadScene(scenefile);
+  m_gltfLoad.LoadScene(filename);
 
   if (IgnorePointLight) {
     m_gltfLoad.m_gltfScene.m_lights.clear();
@@ -76,6 +90,7 @@ void Renderer::CreateScene(std::string scenefile) {
       render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
 
+  m_sceneBuffers.createDescriptorSet(descriptor_pool_);
 
   for (std::size_t i = 0; i < numGBuffers; i++) {
     m_gBuffers[i].create(

@@ -15,7 +15,7 @@ void GLTFLoader::LoadScene(const std::string& filename) {
   std::string warn, error;
 
   spdlog::info("Loading file: {}", filename.c_str());
-  if (!tcontext.LoadASCIIFromFile(&m_tmodel, &error, &warn, filename)) {
+  if (!tcontext.LoadASCIIFromFile(&m_tmodel, &error, &warn,  filename)) {
     assert(!"Error while loading scene");
   }
   spdlog::info(warn.c_str());
