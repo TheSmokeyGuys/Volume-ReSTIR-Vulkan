@@ -5,15 +5,15 @@
 
 #include "ShaderModule.hpp"
 #include "SingtonManager.hpp"
-#include "config/static_config.hpp"
 #include "config/build_config.h"
+#include "config/static_config.hpp"
 #include "model/Cube.hpp"
+#include "nvh/fileoperations.hpp"
 #include "spdlog/spdlog.h"
-#include"nvh/fileoperations.hpp"
-
-bool IgnorePointLight = true;
 
 namespace volume_restir {
+
+bool IgnorePointLight = true;
 
 Renderer::Renderer() {
   float aspect_ratio =
@@ -47,41 +47,40 @@ Renderer::Renderer() {
   CreateCommandPools();
   RecordCommandBuffers();
 
-  //NVVK Stuff
+  // NVVK Stuff
   m_alloc.init(render_context_->GetNvvkContext().m_device,
                render_context_->GetNvvkContext().m_physicalDevice);
   m_debug.setup(render_context_->GetNvvkContext().m_device);
 };
 
 void Renderer::CreateScene(std::string scenefile) {
+  std::vector<std::string> project_dir{PROJECT_DIRECTORY};
 
+  std::string filename = nvh::findFile(scenefile, project_dir);
 
-    std::vector<std::string> prjctDir{PROJECT_DIRECTORY};
-
-  std::string filename = nvh::findFile(scenefile, prjctDir);
-
-    m_gltfLoad.LoadScene(scenefile);
+  m_gltfLoad.LoadScene(scenefile);
 
   if (IgnorePointLight) {
-      m_gltfLoad.m_gltfScene.m_lights.clear();
+    m_gltfLoad.m_gltfScene.m_lights.clear();
   }
-  // Create descriptor set Pool // Already Done 
-  
-  //TODO
-  //Create Scene Buffers
-  m_sceneBuffers.create(m_gltfLoad.m_gltfScene, m_gltfLoad.m_tmodel, &m_alloc, render_context_->GetNvvkContext().m_device,
-                        render_context_->GetNvvkContext().m_physicalDevice, render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
-   
- 
-  //CreateSceneBuffers();
-  CreateDescriptorSetScene(); 
+  // Create descriptor set Pool // Already Done
 
-  //TODO Create buffers for scene
-  //m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
+  // TODO
+  // Create Scene Buffers
+  m_sceneBuffers.create(
+      m_gltfLoad.m_gltfScene, m_gltfLoad.m_tmodel, &m_alloc,
+      render_context_->GetNvvkContext().m_device,
+      render_context_->GetNvvkContext().m_physicalDevice,
+      render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
+
+  // CreateSceneBuffers();
+  CreateDescriptorSetScene();
+
+  // TODO Create buffers for scene
+  // m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
   //                      m_physicalDevice, m_graphicsQueueIndex);
 
   //
- 
 }
 
 //[[nodiscard]] void CreateSceneBuffers(const nvh::GltfScene& gltfScene,
@@ -153,7 +152,8 @@ void Renderer::CreateScene(std::string scenefile) {
 //  m_normals =
 //      alloc->createBuffer(cmdBuf, gltfScene.m_normals, vkBU::eStorageBuffer);
 //  m_texcoords =
-//      alloc->createBuffer(cmdBuf, gltfScene.m_texcoords0, vkBU::eStorageBuffer);
+//      alloc->createBuffer(cmdBuf, gltfScene.m_texcoords0,
+//      vkBU::eStorageBuffer);
 //  m_tangents =
 //      alloc->createBuffer(cmdBuf, gltfScene.m_tangents, vkBU::eStorageBuffer);
 //  m_colors =
@@ -193,7 +193,8 @@ void Renderer::CreateScene(std::string scenefile) {
 //    mat.transformInverseTransposed = invert(node.worldMatrix);
 //    nodeMatrices.emplace_back(mat);
 //  }
-//  m_matrices = alloc->createBuffer(cmdBuf, nodeMatrices, vkBU::eStorageBuffer);
+//  m_matrices = alloc->createBuffer(cmdBuf, nodeMatrices,
+//  vkBU::eStorageBuffer);
 //
 //  vk::Format format = vk::Format::eR8G8B8A8Unorm;
 //
@@ -235,7 +236,8 @@ void Renderer::CreateScene(std::string scenefile) {
 //      }
 //      void* buffer            = &gltfimage.image[0];
 //      VkDeviceSize bufferSize = gltfimage.image.size();
-//      auto imgSize            = vk::Extent2D(gltfimage.width, gltfimage.height);
+//      auto imgSize            = vk::Extent2D(gltfimage.width,
+//      gltfimage.height);
 //
 //      // std::cout << "Loading Texture: " << gltfimage.uri << std::endl;
 //      if (tmodel.textures[i].sampler > -1) {
@@ -263,9 +265,8 @@ void Renderer::CreateScene(std::string scenefile) {
 //  _createRtBuffer(gltfScene);
 //}
 
-
-//TODO this is for scene buffers
-void Renderer:: CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
+// TODO this is for scene buffers
+void Renderer::CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
   using vkDT      = vk::DescriptorType;
   using vkSS      = vk::ShaderStageFlagBits;
   using vkDSLB    = vk::DescriptorSetLayoutBinding;
@@ -296,13 +297,12 @@ void Renderer:: CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
   bind.addBinding(
       vkDSLB(B_COLORS, vkDT::eStorageBuffer, 1, vkSS::eClosestHitKHR));
 
-  
   vk::Device device_ = render_context_->GetNvvkContext().m_device;
 
   scene_descriptorset_layout_ = bind.createLayout(device_);
   descriptor_pool_            = bind.createPool(device_);
 
-  scene_descriptorset_         = device_.allocateDescriptorSets(
+  scene_descriptorset_ = device_.allocateDescriptorSets(
       {descriptor_pool_, 1, &scene_descriptorset_layout_})[0];
 
   vk::AccelerationStructureKHR tlas = m_rtBuilder.getAccelerationStructure();
@@ -342,8 +342,6 @@ void Renderer:: CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
   m_device.updateDescriptorSets(static_cast<uint32_t>(writes.size()),
                                 writes.data(), 0, nullptr);
 };
-
-
 
 void Renderer::SetFrameBufferResized(bool val) {
   this->frame_buffer_resized_ = val;
@@ -914,7 +912,7 @@ void Renderer::CreateCameraDiscriptorSetLayout() {
 void Renderer::CreateDescriptorPool() {
   // Describe which descriptor types that the descriptor sets will contain
 
-    uint32_t maxSets = 100;
+  uint32_t maxSets = 100;
   using vkDT       = vk::DescriptorType;
   using vkDP       = vk::DescriptorPoolSize;
 
@@ -928,12 +926,14 @@ void Renderer::CreateDescriptorPool() {
       vk::DescriptorPoolSize(vk::DescriptorType::eAccelerationStructureKHR,
                              maxSets),
       vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, maxSets)};
-  
+
   vk::Device device_ = render_context_->GetNvvkContext().m_device;
 
-  descriptor_pool_ = nvvk::createDescriptorPool(device_,staticPoolSizes, maxSets)  ;
-  //TODO : OLd descriptor pool for camera
-  //std::vector<VkDescriptorPoolSize> poolSizes = {
+  descriptor_pool_ =
+      nvvk::createDescriptorPool(device_, staticPoolSizes, maxSets);
+
+  // TODO: OLd descriptor pool for camera
+  // std::vector<VkDescriptorPoolSize> poolSizes = {
   //    // Camera
   //    {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}};
 
