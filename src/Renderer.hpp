@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "Camera.hpp"
+#include "GBuffer.hpp"
 #include "GLTFSceneBuffers.h"
 #include "RenderContext.hpp"
 #include "Scene.hpp"
@@ -28,7 +29,6 @@
 #include "nvvk/swapchain_vk.hpp"
 #include "shaders/Headers/binding.glsl"
 #include "utils/vkqueue_utils.hpp"
-#include "GBuffer.hpp"
 
 namespace volume_restir {
 
@@ -65,15 +65,15 @@ private:
 
   // image views & frame buffers
   /*std::vector<VkImageView> swapchain_image_views_;*/
-  std::vector<VkFramebuffer> framebuffers_;
+  std::vector<vk::Framebuffer> framebuffers_;
 
   // descriptor set layouts
-  vk::DescriptorSetLayout camera_descriptorset_layout_;
-  vk::DescriptorSetLayout scene_descriptorset_layout_;
+  VkDescriptorSetLayout camera_descriptorset_layout_;
+  VkDescriptorSetLayout scene_descriptorset_layout_;
 
   // descriptor sets
-  vk::DescriptorSet camera_descriptorset_;
-  vk::DescriptorSet scene_descriptorset_;
+  VkDescriptorSet camera_descriptorset_;
+  VkDescriptorSet scene_descriptorset_;
 
   // descriptor pools
   vk::DescriptorPool descriptor_pool_;
@@ -91,7 +91,7 @@ private:
   vk::CommandPool graphics_command_pool_;
 
   // command buffer
-  std::vector<VkCommandBuffer> command_buffers_;
+  std::vector<vk::CommandBuffer> command_buffers_;
 
   size_t current_frame_idx_  = 0;
   bool frame_buffer_resized_ = false;
@@ -104,8 +104,7 @@ private:
   nvvk::RaytracingBuilderKHR m_rtBuilder;
   constexpr static std::size_t numGBuffers = 2;
   GBuffer m_gBuffers[numGBuffers];
-  vk::Extent2D m_windowSize{0, 0}; 
-
+  vk::Extent2D m_windowSize{0, 0};
 
   GLTFSceneBuffers m_sceneBuffers;
 

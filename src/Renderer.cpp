@@ -23,8 +23,7 @@ Renderer::Renderer()
   render_context_ = std::make_unique<RenderContext>();
 
   swapchain_ = std::make_unique<nvvk::SwapChain>(
-      render_context_->GetNvvkContext().m_device,
-      render_context_->GetNvvkContext().m_physicalDevice,
+      render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueues()[QueueFlags::GRAPHICS],
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS],
       render_context_->Surface());
@@ -49,9 +48,9 @@ Renderer::Renderer()
   RecordCommandBuffers();
 
   // NVVK Stuff
-  m_alloc.init(render_context_->GetNvvkContext().m_device,
-               render_context_->GetNvvkContext().m_physicalDevice);
-  m_debug.setup(render_context_->GetNvvkContext().m_device);
+  m_alloc.init(render_context_->GetDevice(),
+               render_context_->GetPhysicalDevice());
+  m_debug.setup(render_context_->GetDevice());
 };
 
 void Renderer::CreateScene(std::string scenefile) {
@@ -70,8 +69,7 @@ void Renderer::CreateScene(std::string scenefile) {
   // Create Scene Buffers
   m_sceneBuffers.create(
       m_gltfLoad.m_gltfScene, m_gltfLoad.m_tmodel, &m_alloc,
-      render_context_->GetNvvkContext().m_device,
-      render_context_->GetNvvkContext().m_physicalDevice,
+      render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS));
 
   // CreateSceneBuffers();
@@ -79,10 +77,9 @@ void Renderer::CreateScene(std::string scenefile) {
 
   for (std::size_t i = 0; i < numGBuffers; i++) {
     m_gBuffers[i].create(
-        &m_alloc, render_context_->GetNvvkContext().m_device,
+        &m_alloc, render_context_->GetDevice(),
         render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS),
-        m_windowSize,
-        render_pass_);
+        m_windowSize, render_pass_);
     // m_gBuffers[i].transitionLayout();
   }
 
@@ -95,35 +92,36 @@ void Renderer::CreateScene(std::string scenefile) {
   //_createUniformBuffer();
   //_createDescriptorSet();
 
-  //LOGI("Create Restir Pass\n");
+  // LOGI("Create Restir Pass\n");
 
-  //m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  // m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
   //                   &m_alloc);
-  //m_restirPass.createRenderPass(m_size);
-  //m_restirPass.createPipeline(m_sceneSetLayout, m_sceneBuffers.getDescLayout(),
+  // m_restirPass.createRenderPass(m_size);
+  // m_restirPass.createPipeline(m_sceneSetLayout,
+  // m_sceneBuffers.getDescLayout(),
   //                            m_lightSetLayout, m_restirSetLayout);
 
-  //LOGI("Create SpatialReuse Pass\n");
+  // LOGI("Create SpatialReuse Pass\n");
 
-  //m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  // m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
   //                         &m_alloc);
-  //m_spatialReusePass.createRenderPass(m_size);
-  //m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
+  // m_spatialReusePass.createRenderPass(m_size);
+  // m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
   //                                  m_restirSetLayout);
 
-  //createDepthBuffer();
-  //createRenderPass();
-  //initGUI(0);
-  //createFrameBuffers();
+  // createDepthBuffer();
+  // createRenderPass();
+  // initGUI(0);
+  // createFrameBuffers();
   //_createPostPipeline();
 
   //_updateRestirDescriptorSet();
 
-  //m_pushC.initialize = 1;
+  // m_pushC.initialize = 1;
   //_createMainCommandBuffer();
 
-  //m_device.waitIdle();
-  //LOGI("Prepared\n");
+  // m_device.waitIdle();
+  // LOGI("Prepared\n");
 
   // TODO Create buffers for scene
   // m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
@@ -346,7 +344,7 @@ void Renderer::CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
   bind.addBinding(
       vkDSLB(B_COLORS, vkDT::eStorageBuffer, 1, vkSS::eClosestHitKHR));
 
-  vk::Device device_ = render_context_->GetNvvkContext().m_device;
+  vk::Device device_ = render_context_->GetDevice();
 
   scene_descriptorset_layout_ = bind.createLayout(device_);
   descriptor_pool_            = bind.createPool(device_);
@@ -388,8 +386,8 @@ void Renderer::CreateDescriptorSetScene(vk::DescriptorPool& staticDescPool) {
   writes.emplace_back(
       bind.makeWriteArray(m_sceneDescSet, B_TEXTURES, diit.data()));
 
-  m_device.updateDescriptorSets(static_cast<uint32_t>(writes.size()),
-                                writes.data(), 0, nullptr);
+  render_context_->GetDevice().updateDescriptorSets(
+      static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 };
 
 void Renderer::SetFrameBufferResized(bool val) {
@@ -397,27 +395,24 @@ void Renderer::SetFrameBufferResized(bool val) {
 }
 
 Renderer::~Renderer() {
-  vkDeviceWaitIdle(render_context_->GetNvvkContext().m_device);
-  vkDestroyCommandPool(render_context_->GetNvvkContext().m_device,
-                       graphics_command_pool_, nullptr);
+  vkDeviceWaitIdle(render_context_->GetDevice());
+  vkDestroyCommandPool(render_context_->GetDevice(), graphics_command_pool_,
+                       nullptr);
   for (auto framebuffer : framebuffers_) {
-    vkDestroyFramebuffer(render_context_->GetNvvkContext().m_device,
-                         framebuffer, nullptr);
+    vkDestroyFramebuffer(render_context_->GetDevice(), framebuffer, nullptr);
   }
-  vkDestroyPipeline(render_context_->GetNvvkContext().m_device,
-                    graphics_pipeline_, nullptr);
-  vkDestroyPipelineLayout(render_context_->GetNvvkContext().m_device,
+  vkDestroyPipeline(render_context_->GetDevice(), graphics_pipeline_, nullptr);
+  vkDestroyPipelineLayout(render_context_->GetDevice(),
                           graphics_pipeline_layout_, nullptr);
 
-  vkDestroyDescriptorSetLayout(render_context_->GetNvvkContext().m_device,
+  vkDestroyDescriptorSetLayout(render_context_->GetDevice(),
                                camera_descriptorset_layout_, nullptr);
 
-  vkDestroyDescriptorPool(render_context_->GetNvvkContext().m_device,
-                          descriptor_pool_, nullptr);
+  vkDestroyDescriptorPool(render_context_->GetDevice(), descriptor_pool_,
+                          nullptr);
 
-  vkDestroyRenderPass(render_context_->GetNvvkContext().m_device, render_pass_,
-                      nullptr);
-  // Desturctur for swap chain will be called automatically
+  vkDestroyRenderPass(render_context_->GetDevice(), render_pass_, nullptr);
+  // Destructor for swap chain will be called automatically
 }
 
 void Renderer::CreateRenderPass() {
@@ -458,12 +453,8 @@ void Renderer::CreateRenderPass() {
   render_pass_info.dependencyCount = 1;
   render_pass_info.pDependencies   = &dependency;
 
-  if (vkCreateRenderPass(render_context_->GetNvvkContext().m_device,
-                         &render_pass_info, nullptr,
-                         &render_pass_) != VK_SUCCESS) {
-    spdlog::error("Failed to create render pass!");
-    throw std::runtime_error("Failed to create render pass");
-  }
+  render_pass_ =
+      render_context_->GetDevice().createRenderPass(render_pass_info);
   spdlog::debug("Created render pass");
 }
 
@@ -474,17 +465,17 @@ void Renderer::CreateGraphicsPipeline() {
   if (static_config::kShaderMode == 0) {
     vert_module = ShaderModule::Create(
         std::string(BUILD_DIRECTORY) + "/shaders/graphics.vert.spv",
-        render_context_->GetNvvkContext().m_device);
+        render_context_->GetDevice());
     frag_module = ShaderModule::Create(
         std::string(BUILD_DIRECTORY) + "/shaders/graphics.frag.spv",
-        render_context_->GetNvvkContext().m_device);
+        render_context_->GetDevice());
   } else if (static_config::kShaderMode == 1) {
     vert_module = ShaderModule::Create(
         std::string(BUILD_DIRECTORY) + "/shaders/lambert.vert.spv",
-        render_context_->GetNvvkContext().m_device);
+        render_context_->GetDevice());
     frag_module = ShaderModule::Create(
         std::string(BUILD_DIRECTORY) + "/shaders/lambert.frag.spv",
-        render_context_->GetNvvkContext().m_device);
+        render_context_->GetDevice());
   }
   if (vert_module == VK_NULL_HANDLE || frag_module == VK_NULL_HANDLE) {
     spdlog::error("Failed to create shader module!");
@@ -608,12 +599,9 @@ void Renderer::CreateGraphicsPipeline() {
   pipeline_layout_info.pushConstantRangeCount = 0;
   pipeline_layout_info.pPushConstantRanges    = VK_NULL_HANDLE;
 
-  if (vkCreatePipelineLayout(render_context_->GetNvvkContext().m_device,
-                             &pipeline_layout_info, nullptr,
-                             &graphics_pipeline_layout_) != VK_SUCCESS) {
-    spdlog::error("Failed to create pipeline layout!");
-    throw std::runtime_error("Failed to create pipeline layout");
-  }
+  graphics_pipeline_layout_ =
+      render_context_->GetDevice().createPipelineLayout(pipeline_layout_info);
+
   spdlog::debug("Created graphics pipeline layout");
 
   std::vector<VkDynamicState> dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT,
@@ -655,18 +643,18 @@ void Renderer::CreateGraphicsPipeline() {
   pipeline_info.basePipelineHandle  = VK_NULL_HANDLE;
   pipeline_info.pDepthStencilState  = &depthStencil;
 
-  if (vkCreateGraphicsPipelines(render_context_->GetNvvkContext().m_device,
-                                VK_NULL_HANDLE, 1, &pipeline_info, nullptr,
-                                &graphics_pipeline_) != VK_SUCCESS) {
+  vk::Result result;
+  std::tie(result, graphics_pipeline_) =
+      render_context_->GetDevice().createGraphicsPipeline(nullptr,
+                                                          pipeline_info);
+  if (result != vk::Result::eSuccess) {
     spdlog::error("Failed to create pipline!");
     throw std::runtime_error("Failed to create pipline");
   }
   spdlog::debug("Created graphics pipeline");
 
-  vkDestroyShaderModule(render_context_->GetNvvkContext().m_device, frag_module,
-                        nullptr);
-  vkDestroyShaderModule(render_context_->GetNvvkContext().m_device, vert_module,
-                        nullptr);
+  render_context_->GetDevice().destroyShaderModule(frag_module, nullptr);
+  render_context_->GetDevice().destroyShaderModule(vert_module, nullptr);
 
   spdlog::debug(
       "Destroyed unused shader module after creating graphics pipeline");
@@ -689,13 +677,8 @@ void Renderer::CreateFrameResources() {
     framebuffer_info.height          = swapchain_->getHeight();
     framebuffer_info.layers          = 1;
 
-    if (vkCreateFramebuffer(render_context_->GetNvvkContext().m_device,
-                            &framebuffer_info, nullptr,
-                            &framebuffers_[i]) != VK_SUCCESS) {
-      spdlog::error("Failed to create frame buffer {} of {}", i,
-                    swapchain_->getImageCount());
-      throw std::runtime_error("Failed to create frame buffer");
-    }
+    framebuffers_[i] =
+        render_context_->GetDevice().createFramebuffer(framebuffer_info);
     spdlog::debug("Created frame buffer [{}] of {}", i,
                   swapchain_->getImageCount());
   }
@@ -708,12 +691,9 @@ void Renderer::CreateCommandPools() {
   pool_info.queueFamilyIndex =
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS];
 
-  if (vkCreateCommandPool(render_context_->GetNvvkContext().m_device,
-                          &pool_info, nullptr,
-                          &graphics_command_pool_) != VK_SUCCESS) {
-    spdlog::error("Failed to create graphics command pool!");
-    throw std::runtime_error("Failed to create graphics command pool");
-  }
+  graphics_command_pool_ =
+      render_context_->GetDevice().createCommandPool(pool_info);
+
   spdlog::debug("Created graphics command pool");
 }
 
@@ -727,12 +707,8 @@ void Renderer::RecordCommandBuffers() {
   allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandBufferCount = (uint32_t)command_buffers_.size();
 
-  if (vkAllocateCommandBuffers(render_context_->GetNvvkContext().m_device,
-                               &allocInfo,
-                               command_buffers_.data()) != VK_SUCCESS) {
-    spdlog::error("Failed to allocate command buffers!");
-    throw std::runtime_error("Failed to allocate command buffers");
-  }
+  command_buffers_ =
+      render_context_->GetDevice().allocateCommandBuffers(allocInfo);
 
   // Start command buffer recording
   for (size_t i = 0; i < command_buffers_.size(); i++) {
@@ -824,23 +800,21 @@ void Renderer::RecreateSwapChain() {
     glfwWaitEvents();
   } while (width == 0 || height == 0);
 
-  vkDeviceWaitIdle(render_context_->GetNvvkContext().m_device);
+  vkDeviceWaitIdle(render_context_->GetDevice());
 
   // CleanupSwapChain();
 
-  vkDestroyCommandPool(render_context_->GetNvvkContext().m_device,
-                       graphics_command_pool_, nullptr);
+  vkDestroyCommandPool(render_context_->GetDevice(), graphics_command_pool_,
+                       nullptr);
   for (auto framebuffer : framebuffers_) {
-    vkDestroyFramebuffer(render_context_->GetNvvkContext().m_device,
-                         framebuffer, nullptr);
+    vkDestroyFramebuffer(render_context_->GetDevice(), framebuffer, nullptr);
   }
   swapchain_->deinit();
   spdlog::debug("Destroyed old swapchain in frame");
 
   // Nicely done
   swapchain_->init(
-      render_context_->GetNvvkContext().m_device,
-      render_context_->GetNvvkContext().m_physicalDevice,
+      render_context_->GetDevice(), render_context_->GetPhysicalDevice(),
       render_context_->GetQueues()[QueueFlags::GRAPHICS],
       render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS],
       render_context_->Surface());
@@ -853,24 +827,22 @@ void Renderer::RecreateSwapChain() {
 // TODo : Deprecate !!
 [[deprecated]] void Renderer::CleanupSwapChain() {
   for (int i = 0; i < static_config::kMaxFrameInFlight; i++) {
-    vkDestroyFramebuffer(render_context_->GetNvvkContext().m_device,
-                         framebuffers_[i], nullptr);
+    vkDestroyFramebuffer(render_context_->GetDevice(), framebuffers_[i],
+                         nullptr);
   }
 
-  vkFreeCommandBuffers(
-      render_context_->GetNvvkContext().m_device, graphics_command_pool_,
-      static_cast<uint32_t>(command_buffers_.size()), command_buffers_.data());
+  vkFreeCommandBuffers(render_context_->GetDevice(), graphics_command_pool_,
+                       static_cast<uint32_t>(command_buffers_.size()),
+                       command_buffers_.data());
 
-  vkDestroyPipeline(render_context_->GetNvvkContext().m_device,
-                    graphics_pipeline_, nullptr);
-  vkDestroyPipelineLayout(render_context_->GetNvvkContext().m_device,
+  vkDestroyPipeline(render_context_->GetDevice(), graphics_pipeline_, nullptr);
+  vkDestroyPipelineLayout(render_context_->GetDevice(),
                           graphics_pipeline_layout_, nullptr);
-  vkDestroyRenderPass(render_context_->GetNvvkContext().m_device, render_pass_,
-                      nullptr);
+  vkDestroyRenderPass(render_context_->GetDevice(), render_pass_, nullptr);
 }
 
 void Renderer::Draw() {
-  /*vkWaitForFences(render_context_->GetNvvkContext().m_device, 1,
+  /*vkWaitForFences(render_context_->GetDevice(), 1,
                   &swapchain_->fences_in_flight_[current_frame_idx_], VK_TRUE,
                   UINT64_MAX);*/
   if (!swapchain_->acquire()) {
@@ -950,9 +922,9 @@ void Renderer::CreateCameraDiscriptorSetLayout() {
   layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
   layoutInfo.pBindings    = bindings.data();
 
-  if (vkCreateDescriptorSetLayout(
-          render_context_->GetNvvkContext().m_device, &layoutInfo, nullptr,
-          &camera_descriptorset_layout_) != VK_SUCCESS) {
+  if (vkCreateDescriptorSetLayout(render_context_->GetDevice(), &layoutInfo,
+                                  nullptr, &camera_descriptorset_layout_) !=
+      VK_SUCCESS) {
     spdlog::error("Failed to create camera descriptor set layout");
     throw std::runtime_error("Failed to create camera descriptor set layout");
   }
@@ -976,7 +948,7 @@ void Renderer::CreateDescriptorPool() {
                              maxSets),
       vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, maxSets)};
 
-  vk::Device device_ = render_context_->GetNvvkContext().m_device;
+  vk::Device device_ = render_context_->GetDevice();
 
   descriptor_pool_ =
       nvvk::createDescriptorPool(device_, staticPoolSizes, maxSets);
@@ -992,7 +964,7 @@ void Renderer::CreateDescriptorPool() {
   poolInfo.pPoolSizes    = poolSizes.data();
   poolInfo.maxSets       = 5;
 
-  if (vkCreateDescriptorPool(render_context_->GetNvvkContext().m_device,
+  if (vkCreateDescriptorPool(render_context_->GetDevice(),
                              &poolInfo, nullptr,
                              &descriptor_pool_) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create descriptor pool");
@@ -1009,8 +981,7 @@ void Renderer::CreateCameraDescriptorSet() {
   allocInfo.pSetLayouts        = layouts;
 
   // Allocate descriptor sets
-  if (vkAllocateDescriptorSets(render_context_->GetNvvkContext().m_device,
-                               &allocInfo,
+  if (vkAllocateDescriptorSets(render_context_->GetDevice(), &allocInfo,
                                &camera_descriptorset_) != VK_SUCCESS) {
     throw std::runtime_error("Failed to allocate camera descriptor set");
   }
@@ -1033,7 +1004,7 @@ void Renderer::CreateCameraDescriptorSet() {
   descriptorWrites[0].pTexelBufferView = nullptr;
 
   // Update descriptor sets
-  vkUpdateDescriptorSets(render_context_->GetNvvkContext().m_device,
+  vkUpdateDescriptorSets(render_context_->GetDevice(),
                          static_cast<uint32_t>(descriptorWrites.size()),
                          descriptorWrites.data(), 0, nullptr);
 }

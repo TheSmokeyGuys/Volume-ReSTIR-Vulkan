@@ -24,7 +24,15 @@ public:
   RenderContext();
   ~RenderContext();
 
-  const nvvk::Context& GetNvvkContext() const { return nvvk_context_; }
+  const Queues& GetQueues() const { return queues_; }
+
+  const vk::Device& GetDevice() const { return device_; }
+  vk::Device& GetDevice() { return device_; }
+  const vk::Instance& GetInstance() const { return instance_; }
+  const vk::PhysicalDevice& GetPhysicalDevice() const { return phys_device_; }
+
+  vk::SurfaceKHR Surface() const { return surface_; }
+
   const QueueFamilyIndices& GetQueueFamilyIndices() const {
     return queue_family_indices_;
   }
@@ -32,15 +40,16 @@ public:
   const int32_t GetQueueFamilyIndex(QueueFlags flag) const {
     return queue_family_indices_[flag];
   }
-  const Queues& GetQueues() const { return queues_; }
-
-  vk::SurfaceKHR Surface() const { return surface_; }
 
   uint32_t MemoryTypeIndex(uint32_t type_bits,
                            VkMemoryPropertyFlags properties) const;
 
 private:
   nvvk::Context nvvk_context_;
+
+  vk::Instance instance_;
+  vk::Device device_;
+  vk::PhysicalDevice phys_device_;
 
   // render queues
   Queues queues_;

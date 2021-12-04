@@ -12,7 +12,7 @@
 #include "nvvk/descriptorsets_vk.hpp"
 #include "nvvk/raytraceKHR_vk.hpp"
 #include "shaders/headers/binding.glsl"
-#include "utils/GeneralUtils.h"
+#include "utils/nvvkUtils.h"
 extern bool GeneratePointLight;
 
 namespace volume_restir {
