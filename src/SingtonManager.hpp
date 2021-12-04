@@ -1,7 +1,7 @@
 #ifndef __VOLUME_RESTIR_SINGLETON_MANAGER_HPP__
 #define __VOLUME_RESTIR_SINGLETON_MANAGER_HPP__
 
-#include "VDBLoader.hpp"
+#include "loader/VDBLoader.hpp"
 #include "Window.hpp"
 
 namespace volume_restir {

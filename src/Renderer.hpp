@@ -25,7 +25,12 @@
 #include "utils/vkqueue_utils.hpp"
 
 #include "nvvk/swapchain_vk.hpp"
+#include "loader/GLTFLoader.hpp"
+#include "shaders/Headers/binding.glsl"
 
+
+#include "GLTFSceneBuffers.h"
+#define VULKAN_HPP
 namespace volume_restir {
 
 class Renderer {
@@ -51,7 +56,7 @@ private:
   void CreateSwapChain();
   void RecreateSwapChain();
   void CleanupSwapChain();
-
+  void CreateDescriptorSetScene();
   void CreateScene(std::string scene);
 
 
@@ -65,25 +70,27 @@ private:
   std::vector<VkFramebuffer> framebuffers_;
 
   // descriptor set layouts
-  VkDescriptorSetLayout camera_descriptorset_layout_;
+  vk::DescriptorSetLayout camera_descriptorset_layout_;
+  vk::DescriptorSetLayout scene_descriptorset_layout_;
 
   // descriptor sets
-  VkDescriptorSet camera_descriptorset_;
+  vk::DescriptorSet camera_descriptorset_;
+  vk::DescriptorSet scene_descriptorset_;
 
   // descriptor pools
-  VkDescriptorPool descriptor_pool_;
+  vk::DescriptorPool descriptor_pool_;
 
   // pipeline layouts
-  VkPipelineLayout graphics_pipeline_layout_;
+  vk::PipelineLayout graphics_pipeline_layout_;
 
   // pipelines
-  VkPipeline graphics_pipeline_;
+  vk::Pipeline graphics_pipeline_;
 
   // render pass
-  VkRenderPass render_pass_;
+  vk::RenderPass render_pass_;
 
   // command pools
-  VkCommandPool graphics_command_pool_;
+  vk::CommandPool graphics_command_pool_;
 
   // command buffer
   std::vector<VkCommandBuffer> command_buffers_;
@@ -95,7 +102,23 @@ private:
   //NVVK Stuff
   nvvk::AllocatorDedicated m_alloc;
   nvvk::DebugUtil m_debug;
+  GLTFLoader m_gltfLoad;
+  std::vector<nvvk::Texture> m_textures;
+  nvvk::RaytracingBuilderKHR m_rtBuilder;
 
+  GLTFScene m_sceneBuffers;
+
+  ////GLTF Scene Stuff
+  //nvvk::Buffer m_primlooks;
+  //nvvk::Buffer m_vertices;
+  //nvvk::Buffer m_normals;
+  //nvvk::Buffer m_texcoords;
+  //nvvk::Buffer m_indices;
+  //nvvk::Buffer m_materials;
+  //nvvk::Buffer m_matrices;
+  //std::vector<nvvk::Texture> m_textures;
+  //nvvk::Buffer m_tangents;
+  //nvvk::Buffer m_colors;
 };
 
 }  // namespace volume_restir

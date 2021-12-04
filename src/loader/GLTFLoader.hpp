@@ -5,10 +5,13 @@
 namespace volume_restir {
 class GLTFLoader
 {
+public:
   void LoadScene(const std::string &fileName);
 
-  private:
+  nvh::GltfScene m_gltfScene;
   tinygltf::Model m_tmodel;
+  private:
+  // Resources
 };
 
 }  // namespace volume_restir

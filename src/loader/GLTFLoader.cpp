@@ -20,22 +20,24 @@ void GLTFLoader::LoadScene(const std::string& filename) {
                     nvh::GltfAttributes::Color_0 |
                     nvh::GltfAttributes::Tangent);
 
-  ImGuiH::SetCameraJsonFile(fs::path(filename).stem().string());
-  if (!m_gltfScene.m_cameras.empty()) {
-    auto& c = m_gltfScene.m_cameras[0];
-    CameraManip.setCamera(
-        {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
-    ImGuiH::SetHomeCamera(
-        {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
 
-    for (auto& c : m_gltfScene.m_cameras) {
-      ImGuiH::AddCamera(
-          {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
-    }
-  } else {
-    // Re-adjusting camera to fit the new scene
-    CameraManip.fit(m_gltfScene.m_dimensions.min, m_gltfScene.m_dimensions.max,
-                    true);
-  }
+ // No clue what this is
+  //ImGuiH::SetCameraJsonFile(fs::path(filename).stem().string());
+  //if (!m_gltfScene.m_cameras.empty()) {
+  //  auto& c = m_gltfScene.m_cameras[0];
+  //  CameraManip.setCamera(
+  //      {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
+  //  ImGuiH::SetHomeCamera(
+  //      {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
+
+  //  for (auto& c : m_gltfScene.m_cameras) {
+  //    ImGuiH::AddCamera(
+  //        {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
+  //  }
+  //} else {
+  //  // Re-adjusting camera to fit the new scene
+  //  CameraManip.fit(m_gltfScene.m_dimensions.min, m_gltfScene.m_dimensions.max,
+  //                  true);
+  //}
 }
 }  // namespace
