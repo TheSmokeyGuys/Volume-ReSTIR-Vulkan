@@ -3,28 +3,28 @@ file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOUR
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VK_SDK_PATH}/Bin/ $ENV{VK_SDK_PATH}/Bin32/)
 
 file(GLOB_RECURSE SHADER_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.vert
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.frag
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.geom
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.comp
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.tese
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.tesc
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rchit
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rahit
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rint
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rmiss
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rgen
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rcall
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.geom
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.comp
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.tese
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.tesc
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rchit
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rahit
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rint
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rmiss
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rgen
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.rcall
 )
 
 file(GLOB_RECURSE GLSL_HEADER_FILES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.h 
-  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/headers/*.h 
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/headers/*.glsl
 )
 
 file(GLOB_RECURSE GLSL_STRUCTURE_FILES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.h 
-  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/structs/*.h 
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/structs/*.glsl
 )
 
 source_group("Shaders" FILES ${SHADER_SOURCES})
@@ -66,6 +66,17 @@ endforeach(GLSL)
 # list(APPEND SHADER_SOURCES ${GLSL_HEADER_FILES})
 
 message(STATUS "Shader output: ${SPV_OUTPUT}")
+
+#--------------------------------------------------------------------------------------------------
+# Shader management in Visual Studio
+# 
+target_sources(${PROJECT_NAME} PUBLIC ${GLSL_SOURCES})
+target_sources(${PROJECT_NAME} PUBLIC ${GLSL_HEADER_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${GLSL_STRUCTURE_FILES})
+source_group("Shader_Files" FILES ${GLSL_SOURCES})
+source_group("Shader_Headers" FILES ${GLSL_HEADER_FILES})
+source_group("Shader_Structures" FILES ${GLSL_STRUCTURE_FILES})
+#--------------------------------------------------------------------------------------------------
 
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC
