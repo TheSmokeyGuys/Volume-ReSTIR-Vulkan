@@ -81,49 +81,49 @@ void Renderer::CreateScene(std::string scenefile) {
     m_gBuffers[i].create(
         &m_alloc, render_context_->GetNvvkContext().m_device,
         render_context_->GetQueueFamilyIndex(QueueFlags::GRAPHICS),
-        m_windowSize,
-        render_pass_);
+        m_windowSize, render_pass_);
     // m_gBuffers[i].transitionLayout();
   }
 
-  const float aspectRatio =
-      m_windowSize.width / static_cast<float>(m_windowSize.height);
-  m_sceneUniforms.prevFrameProjectionViewMatrix =
-      CameraManip.getMatrix() *
-      nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
+  // const float aspectRatio =
+  //    m_windowSize.width / static_cast<float>(m_windowSize.height);
+  // m_sceneUniforms.prevFrameProjectionViewMatrix =
+  //    CameraManip.getMatrix() *
+  //    nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
 
-  //_createUniformBuffer();
-  //_createDescriptorSet();
+  _createUniformBuffer();
+  _createDescriptorSet();
 
-  //LOGI("Create Restir Pass\n");
+  // LOGI("Create Restir Pass\n");
 
-  //m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  // m_restirPass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
   //                   &m_alloc);
-  //m_restirPass.createRenderPass(m_size);
-  //m_restirPass.createPipeline(m_sceneSetLayout, m_sceneBuffers.getDescLayout(),
+  // m_restirPass.createRenderPass(m_size);
+  // m_restirPass.createPipeline(m_sceneSetLayout,
+  // m_sceneBuffers.getDescLayout(),
   //                            m_lightSetLayout, m_restirSetLayout);
 
-  //LOGI("Create SpatialReuse Pass\n");
+  // LOGI("Create SpatialReuse Pass\n");
 
-  //m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
+  // m_spatialReusePass.setup(m_device, m_physicalDevice, m_graphicsQueueIndex,
   //                         &m_alloc);
-  //m_spatialReusePass.createRenderPass(m_size);
-  //m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
+  // m_spatialReusePass.createRenderPass(m_size);
+  // m_spatialReusePass.createPipeline(m_sceneSetLayout, m_lightSetLayout,
   //                                  m_restirSetLayout);
 
-  //createDepthBuffer();
-  //createRenderPass();
-  //initGUI(0);
-  //createFrameBuffers();
+  // createDepthBuffer();
+  // createRenderPass();
+  // initGUI(0);
+  // createFrameBuffers();
   //_createPostPipeline();
 
   //_updateRestirDescriptorSet();
 
-  //m_pushC.initialize = 1;
+  // m_pushC.initialize = 1;
   //_createMainCommandBuffer();
 
-  //m_device.waitIdle();
-  //LOGI("Prepared\n");
+  // m_device.waitIdle();
+  // LOGI("Prepared\n");
 
   // TODO Create buffers for scene
   // m_sceneBuffers.create(m_gltfScene, m_tmodel, &m_alloc, m_device,
@@ -1037,5 +1037,314 @@ void Renderer::CreateCameraDescriptorSet() {
                          static_cast<uint32_t>(descriptorWrites.size()),
                          descriptorWrites.data(), 0, nullptr);
 }
+
+void Renderer::_createUniformBuffer() {
+  using vkBU = vk::BufferUsageFlagBits;
+  using vkMP = vk::MemoryPropertyFlagBits;
+
+  m_sceneUniforms.debugMode = 0;
+  m_sceneUniforms.gamma     = 2.2;
+  m_sceneUniforms.screenSize =
+      nvmath::uvec2(m_windowSize.width, m_windowSize.height);
+  m_sceneUniforms.flags = RESTIR_VISIBILITY_REUSE_FLAG |
+                          RESTIR_TEMPORAL_REUSE_FLAG |
+                          RESTIR_SPATIAL_REUSE_FLAG;
+  // if (_enableTemporalReuse) {
+  //	m_sceneUniforms.flags |= RESTIR_TEMPORAL_REUSE_FLAG;
+  //}
+  m_sceneUniforms.spatialNeighbors        = 4;
+  m_sceneUniforms.spatialRadius           = 30.0f;
+  m_sceneUniforms.initialLightSampleCount = 1 << m_log2InitialLightSamples;
+  m_sceneUniforms.temporalSampleCountMultiplier =
+      m_temporalReuseSampleMultiplier;
+
+  m_sceneUniforms.pointLightCount    = m_sceneBuffers.getPtLightsCount();
+  m_sceneUniforms.triangleLightCount = m_sceneBuffers.getTriLightsCount();
+  m_sceneUniforms.aliasTableCount    = m_sceneBuffers.getAliasTableCount();
+
+  m_sceneUniforms.environmentalPower    = 1.0;
+  m_sceneUniforms.fireflyClampThreshold = 2.0;
+
+  m_sceneUniformBuffer = m_alloc.createBuffer(
+      sizeof(shader::SceneUniforms), vkBU::eUniformBuffer | vkBU::eTransferDst,
+      vkMP::eDeviceLocal);
+  m_debug.setObjectName(m_sceneUniformBuffer.buffer, "sceneBuffer");
+
+  m_reservoirInfoBuffers.resize(numGBuffers);
+  m_reservoirWeightBuffers.resize(numGBuffers);
+
+  nvvk::CommandPool cmdBufGet(
+      render_context_->GetNvvkContext().m_device,
+      render_context_->GetQueueFamilyIndices()[QueueFlags::GRAPHICS]);
+  vk::CommandBuffer cmdBuf = cmdBufGet.createCommandBuffer();
+
+  _updateUniformBuffer(cmdBuf);
+  auto colorCreateInfo = nvvk::makeImage2DCreateInfo(
+      m_windowSize, vk::Format::eR32G32B32A32Sfloat,
+      vk::ImageUsageFlagBits::eColorAttachment |
+          vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage);
+  vk::SamplerCreateInfo samplerCreateInfo{{},
+                                          vk::Filter::eNearest,
+                                          vk::Filter::eNearest,
+                                          vk::SamplerMipmapMode::eNearest};
+
+  for (std::size_t i = 0; i < numGBuffers; ++i) {
+    {
+      nvvk::Image image = m_alloc.createImage(colorCreateInfo);
+      vk::ImageViewCreateInfo ivInfo =
+          nvvk::makeImageViewCreateInfo(image.image, colorCreateInfo);
+      m_reservoirInfoBuffers[i] =
+          m_alloc.createTexture(image, ivInfo, samplerCreateInfo);
+      m_reservoirInfoBuffers[i].descriptor.imageLayout =
+          VK_IMAGE_LAYOUT_GENERAL;
+      nvvk::cmdBarrierImageLayout(cmdBuf, m_reservoirInfoBuffers[i].image,
+                                  vk::ImageLayout::eUndefined,
+                                  vk::ImageLayout::eGeneral);
+    }
+    {
+      nvvk::Image image = m_alloc.createImage(colorCreateInfo);
+      vk::ImageViewCreateInfo ivInfo =
+          nvvk::makeImageViewCreateInfo(image.image, colorCreateInfo);
+      m_reservoirWeightBuffers[i] =
+          m_alloc.createTexture(image, ivInfo, samplerCreateInfo);
+      m_reservoirWeightBuffers[i].descriptor.imageLayout =
+          VK_IMAGE_LAYOUT_GENERAL;
+      nvvk::cmdBarrierImageLayout(cmdBuf, m_reservoirWeightBuffers[i].image,
+                                  vk::ImageLayout::eUndefined,
+                                  vk::ImageLayout::eGeneral);
+    }
+  }
+  {
+    {
+      nvvk::Image image = m_alloc.createImage(colorCreateInfo);
+      vk::ImageViewCreateInfo ivInfo =
+          nvvk::makeImageViewCreateInfo(image.image, colorCreateInfo);
+      m_reservoirTmpInfoBuffer =
+          m_alloc.createTexture(image, ivInfo, samplerCreateInfo);
+      m_reservoirTmpInfoBuffer.descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+      nvvk::cmdBarrierImageLayout(cmdBuf, m_reservoirTmpInfoBuffer.image,
+                                  vk::ImageLayout::eUndefined,
+                                  vk::ImageLayout::eGeneral);
+    }
+    {
+      nvvk::Image image = m_alloc.createImage(colorCreateInfo);
+      vk::ImageViewCreateInfo ivInfo =
+          nvvk::makeImageViewCreateInfo(image.image, colorCreateInfo);
+      m_reservoirTmpWeightBuffer =
+          m_alloc.createTexture(image, ivInfo, samplerCreateInfo);
+      m_reservoirTmpWeightBuffer.descriptor.imageLayout =
+          VK_IMAGE_LAYOUT_GENERAL;
+      nvvk::cmdBarrierImageLayout(cmdBuf, m_reservoirTmpWeightBuffer.image,
+                                  vk::ImageLayout::eUndefined,
+                                  vk::ImageLayout::eGeneral);
+    }
+  }
+
+  nvvk::Image image = m_alloc.createImage(colorCreateInfo);
+  vk::ImageViewCreateInfo ivInfo =
+      nvvk::makeImageViewCreateInfo(image.image, colorCreateInfo);
+  m_storageImage = m_alloc.createTexture(image, ivInfo, samplerCreateInfo);
+  m_storageImage.descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+  nvvk::cmdBarrierImageLayout(cmdBuf, m_storageImage.image,
+                              vk::ImageLayout::eUndefined,
+                              vk::ImageLayout::eGeneral);
+
+  cmdBufGet.submitAndWait(cmdBuf);
+  m_alloc.finalizeAndReleaseStaging();
+}
+
+void Renderer::_createDescriptorSet() {
+  using vkDS = vk::DescriptorSetLayoutBinding;
+  using vkDT = vk::DescriptorType;
+  using vkSS = vk::ShaderStageFlagBits;
+  std::vector<vk::WriteDescriptorSet> writes;
+
+  m_sceneSetLayoutBind.addBinding(vkDS(B_SCENE, vkDT::eUniformBuffer, 1,
+                                       vkSS::eVertex | vkSS::eFragment |
+                                           vkSS::eRaygenKHR | vkSS::eCompute |
+                                           vkSS::eMissKHR));
+  m_sceneSetLayout = m_sceneSetLayoutBind.createLayout(render_context_->GetNvvkContext().m_device);
+  m_sceneSet =
+      nvvk::allocateDescriptorSet(render_context_->GetNvvkContext().m_device,
+                                  descriptor_pool_, m_sceneSetLayout);
+  vk::DescriptorBufferInfo dbiUnif{m_sceneUniformBuffer.buffer, 0,
+                                   VK_WHOLE_SIZE};
+  writes.emplace_back(
+      m_sceneSetLayoutBind.makeWrite(m_sceneSet, B_SCENE, &dbiUnif));
+
+  m_lightSetLayoutBind.addBinding(
+      vkDS(B_ALIAS_TABLE, vkDT::eStorageBuffer, 1,
+           vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute));
+  m_lightSetLayoutBind.addBinding(
+      vkDS(B_POINT_LIGHTS, vkDT::eStorageBuffer, 1,
+           vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute));
+  m_lightSetLayoutBind.addBinding(
+      vkDS(B_TRIANGLE_LIGHTS, vkDT::eStorageBuffer, 1,
+           vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute));
+  m_lightSetLayoutBind.addBinding(vkDS(
+      B_ENVIRONMENTAL_MAP, vkDT::eCombinedImageSampler, 1,
+      vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute | vkSS::eMissKHR));
+  m_lightSetLayoutBind.addBinding(
+      vkDS(B_ENVIRONMENTAL_ALIAS_MAP, vkDT::eCombinedImageSampler, 1,
+           vkSS::eFragment | vkSS::eRaygenKHR | vkSS::eCompute));
+
+  m_lightSetLayout = m_lightSetLayoutBind.createLayout(
+      render_context_->GetNvvkContext().m_device);
+  m_lightSet =
+      nvvk::allocateDescriptorSet(render_context_->GetNvvkContext().m_device,
+                                  descriptor_pool_, m_lightSetLayout);
+
+  vk::DescriptorBufferInfo pointLightUnif{m_sceneBuffers.getPtLights().buffer,
+                                          0, VK_WHOLE_SIZE};
+  vk::DescriptorBufferInfo trialgleLightUnif{
+      m_sceneBuffers.getTriLights().buffer, 0, VK_WHOLE_SIZE};
+  vk::DescriptorBufferInfo aliasTableUnif{m_sceneBuffers.getAliasTable().buffer,
+                                          0, VK_WHOLE_SIZE};
+  const vk::DescriptorImageInfo& environmentalUnif =
+      m_sceneBuffers.getEnvironmentalTexture().descriptor;
+  const vk::DescriptorImageInfo& environmentalAliasUnif =
+      m_sceneBuffers.getEnvironmentalAliasMap().descriptor;
+
+  writes.emplace_back(m_lightSetLayoutBind.makeWrite(m_lightSet, B_ALIAS_TABLE,
+                                                     &aliasTableUnif));
+  writes.emplace_back(m_lightSetLayoutBind.makeWrite(m_lightSet, B_POINT_LIGHTS,
+                                                     &pointLightUnif));
+  writes.emplace_back(m_lightSetLayoutBind.makeWrite(
+      m_lightSet, B_TRIANGLE_LIGHTS, &trialgleLightUnif));
+  writes.emplace_back(m_lightSetLayoutBind.makeWrite(
+      m_lightSet, B_ENVIRONMENTAL_MAP, &environmentalUnif));
+  writes.emplace_back(m_lightSetLayoutBind.makeWrite(
+      m_lightSet, B_ENVIRONMENTAL_ALIAS_MAP, &environmentalAliasUnif));
+
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_FRAME_WORLD_POSITION, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_FRAME_ALBEDO, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_FRAME_NORMAL, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_FRAME_MATERIAL_PROPS, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PERV_FRAME_WORLD_POSITION, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PERV_FRAME_ALBEDO, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PERV_FRAME_NORMAL, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PREV_FRAME_MATERIAL_PROPS, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_RESERVIORS_INFO, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_RESERVIORS_WEIGHT, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PREV_RESERVIORS_INFO, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_PREV_RESERVIORS_WEIGHT, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_TMP_RESERVIORS_INFO, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_TMP_RESERVIORS_WEIGHT, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayoutBind.addBinding(
+      vkDS(B_STORAGE_IMAGE, vkDT::eStorageImage, 1,
+           vkSS::eRaygenKHR | vkSS::eFragment | vkSS::eCompute));
+  m_restirSetLayout = m_restirSetLayoutBind.createLayout(
+      render_context_->GetNvvkContext().m_device);
+  m_restirSets.resize(numGBuffers);
+  nvvk::allocateDescriptorSets(render_context_->GetNvvkContext().m_device,
+                               descriptor_pool_, m_restirSetLayout,
+                               numGBuffers, m_restirSets);
+
+  render_context_->GetDevice().updateDescriptorSets(static_cast<uint32_t>(writes.size()),
+                                writes.data(), 0, nullptr);
+}
+
+void Renderer::_updateUniformBuffer(const vk::CommandBuffer& cmdBuf) {
+  // Prepare new UBO contents on host.
+  const float aspectRatio =
+      m_windowSize.width / static_cast<float>(m_windowSize.height);
+
+  m_sceneUniforms.prevFrameProjectionViewMatrix =
+      m_sceneUniforms.projectionViewMatrix;
+
+  m_sceneUniforms.proj =
+      nvmath::perspectiveVK(CameraManip.getFov(), aspectRatio, 0.1f, 1000.0f);
+  m_sceneUniforms.view        = CameraManip.getMatrix();
+  m_sceneUniforms.projInverse = nvmath::invert(m_sceneUniforms.proj);
+  m_sceneUniforms.viewInverse = nvmath::invert(m_sceneUniforms.view);
+  m_sceneUniforms.projectionViewMatrix =
+      m_sceneUniforms.proj * m_sceneUniforms.view;
+  m_sceneUniforms.prevCamPos              = m_sceneUniforms.cameraPos;
+  m_sceneUniforms.cameraPos               = CameraManip.getCamera().eye;
+  m_sceneUniforms.initialLightSampleCount = 1 << m_log2InitialLightSamples;
+
+  if (m_enableTemporalReuse) {
+    m_sceneUniforms.flags |= RESTIR_TEMPORAL_REUSE_FLAG;
+  } else {
+    m_sceneUniforms.flags &= ~RESTIR_TEMPORAL_REUSE_FLAG;
+  }
+  if (m_enableVisibleTest) {
+    m_sceneUniforms.flags |= RESTIR_VISIBILITY_REUSE_FLAG;
+  } else {
+    m_sceneUniforms.flags &= ~RESTIR_VISIBILITY_REUSE_FLAG;
+  }
+  if (m_enableSpatialReuse) {
+    m_sceneUniforms.flags |= RESTIR_SPATIAL_REUSE_FLAG;
+  } else {
+    m_sceneUniforms.flags &= ~RESTIR_SPATIAL_REUSE_FLAG;
+  }
+  if (m_enableEnvironment) {
+    m_sceneUniforms.flags |= USE_ENVIRONMENT_FLAG;
+  } else {
+    m_sceneUniforms.flags &= ~USE_ENVIRONMENT_FLAG;
+  }
+  // UBO on the device, and what stages access it.
+  vk::Buffer deviceUBO = m_sceneUniformBuffer.buffer;
+  auto uboUsageStages  = vk::PipelineStageFlagBits::eVertexShader |
+                        vk::PipelineStageFlagBits::eFragmentShader |
+                        vk::PipelineStageFlagBits::eRayTracingShaderKHR;
+
+  // Ensure that the modified UBO is not visible to previous frames.
+  vk::BufferMemoryBarrier beforeBarrier;
+  beforeBarrier.setSrcAccessMask(vk::AccessFlagBits::eShaderRead);
+  beforeBarrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+  beforeBarrier.setBuffer(deviceUBO);
+  beforeBarrier.setOffset(0);
+  beforeBarrier.setSize(sizeof m_sceneUniforms);
+  cmdBuf.pipelineBarrier(uboUsageStages, vk::PipelineStageFlagBits::eTransfer,
+                         vk::DependencyFlagBits::eDeviceGroup, {},
+                         {beforeBarrier}, {});
+
+  // Schedule the host-to-device upload. (hostUBO is copied into the cmd
+  // buffer so it is okay to deallocate when the function returns).
+  cmdBuf.updateBuffer<shader::SceneUniforms>(m_sceneUniformBuffer.buffer, 0,
+                                             m_sceneUniforms);
+
+  // Making sure the updated UBO will be visible.
+  vk::BufferMemoryBarrier afterBarrier;
+  afterBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
+  afterBarrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+  afterBarrier.setBuffer(deviceUBO);
+  afterBarrier.setOffset(0);
+  afterBarrier.setSize(sizeof m_sceneUniforms);
+  cmdBuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, uboUsageStages,
+                         vk::DependencyFlagBits::eDeviceGroup, {},
+                         {afterBarrier}, {});
+    }
 
 }  // namespace volume_restir

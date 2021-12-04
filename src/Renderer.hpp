@@ -58,6 +58,11 @@ private:
   void CreateDescriptorSetScene();
   void CreateScene(std::string scene);
 
+  // nvvk functions
+  void _createUniformBuffer();
+  void _createDescriptorSet();
+  void _updateUniformBuffer(const vk::CommandBuffer& cmdBuf);
+
   std::unique_ptr<RenderContext> render_context_;
   std::unique_ptr<nvvk::SwapChain> swapchain_;
   std::unique_ptr<Camera> camera_;
@@ -98,14 +103,47 @@ private:
 
   // NVVK Stuff
   nvvk::AllocatorDedicated m_alloc;
+
   nvvk::DebugUtil m_debug;
+
   GLTFLoader m_gltfLoad;
-  std::vector<nvvk::Texture> m_textures;
+
   nvvk::RaytracingBuilderKHR m_rtBuilder;
+
+
+  bool m_enableTemporalReuse               = true;
+  bool m_enableSpatialReuse                = true;
+  bool m_enableVisibleTest                 = true;
+  bool m_enableEnvironment                 = false;
+
+  int m_log2InitialLightSamples            = 5;
+  int m_temporalReuseSampleMultiplier      = 20;
   constexpr static std::size_t numGBuffers = 2;
+
   GBuffer m_gBuffers[numGBuffers];
   vk::Extent2D m_windowSize{0, 0}; 
 
+  shader::SceneUniforms m_sceneUniforms;
+  nvvk::Buffer m_sceneUniformBuffer;
+  std::vector<nvvk::Texture> m_textures;
+  std::vector<nvvk::Texture> m_reservoirInfoBuffers;
+  std::vector<nvvk::Texture> m_reservoirWeightBuffers;
+
+  nvvk::Texture m_reservoirTmpInfoBuffer;
+  nvvk::Texture m_reservoirTmpWeightBuffer;
+  nvvk::Texture m_storageImage;
+
+  nvvk::DescriptorSetBindings m_sceneSetLayoutBind;
+  vk::DescriptorSetLayout m_sceneSetLayout;
+  vk::DescriptorSet m_sceneSet;
+
+  nvvk::DescriptorSetBindings m_lightSetLayoutBind;
+  vk::DescriptorSetLayout m_lightSetLayout;
+  vk::DescriptorSet m_lightSet;
+
+  nvvk::DescriptorSetBindings m_restirSetLayoutBind;
+  vk::DescriptorSetLayout m_restirSetLayout;
+  std::vector<vk::DescriptorSet> m_restirSets;
 
   GLTFSceneBuffers m_sceneBuffers;
 

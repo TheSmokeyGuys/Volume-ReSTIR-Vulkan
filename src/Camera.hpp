@@ -1,7 +1,7 @@
 #ifndef __VOLUME_RESTIR_CAMERA_HPP__
 #define __VOLUME_RESTIR_CAMERA_HPP__
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "RenderContext.hpp"
 #include "glm/glm.hpp"

@@ -134,6 +134,8 @@ RenderContext::RenderContext() {
   surface_ = surface;
   nvvk_context_.setGCTQueueWithPresent(surface_);
 
+  device_ = nvvk_context_.m_device;
+
   // create queues
   InitQueues();
 }

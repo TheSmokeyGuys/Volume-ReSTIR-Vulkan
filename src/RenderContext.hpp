@@ -39,8 +39,12 @@ public:
   uint32_t MemoryTypeIndex(uint32_t type_bits,
                            VkMemoryPropertyFlags properties) const;
 
+  vk::Device GetDevice() const { return device_;  }
+
 private:
   nvvk::Context nvvk_context_;
+
+  vk::Device device_; 
 
   // render queues
   Queues queues_;

@@ -1,7 +1,7 @@
 #ifndef __VOLUME_RESTIR_SHADER_MODULE_HPP__
 #define __VOLUME_RESTIR_SHADER_MODULE_HPP__
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include <string>
 #include <vector>
