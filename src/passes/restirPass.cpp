@@ -1,5 +1,9 @@
 #include "restirPass.h"
 
+#include <string>
+#include <vector>
+
+#include "config/static_config.hpp"
 #include "nvh/fileoperations.hpp"
 #include "nvvk/pipeline_vk.hpp"
 #include "nvvk/renderpasses_vk.hpp"
@@ -68,7 +72,7 @@ void RestirPass::createPipeline(
     const vk::DescriptorSetLayout& sceneDescSetLayout,
     const vk::DescriptorSetLayout& lightDescSetLayout,
     const vk::DescriptorSetLayout& restirDescSetLayout) {
-  std::vector<std::string> paths = defaultSearchPaths;
+  std::vector<std::string> paths = static_config::kDefaultSearchPaths;
   vk::ShaderModule raygenSM      = nvvk::createShaderModule(
       m_device,  //
       nvh::loadFile("src/shaders/restir.rgen.spv", true, paths, true));

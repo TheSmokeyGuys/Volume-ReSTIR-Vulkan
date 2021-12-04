@@ -16,10 +16,12 @@
 #include "nvvk/allocator_vk.hpp"
 #endif
 
+#include "ShaderIncludes.h"
 #include "nvh/gltfscene.hpp"
 #include "nvvk/appbase_vkpp.hpp"
 #include "nvvk/descriptorsets_vk.hpp"
-#include "shaderIncludes.h"
+
+namespace volume_restir {
 
 [[nodiscard]] std::vector<shader::pointLight> collectPointLights(
     const nvh::GltfScene&);
@@ -31,3 +33,5 @@
 
 [[nodiscard]] std::vector<shader::aliasTableCell> createAliasTable(
     std::vector<float>&);
+
+}  // namespace volume_restir

@@ -1,13 +1,12 @@
 #include "spatialReusePass.h"
 
+#include "config/static_config.hpp"
 #include "nvh/fileoperations.hpp"
 #include "nvvk/pipeline_vk.hpp"
 #include "nvvk/renderpasses_vk.hpp"
 #include "nvvk/shaders_vk.hpp"
 
 namespace volume_restir {
-
-extern std::vector<std::string> defaultSearchPaths;
 
 void SpatialReusePass::run(const vk::CommandBuffer& cmdBuf,
                            const vk::DescriptorSet& sceneDescSet,
@@ -41,7 +40,7 @@ void SpatialReusePass::createPipeline(
     const vk::DescriptorSetLayout& sceneDescSetLayout,
     const vk::DescriptorSetLayout& lightDescSetLayout,
     const vk::DescriptorSetLayout& restirDescSetLayout) {
-  std::vector<std::string> paths = defaultSearchPaths;
+  std::vector<std::string> paths = static_config::kDefaultSearchPaths;
 
   // pushing time
   vk::PushConstantRange push_constants = {vk::ShaderStageFlagBits::eCompute, 0,
@@ -56,8 +55,7 @@ void SpatialReusePass::createPipeline(
 
   computePipelineCreateInfo.stage = nvvk::createShaderStageInfo(
       m_device,
-      nvh::loadFile("src/shaders/spatialReuse.comp.spv", true,
-                    defaultSearchPaths, true),
+      nvh::loadFile("src/shaders/spatialReuse.comp.spv", true, paths, true),
       VK_SHADER_STAGE_COMPUTE_BIT);
   m_pipeline = static_cast<const vk::Pipeline&>(
       m_device.createComputePipeline({}, computePipelineCreateInfo));

@@ -21,13 +21,16 @@
 
 #include "Camera.hpp"
 #include "GBuffer.hpp"
+
+
 #include "GLTFSceneBuffers.h"
+
+#include "loader/GLTFLoader.hpp"
+
 #include "RenderContext.hpp"
 #include "Scene.hpp"
 #include "config/build_config.h"
 #include "config/static_config.hpp"
-#include "loader/GLTFLoader.hpp"
-#include "nvh/gltfscene.hpp"
 #include "nvvk/pipeline_vk.hpp"
 #include "nvvk/raytraceKHR_vk.hpp"
 #include "nvvk/swapchain_vk.hpp"
@@ -35,6 +38,7 @@
 #include "passes/spatialReusePass.h"
 #include "shaders/Headers/binding.glsl"
 #include "utils/vkqueue_utils.hpp"
+
 
 namespace volume_restir {
 

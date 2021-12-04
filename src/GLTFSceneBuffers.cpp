@@ -2,16 +2,16 @@
 
 #include <cmath>
 
+#include "config/static_config.hpp"
 #include "fileformats/stb_image.h"
 #include "nvh/fileoperations.hpp"
+#include "nvh/gltfscene.hpp"
 #include "shaders/headers/common.glsl"
-
-extern std::string environmentalTextureFile;
-extern std::vector<std::string> defaultSearchPaths;
 
 namespace volume_restir {
 
-vk::SamplerCreateInfo GLTFSceneBuffers::_gltfSamplerToVulkan(tinygltf::Sampler& tsampler) {
+vk::SamplerCreateInfo GLTFSceneBuffers::_gltfSamplerToVulkan(
+    tinygltf::Sampler& tsampler) {
   vk::SamplerCreateInfo vk_sampler;
 
   std::map<int, vk::Filter> filters;
@@ -49,8 +49,10 @@ vk::SamplerCreateInfo GLTFSceneBuffers::_gltfSamplerToVulkan(tinygltf::Sampler& 
 }
 
 void GLTFSceneBuffers::_loadEnvironment() {
-  std::string fileName =
-      nvh::findFile(environmentalTextureFile, defaultSearchPaths);
+  std::string environmentalTextureFile = "media/daytime.hdr";
+
+  std::string fileName = nvh::findFile(environmentalTextureFile,
+                                       static_config::kDefaultSearchPaths);
   std::cout << fileName << std::endl;
   m_alloc->destroy(m_environmentalTexture);
   int width, height, component;
@@ -123,12 +125,11 @@ void GLTFSceneBuffers::_loadEnvironment() {
   std::cout << "etotal: " << total << std::endl;
   stbi_image_free(pixels);
 }
+
 [[nodiscard]] void GLTFSceneBuffers::create(
-    const nvh::GltfScene& gltfScene,
-                          tinygltf::Model& tmodel, nvvk::Allocator* alloc,
-                          const vk::Device& device,
-                          const vk::PhysicalDevice& physicalDevice,
-                          uint32_t graphicsQueueIndex) {
+    const nvh::GltfScene& gltfScene, tinygltf::Model& tmodel,
+    nvvk::Allocator* alloc, const vk::Device& device,
+    const vk::PhysicalDevice& physicalDevice, uint32_t graphicsQueueIndex) {
   m_debug.setup(device);
   m_alloc              = alloc;
   m_device             = device;
@@ -452,8 +453,5 @@ void GLTFSceneBuffers::destroy() {
   cmdBufGet.submitAndWait(cmdBuf);
   m_alloc->finalizeAndReleaseStaging();
 }
-
-
-
 
 }  // namespace volume_restir

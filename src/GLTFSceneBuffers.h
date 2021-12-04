@@ -11,11 +11,6 @@
 #endif
 
 
-
-    
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-
 #include "nvh/gltfscene.hpp"
 #include "nvvk/appbase_vkpp.hpp"
 #include "nvvk/commands_vk.hpp"
@@ -23,7 +18,6 @@
 #include "nvvk/raytraceKHR_vk.hpp"
 #include "shaders/headers/binding.glsl"
 #include "utils/nvvkUtils.h"
-extern bool GeneratePointLight;
 
 namespace volume_restir {
 class GLTFSceneBuffers {

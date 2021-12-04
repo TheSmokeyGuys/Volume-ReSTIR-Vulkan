@@ -2,11 +2,9 @@
 #include <string>
 #include <vulkan/vulkan.hpp>
 
+
 #include "nvh/gltfscene.hpp"
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 namespace volume_restir {
 class GLTFLoader {
 public:

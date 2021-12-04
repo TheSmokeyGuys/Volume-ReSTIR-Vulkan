@@ -1,6 +1,12 @@
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "GLTFLoader.hpp"
 
+#include "nvh/gltfscene.hpp"
 #include "utils/logging.hpp"
+
 namespace volume_restir {
 
 void GLTFLoader::LoadScene(const std::string& filename) {

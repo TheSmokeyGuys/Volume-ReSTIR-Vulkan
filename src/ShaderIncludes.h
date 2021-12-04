@@ -1,8 +1,9 @@
 #pragma once
 
-#pragma once
 #include <nvmath/nvmath.h>
 #include <nvmath/nvmath_glsltypes.h>
+
+namespace volume_restir {
 
 namespace shader {
 
@@ -38,3 +39,4 @@ struct PushConstant {
   int initialize{1};
 };
 }  // namespace shader
+}  // namespace volume_restir

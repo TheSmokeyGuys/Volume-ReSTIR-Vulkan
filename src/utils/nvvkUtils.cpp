@@ -2,9 +2,9 @@
 
 #include <queue>
 
-extern bool GeneratePointLight;
-extern bool GenerateWhiteLight;
-extern uint32_t numPointLightGenerates;
+#include "config/static_config.hpp"
+
+namespace volume_restir {
 
 std::vector<shader::pointLight> collectPointLights(
     const nvh::GltfScene& scene) {
@@ -35,10 +35,11 @@ std::vector<shader::pointLight> generatePointLights(nvmath::vec3 min,
   std::uniform_real_distribution<float> distZ(min.z, max.z);
   std::default_random_engine rand;
 
-  std::vector<shader::pointLight> result(numPointLightGenerates);
+  std::vector<shader::pointLight> result(
+      static_config::kNumPointLightGenerates);
   for (shader::pointLight& light : result) {
     light.pos = nvmath::vec4(distX(rand), distY(rand), distZ(rand), 1.0f);
-    if (GenerateWhiteLight) {
+    if (static_config::kGenerateWhiteLight) {
       light.emission_luminance = nvmath::vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
     } else {
@@ -156,3 +157,5 @@ std::vector<shader::triangleLight> collectTriangleLights(
 
   return aliasTable;
 }
+
+}  // namespace volume_restir
