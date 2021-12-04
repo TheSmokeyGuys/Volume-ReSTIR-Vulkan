@@ -44,6 +44,8 @@ public:
   uint32_t MemoryTypeIndex(uint32_t type_bits,
                            VkMemoryPropertyFlags properties) const;
 
+  vk::Device GetDevice() const { return device_; }
+
 private:
   nvvk::Context nvvk_context_;
 
