@@ -12,7 +12,36 @@ project(volume_restir)
 
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 
-find_package(Vulkan REQUIRED)
+# presets and utility functions used in all CMakeLists
+include(utilities.cmake)
+
+#--------------------------------------------------------------------------------------------------
+# look for shared_sources 1) as a sub-folder 2) at some other locations
+# this cannot be put anywhere else since we still didn't find CMakeLists_include.txt yet
+if(NOT BASE_DIRECTORY)
+   SET(BASE_DIRECTORY "" CACHE FILEPATH "folder containing shared_sources")
+  SET(ADD_SUBDIR_BELOW 1)
+  find_path(BASE_DIRECTORY2
+    NAMES shared_sources
+    PATHS  ${PROJECT_SOURCE_DIR}/external
+    REQUIRED
+    DOC "Couldn't find shared_source directory'"
+    )
+  SET(BASE_DIRECTORY ${BASE_DIRECTORY2} )
+endif()
+
+## Various functions and macros REQUIRED
+include(${BASE_DIRECTORY}/shared_sources/CMakeLists_include.txt)
+set(TUTO_KHR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+#--------------------------------------------------------------------------------------------------
+# Package shared by all projects
+_add_package_VulkanSDK()
+_add_package_OpenGL()
+_add_package_ImGUI()
+_add_package_ZLIB()
+_add_shared_sources_lib()
+
 find_package(OpenVDB)
 
 IF(WIN32)
