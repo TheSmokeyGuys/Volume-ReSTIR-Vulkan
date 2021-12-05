@@ -16,31 +16,38 @@ OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 include(utilities.cmake)
 
 #--------------------------------------------------------------------------------------------------
-# look for shared_sources 1) as a sub-folder 2) at some other locations
-# this cannot be put anywhere else since we still didn't find CMakeLists_include.txt yet
+# look for nvpro_core 1) as a sub-folder 2) at some other locations
+# this cannot be put anywhere else since we still didn't find setup.cmake yet
 if(NOT BASE_DIRECTORY)
-   SET(BASE_DIRECTORY "" CACHE FILEPATH "folder containing shared_sources")
-  SET(ADD_SUBDIR_BELOW 1)
-  find_path(BASE_DIRECTORY2
-    NAMES shared_sources
-    PATHS  ${PROJECT_SOURCE_DIR}/external
+
+  find_path(BASE_DIRECTORY
+    NAMES nvpro_core/cmake/setup.cmake
+    PATHS ${PROJECT_SOURCE_DIR}/external
     REQUIRED
-    DOC "Couldn't find shared_source directory'"
+    DOC "Directory containing nvpro_core"
     )
-  SET(BASE_DIRECTORY ${BASE_DIRECTORY2} )
 endif()
 
 ## Various functions and macros REQUIRED
-include(${BASE_DIRECTORY}/shared_sources/CMakeLists_include.txt)
+if(EXISTS ${BASE_DIRECTORY}/nvpro_core/cmake/setup.cmake)
+  include(${BASE_DIRECTORY}/nvpro_core/cmake/setup.cmake)
+  include(${BASE_DIRECTORY}/nvpro_core/cmake/utilities.cmake)
+else()
+  message(FATAL_ERROR "could not find base directory, please set BASE_DIRECTORY to folder containing nvpro_core")
+endif()
+
 set(TUTO_KHR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+if(MSVC)
+    add_definitions(/wd26812)  # 'enum class' over 'enum'
+    add_definitions(/wd26451)  # Arithmetic overflow, casting 4 byte value to 8 byte value
+endif()
 
 #--------------------------------------------------------------------------------------------------
 # Package shared by all projects
 _add_package_VulkanSDK()
-_add_package_OpenGL()
 _add_package_ImGUI()
-_add_package_ZLIB()
-_add_shared_sources_lib()
+_add_nvpro_core_lib()
 
 find_package(OpenVDB)
 

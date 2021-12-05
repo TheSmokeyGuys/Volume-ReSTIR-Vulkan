@@ -42,36 +42,46 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(WIN32)
-  add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${WINLIBS})
-else(WIN32)
-  add_executable(${PROJECT_NAME} ${SOURCES})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-endif(WIN32)
+add_executable(${PROJECT_NAME})
+_add_project_definitions(${PROJECT_NAME})
 
 
 #--------------------------------------------------------------------------------------------------
 # GLSL to SPIR-V custom build
 #
-message(STATUS "Compiling shader sources:")
 set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-SET(VULKAN_TARGET_ENV vulkan1.2)
-UNSET(SPV_OUTPUT)
-foreach(GLSL ${SHADER_SOURCES})
-  message(STATUS "\t${GLSL}")
-  get_filename_component(FILE_NAME ${GLSL} NAME)
-  _compile_GLSL(${GLSL} ${SHADER_DIR}/${FILE_NAME}.spv GLSL_SOURCES SPV_OUTPUT)
-endforeach(GLSL)
-# list(APPEND SHADER_SOURCES ${GLSL_HEADER_FILES})
+compile_glsl_directory(
+	SRC "${SHADER_SOURCES}" 
+	DST "${SHADER_DIR}" 
+	VULKAN_TARGET "vulkan1.2"
+	DEPENDENCY ${VULKAN_BUILD_DEPENDENCIES}
+)
 
-message(STATUS "Shader output: ${SPV_OUTPUT}")
+#--------------------------------------------------------------------------------------------------
+# Sources
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
+target_sources(${PROJECT_NAME} PUBLIC ${COMMON_SOURCE_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${PACKAGE_SOURCE_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${SHADER_SOURCES} ${GLSL_HEADER_FILES} ${GLSL_STRUCTURE_FILES})
 
+
+#--------------------------------------------------------------------------------------------------
+# Sub-folders in Visual Studio
+#
+source_group("Common"       FILES ${COMMON_SOURCE_FILES} ${PACKAGE_SOURCE_FILES})
+source_group("Sources"      FILES ${SOURCES})
+source_group("Shader Sources"  FILES ${SHADER_SOURCES})
+source_group("Shader Headers"  FILES ${GLSL_HEADER_FILES})
+source_group("Shader Structs"  FILES ${GLSL_STRUCTURE_FILES})
+
+#--------------------------------------------------------------------------------------------------
+# Linkage
+#
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC
   ${ASSIMP_LIBRARIES}
   ${PLATFORM_LIBRARIES} 
-  shared_sources 
+  nvpro_core 
   spdlog::spdlog
   vk-bootstrap::vk-bootstrap
   OpenVDB::openvdb
