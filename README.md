@@ -39,34 +39,34 @@ make -j
 ```
 
 ## Pitch
-- [Project Pitch]()
+- [Project Pitch](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/finalProjectPitch.pdf)
 
 ## Milestone 1 (11/17/2021)
-- [Milestone 1 Presentation]()
+- [Milestone 1 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone1.pdf)
 By milestone 1, we have set up a basic Vulkan rendering pipeline using [vk-bootstrap](https://github.com/charles-lunarg/vk-bootstrap).
 
 ## Milestone 2 (11/29/2021)
-- [Milestone 2 Presentation]()
+- [Milestone 2 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone2.pdf)
 By milestone 2, we have set up general 3D rendering in Vulkan and volume rasterization with [OpenVDB](https://www.openvdb.org/) 
 
 ## Milestone 3 (12/06/2021)
-- [Milestone 3 Presentation]()
+- [Milestone 3 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone3.pdf)
 By milestone 3, we have set up a pipeline for path tracing volumetric data and a separate pipeline for ReSTIR on triangle mesh 3D data. 
 
 <p align="center">
-  ![Explosion VDB](img/explosionPathTrace.gif)
+<img src="img/explosionPathTrace.gif" alt="Explosion VDB" width="800" />
 </p>
 
 <p align="center">
-  ![Fire VDB](img/firePathTrace.gif)
+<img src="img/firePathTrace.gif" alt="Fire VDB" width="800" />
 </p>
 
 <p align="center">
-  ![Rabbit VDB](img/rabbitPathTrace.gif)
+<img src="img/rabbitPathTrace.gif" alt="Rabbit VDB" width="800" />
 </p>
 
 <p align="center">
-  ![Scene ReSTIR](img/sceneRestir.gif)
+<img src="img/sceneRestir.gif" alt="Scene ReSTIR" width="800" />
 </p>
 
 
