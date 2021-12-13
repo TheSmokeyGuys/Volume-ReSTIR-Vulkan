@@ -74,6 +74,6 @@ By milestone 3, we have set up a pipeline for path tracing volumetric data and a
 ## References
 1. Daqi Lin, Chris Wyman, Cem Yuksel. [Fast Volume Rendering with Spatiotemporal Reservoir Resampling](https://research.nvidia.com/publication/2021-11_Fast-Volume-Rendering). ACM Transactions on Graphics (Proceedings of SIGGRAPH Asia 2021), 40, 6, 2021.
 2. [OpenVDB](https://www.openvdb.org/) for VDB data loading.
-3. [vk-bootstrap](https://github.com/charles-lunarg/vk-bootstrap).
+3. [nvpro](https://github.com/nvpro-samples/nvpro_core) for Vulkan Ray Tracing KHR setup.
 4. [spdlog](https://github.com/gabime/spdlog) for fast C++ logging.
-5. Common graphics utilities [glfw](https://github.com/glfw/glfw), [glm](https://github.com/g-truc/glm), [stb](https://github.com/nothings/stb).
+5. Common graphics utilities [glfw](https://github.com/glfw/glfw), [glm](https://github.com/g-truc/glm), [stb](https://github.com/nothings/stb). These are all included in the [nvpro](https://github.com/nvpro-samples/nvpro_core).
