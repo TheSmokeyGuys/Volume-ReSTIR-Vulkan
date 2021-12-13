@@ -6,6 +6,8 @@ Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Res
 
 **This project requires an RTX-compatible (Vulkan Ray Tracing KHR-compatible) graphics card to run.**
 
+![](img/explosion2.gif)
+
 ![](img/demo1.png)
 
 ## Demos
@@ -17,6 +19,14 @@ Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Res
 | :-------------------------------------------: | :--------------------------: |
 |              ![](img/demo2.png)               |      ![](img/demo4.png)      |
 
+### Rasterization vs. Path Tracing
+|      Rasterization      |       Path Tracing       |
+| :---------------------: | :----------------------: |
+| ![](img/rasterizer.png) | ![](img/path_tracer.gif) |
+
+
+### ReSTIR
+![](img/fire.gif)
 
 ## Usage
 ### Building on Windows
