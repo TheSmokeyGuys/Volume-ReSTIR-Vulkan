@@ -1,9 +1,6 @@
 # Volume-ReSTIR
 Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Resampling.
 
-- [Project Pitch](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/main/docs/CIS%20565%20Final%20project%20pitch.pdf)
-- [Milestone 1 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/UserRYang-patch-1/docs/CIS%20565%20Milestone1.pdf)
-
 ## Usage
 ### Building on Windows
 This project relies on [Vcpkg](https://github.com/microsoft/vcpkg) to provide Windows support. Before building the code, one should make sure a working Vcpkg is installed in the system.
@@ -41,10 +38,38 @@ make -j
 ./bin/volume_restir
 ```
 
+## Pitch
+- [Project Pitch](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/finalProjectPitch.pdf)
+
 ## Milestone 1 (11/17/2021)
+- [Milestone 1 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone1.pdf)
 By milestone 1, we have set up a basic Vulkan rendering pipeline using [vk-bootstrap](https://github.com/charles-lunarg/vk-bootstrap).
 
-![](img/initial_vulkan_rendering.png)
+## Milestone 2 (11/29/2021)
+- [Milestone 2 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone2.pdf)
+By milestone 2, we have set up general 3D rendering in Vulkan and volume rasterization with [OpenVDB](https://www.openvdb.org/) 
+
+## Milestone 3 (12/06/2021)
+- [Milestone 3 Presentation](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/milestone3.pdf)
+By milestone 3, we have set up a pipeline for path tracing volumetric data and a separate pipeline for ReSTIR on triangle mesh 3D data. 
+
+<p align="center">
+<img src="img/explosionPathTrace.gif" alt="Explosion VDB" width="800" />
+</p>
+
+<p align="center">
+<img src="img/firePathTrace.gif" alt="Fire VDB" width="800" />
+</p>
+
+<p align="center">
+<img src="img/rabbitPathTrace.gif" alt="Rabbit VDB" width="800" />
+</p>
+
+<p align="center">
+<img src="img/sceneRestir.gif" alt="Scene ReSTIR" width="800" />
+</p>
+
+
 
 ## References
 1. Daqi Lin, Chris Wyman, Cem Yuksel. [Fast Volume Rendering with Spatiotemporal Reservoir Resampling](https://research.nvidia.com/publication/2021-11_Fast-Volume-Rendering). ACM Transactions on Graphics (Proceedings of SIGGRAPH Asia 2021), 40, 6, 2021.
