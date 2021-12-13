@@ -12,7 +12,7 @@ if(UNIX AND NOT APPLE)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/OpenVDB")
 endif(UNIX AND NOT APPLE)
 
-project(vk_raytracing_vdb)
+project(volume_restir)
 
 #--------------------------------------------------------------------------------------------------
 # look for nvpro_core 1) as a sub-folder 2) at some other locations
