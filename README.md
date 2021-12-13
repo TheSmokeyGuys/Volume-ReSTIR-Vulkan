@@ -6,6 +6,18 @@ Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Res
 
 **This project requires an RTX-compatible (Vulkan Ray Tracing KHR-compatible) graphics card to run.**
 
+![](img/demo1.png)
+
+## Demos
+|   Volume-ReSTIR    |   Normal ReSTIR    |
+| :----------------: | :----------------: |
+| ![](img/demo1.png) | ![](img/demo3.png) |
+
+| Ray Traced Volume Rendering (with OBJ Models) | Ray Traced  Volume Rendering |
+| :-------------------------------------------: | :--------------------------: |
+|              ![](img/demo2.png)               |      ![](img/demo4.png)      |
+
+
 ## Usage
 ### Building on Windows
 This project relies on [Vcpkg](https://github.com/microsoft/vcpkg) to provide Windows support. Before building the code, one should make sure a working Vcpkg is installed in the system.
