@@ -179,3 +179,4 @@ pip-log.txt
 cmake_built
 
 !third_party/binaries/**
+!third_party/zstd/**

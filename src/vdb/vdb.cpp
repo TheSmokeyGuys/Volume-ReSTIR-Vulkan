@@ -790,17 +790,18 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     point.y = worldSpace[1];
     point.z = worldSpace[2];
     point.u = j;
-    j++;  // incremenet poin count
+    j++;  // incremenet point count
+
     if (channelName(pointChannel()) == "temperature") {
-      glm::vec3 flameColor =
-          glm::normalize(glm::vec3(226, 88, 34)) * (float)vec * 100.0f;
+      nvmath::vec3f flameColor =
+          nvmath::normalize(nvmath::vec3f(300, 88, 34)) * (float)vec * 1000.0f;
       point.nx =
           flameColor[0];  // set colour to normal for rendering on the shader
       point.ny = flameColor[1];
       point.nz = flameColor[2];
     } else {
-      glm::vec3 smokeColor =
-          glm::normalize(glm::vec3(50, 54, 50)) * (float)vec * 1000.0f;
+      nvmath::vec3f smokeColor =
+          nvmath::normalize(nvmath::vec3f(50, 54, 50)) * (float)vec;
       point.nx =
           smokeColor[0];  // set colour to normal for rendering on the shader
       point.ny = smokeColor[1];
