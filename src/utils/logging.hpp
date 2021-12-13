@@ -13,18 +13,20 @@
  * @date 2021-11-23
  */
 
-#include "glm/glm.hpp"
+// #include "glm/glm.hpp"
+#include "nvmath/nvmath.h"
 #include "spdlog/fmt/bundled/format.h"
 #include "spdlog/spdlog.h"
 
 template <>
-struct fmt::formatter<glm::vec4> {
+struct fmt::formatter<nvmath::vec4f> {
   constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     return ctx.end();
   }
 
   template <typename FormatContext>
-  auto format(const glm::vec4& p, FormatContext& ctx) -> decltype(ctx.out()) {
+  auto format(const nvmath::vec4f& p, FormatContext& ctx)
+      -> decltype(ctx.out()) {
     // ctx.out() is an output iterator to write to.
     return format_to(ctx.out(), "[{:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}]", p[0],
                      p[1], p[2], p[3]);
@@ -32,13 +34,14 @@ struct fmt::formatter<glm::vec4> {
 };
 
 template <>
-struct fmt::formatter<glm::vec3> {
+struct fmt::formatter<nvmath::vec3f> {
   constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     return ctx.end();
   }
 
   template <typename FormatContext>
-  auto format(const glm::vec3& p, FormatContext& ctx) -> decltype(ctx.out()) {
+  auto format(const nvmath::vec3f& p, FormatContext& ctx)
+      -> decltype(ctx.out()) {
     // ctx.out() is an output iterator to write to.
     return format_to(ctx.out(), "[{:7.3f}, {:7.3f}, {:7.3f}]", p[0], p[1],
                      p[2]);
@@ -46,13 +49,14 @@ struct fmt::formatter<glm::vec3> {
 };
 
 template <>
-struct fmt::formatter<glm::mat4> {
+struct fmt::formatter<nvmath::mat4f> {
   constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     return ctx.end();
   }
 
   template <typename FormatContext>
-  auto format(const glm::mat4& p, FormatContext& ctx) -> decltype(ctx.out()) {
+  auto format(const nvmath::mat4f& p, FormatContext& ctx)
+      -> decltype(ctx.out()) {
     // ctx.out() is an output iterator to write to.
     return format_to(ctx.out(),
                      "\n\t[{:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}\n\t {:7.3f}, "
@@ -65,13 +69,14 @@ struct fmt::formatter<glm::mat4> {
 };
 
 template <>
-struct fmt::formatter<glm::mat3> {
+struct fmt::formatter<nvmath::mat3f> {
   constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     return ctx.end();
   }
 
   template <typename FormatContext>
-  auto format(const glm::mat3& p, FormatContext& ctx) -> decltype(ctx.out()) {
+  auto format(const nvmath::mat3f& p, FormatContext& ctx)
+      -> decltype(ctx.out()) {
     // ctx.out() is an output iterator to write to.
     return format_to(
         ctx.out(),

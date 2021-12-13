@@ -1,0 +1,135 @@
+#version 460 core
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_ARB_shader_clock : enable
+#extension GL_EXT_scalar_block_layout : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#define SPATIAL_REUSE_GROUP_SIZE_X 64
+#define SPATIAL_REUSE_GROUP_SIZE_Y 1
+
+#include "host_device.h"
+
+layout(local_size_x = SPATIAL_REUSE_GROUP_SIZE_X,
+       local_size_y = SPATIAL_REUSE_GROUP_SIZE_Y, local_size_z = 1) in;
+
+layout(set = 2, binding = eUniform) uniform _RestirUniforms {
+  RestirUniforms uniforms;
+};
+
+layout(set = 3, binding = ePointLights, scalar) buffer PointLights {
+  PointLight lights[];
+}
+pointLights;
+
+layout(set = 3, binding = eTriangleLights, scalar) buffer TriangleLights {
+  TriangleLight lights[];
+}
+triangleLights;
+
+// layout(set     = 1,
+//       binding = B_ENVIRONMENTAL_MAP) uniform sampler2D environmentalTexture;
+
+layout(set = 4, binding = eFrameWorldPosition,
+       rgba32f) uniform image2D frameWorldPosition;
+layout(set = 4, binding = eFrameAlbedo, rgba32f) uniform image2D frameAlbedo;
+layout(set = 4, binding = eFrameNormal, rgba32f) uniform image2D frameNormal;
+layout(set = 4, binding = eFrameMaterialProps,
+       rgba32f) uniform image2D frameRoughnessMetallic;
+
+layout(set = 4, binding = eTmpReservoirInfo,
+       rgba32f) uniform image2D reservoirInfoBuf;
+layout(set = 4, binding = eTmpReservoirWeight,
+       rgba32f) uniform image2D reservoirWeightBuf;
+
+layout(set = 4, binding = eReservoirsInfo,
+       rgba32f) uniform image2D resultReservoirInfoBuf;
+layout(set = 4, binding = eReservoirWeights,
+       rgba32f) uniform image2D resultReservoirWeightBuf;
+
+#define NUM_NEIGHBORS 3
+
+#include "headers/random.glsl"
+#include "headers/reservoir.glsl"
+
+void main() {
+  uvec2 pixelCoord = gl_GlobalInvocationID.xy;
+  ivec2 coordImage = ivec2(gl_GlobalInvocationID.xy);
+
+  uvec2 s   = pcg2d(pixelCoord * int(clockARB()));
+  uint seed = s.x + s.y;
+
+  if (any(greaterThanEqual(pixelCoord, uniforms.screenSize))) {
+    return;
+  }
+
+  GeometryInfo gInfo;
+
+  gInfo.albedo           = imageLoad(frameAlbedo, coordImage);
+  gInfo.normal           = imageLoad(frameNormal, coordImage).xyz;
+  gInfo.worldPos         = imageLoad(frameWorldPosition, coordImage).xyz;
+  vec2 roughnessMetallic = imageLoad(frameRoughnessMetallic, coordImage).xy;
+  gInfo.roughness        = roughnessMetallic.x;
+  gInfo.metallic         = roughnessMetallic.y;
+  gInfo.albedoLum = luminance(gInfo.albedo.r, gInfo.albedo.g, gInfo.albedo.b);
+  gInfo.camPos    = uniforms.currCamPos.xyz;
+
+  float exist = imageLoad(frameWorldPosition, coordImage).w;
+  if (exist < 0.5) {
+    return;
+  }
+
+  uint reservoirIndex  = pixelCoord.y * uniforms.screenSize.x + pixelCoord.x;
+  vec4 reservoirInfo   = imageLoad(reservoirInfoBuf, coordImage);
+  vec4 reservoirWeight = imageLoad(reservoirWeightBuf, coordImage);
+  Reservoir res        = unpackReservoirStruct(reservoirInfo, reservoirWeight);
+
+  if ((uniforms.flags & RESTIR_SPATIAL_REUSE_FLAG) != 0) {
+    packReservoirStruct(res, reservoirInfo, reservoirWeight);
+    imageStore(resultReservoirInfoBuf, coordImage, reservoirInfo);
+    imageStore(resultReservoirWeightBuf, coordImage, reservoirWeight);
+    return;
+  }
+
+  for (int i = 0; i < NUM_NEIGHBORS; ++i) {
+    float angle        = rnd(seed) * 2.0 * M_PI;
+    float radius       = sqrt(rnd(seed)) * uniforms.spatialRadius;
+    ivec2 randNeighbor = ivec2(round(vec2(cos(angle), sin(angle)) * radius));
+    randNeighbor       = clamp(ivec2(pixelCoord) + randNeighbor, ivec2(0),
+                         ivec2(uniforms.screenSize - 1));
+
+    GeometryInfo n_gInfo;
+
+    n_gInfo.worldPos = imageLoad(frameWorldPosition, ivec2(randNeighbor)).xyz;
+    n_gInfo.normal   = imageLoad(frameNormal, ivec2(randNeighbor)).xyz;
+    n_gInfo.albedo   = imageLoad(frameAlbedo, ivec2(randNeighbor));
+    vec3 neighborRoughnessMetallic =
+        imageLoad(frameRoughnessMetallic, ivec2(randNeighbor)).xyz;
+    n_gInfo.roughness = neighborRoughnessMetallic.x;
+    n_gInfo.metallic  = neighborRoughnessMetallic.y;
+    n_gInfo.albedoLum =
+        luminance(n_gInfo.albedo.r, n_gInfo.albedo.g, n_gInfo.albedo.b);
+    n_gInfo.camPos = gInfo.camPos;
+
+    vec3 positionDiff = gInfo.worldPos - n_gInfo.worldPos;
+    if (dot(positionDiff, positionDiff) < 0.01f) {
+      vec3 albedoDiff = gInfo.albedo.xyz - n_gInfo.albedo.xyz;
+      if (dot(albedoDiff, albedoDiff) < 0.01f) {
+        float normalDot = dot(gInfo.normal, n_gInfo.normal);
+        if (normalDot > 0.5f) {
+          uint neighborIndex =
+              randNeighbor.y * uniforms.screenSize.x + randNeighbor.x;
+          vec4 reservoirInfo = imageLoad(reservoirInfoBuf, ivec2(randNeighbor));
+          vec4 reservoirWeight =
+              imageLoad(reservoirWeightBuf, ivec2(randNeighbor));
+          Reservoir randRes =
+              unpackReservoirStruct(reservoirInfo, reservoirWeight);
+
+          combineReservoirs(res, randRes, gInfo, n_gInfo, seed);
+        }
+      }
+    }
+  }
+  packReservoirStruct(res, reservoirInfo, reservoirWeight);
+  imageStore(resultReservoirInfoBuf, coordImage, reservoirInfo);
+  imageStore(resultReservoirWeightBuf, coordImage, reservoirWeight);
+}

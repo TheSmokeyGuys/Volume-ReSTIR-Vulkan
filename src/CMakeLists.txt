@@ -1,79 +1,81 @@
-file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
+#*****************************************************************************
+# Copyright 2020 NVIDIA Corporation. All rights reserved.
+#*****************************************************************************
 
-find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VK_SDK_PATH}/Bin/ $ENV{VK_SDK_PATH}/Bin32/)
+cmake_minimum_required(VERSION 3.9.6 FATAL_ERROR)
 
-file(GLOB_RECURSE SHADER_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.vert
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.frag
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.geom
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.comp
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.tese
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.tesc
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rchit
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rahit
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rint
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rmiss
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rgen
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.rcall
-)
+#--------------------------------------------------------------------------------------------------
+# Project setting
+message(STATUS "-------------------------------")
+message(STATUS "Processing Project ${PROJECT_NAME}:")
 
-file(GLOB_RECURSE GLSL_HEADER_FILES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.h 
-  ${CMAKE_CURRENT_SOURCE_DIR}/headers/*.glsl
-)
 
-file(GLOB_RECURSE GLSL_STRUCTURE_FILES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.h 
-  ${CMAKE_CURRENT_SOURCE_DIR}/structs/*.glsl
-)
+#--------------------------------------------------------------------------------------------------
+# C++ target and defines
+set(CMAKE_CXX_STANDARD 17)
+add_executable(${PROJECT_NAME})
+_add_project_definitions(${PROJECT_NAME})
 
-source_group("Shaders" FILES ${SHADER_SOURCES})
 
-message(STATUS "OpenVDB include dir: ${OpenVDB_INCLUDE_DIR}")
+#--------------------------------------------------------------------------------------------------
+# Source files for this project
+#
+file(GLOB_RECURSE SOURCE_FILES *.cpp *.hpp *.inl *.h *.c)
+file(GLOB EXTRA_COMMON ${TUTO_KHR_DIR}/src/common/*.*)
+list(APPEND COMMON_SOURCE_FILES ${EXTRA_COMMON})
+
+message(STATUS "Choosing TUTO_KHR_DIR: ${TUTO_KHR_DIR}")
 
 include_directories(
   SYSTEM PUBLIC
-  ${GLM_INCLUDE_DIR}
-  ${STB_INCLUDE_DIR}
   ${OpenVDB_INCLUDE_DIR}
 )
 
 include_directories(
+  ${TUTO_KHR_DIR}/src/common
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-if(WIN32)
-  add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${SHADER_SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${WINLIBS})
-else(WIN32)
-  add_executable(${PROJECT_NAME} ${SOURCES})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-endif(WIN32)
 
 
 #--------------------------------------------------------------------------------------------------
 # GLSL to SPIR-V custom build
+compile_glsl_directory(
+	SRC "${CMAKE_CURRENT_SOURCE_DIR}/shaders" 
+	DST "${CMAKE_CURRENT_SOURCE_DIR}/spv" 
+	VULKAN_TARGET "vulkan1.2"
+	DEPENDENCY ${VULKAN_BUILD_DEPENDENCIES}
+)
+
+
+#--------------------------------------------------------------------------------------------------
+# Sources
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCE_FILES} ${HEADER_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${COMMON_SOURCE_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${PACKAGE_SOURCE_FILES})
+target_sources(${PROJECT_NAME} PUBLIC ${GLSL_SOURCES} ${GLSL_HEADERS})
+
+
+#--------------------------------------------------------------------------------------------------
+# Sub-folders in Visual Studio
 #
-message(STATUS "Compiling shader sources:")
-set(SHADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-SET(VULKAN_TARGET_ENV vulkan1.2)
-UNSET(SPV_OUTPUT)
-foreach(GLSL ${SHADER_SOURCES})
-  message(STATUS "\t${GLSL}")
-  get_filename_component(FILE_NAME ${GLSL} NAME)
-  _compile_GLSL(${GLSL} ${SHADER_DIR}/${FILE_NAME}.spv GLSL_SOURCES SPV_OUTPUT)
-endforeach(GLSL)
-# list(APPEND SHADER_SOURCES ${GLSL_HEADER_FILES})
+source_group("Common"       FILES ${COMMON_SOURCE_FILES} ${PACKAGE_SOURCE_FILES})
+source_group("Sources"      FILES ${SOURCE_FILES})
+source_group("Headers"      FILES ${HEADER_FILES})
+source_group("Shader Sources"  FILES ${GLSL_SOURCES})
+source_group("Shader Headers"  FILES ${GLSL_HEADERS})
 
-message(STATUS "Shader output: ${SPV_OUTPUT}")
 
+#--------------------------------------------------------------------------------------------------
+# Linkage
+#
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC
-  ${ASSIMP_LIBRARIES}
   ${PLATFORM_LIBRARIES} 
-  shared_sources 
+  nvpro_core
+)
+target_link_libraries(${PROJECT_NAME} 
+  PRIVATE
   spdlog::spdlog
-  vk-bootstrap::vk-bootstrap
   OpenVDB::openvdb
 )
 
@@ -85,26 +87,19 @@ foreach(RELEASELIB ${LIBRARIES_OPTIMIZED})
   target_link_libraries(${PROJECT_NAME} PUBLIC optimized ${RELEASELIB})
 endforeach(RELEASELIB)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-IF(MSVC)
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE
-    /EHsc /W4
-  )
-ELSE(MSVC)
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE
-    -Wall -Werror -Wno-unused-variable -Wno-deprecated-declarations
-  )
-ENDIF(MSVC)
-
-InternalTarget("" ${PROJECT_NAME})
-
+#--------------------------------------------------------------------------------------------------
+# Configure CMake Env Variables
+#
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/config/build_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config/build_config.h"
 )
+
+#--------------------------------------------------------------------------------------------------
+# copies binaries that need to be put next to the exe files (ZLib, etc.)
+#
+_finalize_target( ${PROJECT_NAME} )
+
+
+install(FILES ${SPV_OUTPUT} CONFIGURATIONS Release DESTINATION "bin_${ARCH}/${PROJECT_NAME}/spv")
+install(FILES ${SPV_OUTPUT} CONFIGURATIONS Debug DESTINATION "bin_${ARCH}_debug/${PROJECT_NAME}/spv")
