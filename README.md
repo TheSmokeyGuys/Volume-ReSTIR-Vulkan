@@ -33,7 +33,7 @@ If using CMake GUI, add a cache entry "Vcpkg_ROOT" of type `STRING` and type in 
 4. On CMake GUI, Configure and generate the project.
 5. Open Visual Studio 2019, select `volume_restir` project as startup project, and run the project.
 
-### Building on Linux (Ubuntu)
+### (Beta) Building on Linux (Ubuntu)
 Before building, make sure that a working version of OpenVDB has been installed in the system.
 
 ```bash
@@ -42,6 +42,21 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
 ./bin/volume_restir
 ```
+
+## Highlights 
+This project achieves the following:
+* Vulkan ray tracing pipeline with [nvpro](https://github.com/nvpro-samples/nvpro_core).
+* Volume assets loading and rendering through [OpenVDB](https://www.openvdb.org/).
+* ReSTIR algorithm rendering on GLTF scene and volume assets.
+
+## Introduction
+ReSTIR has been a very successful fast path tracing-based rendering algorithm in recent computer graphics. However, the current state-of-the-art ReSTIR algorithm only works with meshes. Moreover, there exists some common objects in the scene that are not suitable for mesh creation. VDB asset is a special kind of asset that compensates the drawback of meshes and provides a much more accurate description for volume-based objects, such as smokes, clouds, fire flames, etc. 
+
+### VDB Data Structures
+VDB is a special type of data structure for smokes, clouds, fire flames, etc. that is based on hierarchical voxel grids. It essentially holds a set of particles. It also uses a similar tree-like data structure as scene graphs for fast traversal and access that stores all transformations at intermediate nodes, and only the particle positions at leaf nodes.
+
+![](img/VDB.png)
+![](/img/VDB-diagram.jpeg)
 
 ## Pitch
 - [Project Pitch](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/finalProjectPitch.pdf)
