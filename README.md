@@ -29,6 +29,13 @@ Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Res
 ![](img/fire.gif)
 
 ## Usage
+### Software Dependencies
+This project depends on the following softwares/drivers:
+* C++ 17
+* Vulkan SDK 1.2.189.2
+* OpenVDB 8.0+
+* CUDA 11.3+
+
 ### Building on Windows
 This project relies on [Vcpkg](https://github.com/microsoft/vcpkg) to provide Windows support. Before building the code, one should make sure a working Vcpkg is installed in the system.
 
@@ -67,7 +74,7 @@ make -j
 
 ## Highlights 
 This project achieves the following:
-* Vulkan ray tracing pipeline with [nvpro](https://github.com/nvpro-samples/nvpro_core).
+* Vulkan ray tracing pipeline with [nvpro](https://github.com/nvpro-samples/nvpro_core) and Vulkan Ray Tracing KHR extension.
 * Volume assets loading and rendering through [OpenVDB](https://www.openvdb.org/).
 * ReSTIR algorithm rendering on GLTF scene and volume assets.
 
@@ -88,6 +95,22 @@ VDB is a special type of data structure for smokes, clouds, fire flames, etc. th
 ReSTIR algorithm is a special ray tracing-based rendering algorithm that deals with large number of light source efficiently. It takes advantage of alias tables for Resampled Importance Sampling (RIS) and flexible reservoir data structures. RIS effectively culls images of low weight lights and constructs a PDF of lights for the scene. The reservoirs, allocated one for each pixel, map geometry collisions to light sources in the scene. The reservoirs are easily updated for every bounce, each time considering a candidate from a subset of all lights. If the candidate is chosen, the reservoir will map the geometry to the new light. As more samples are considered, it becomes less likely for any candidate to be placed into the reservoir. These reservoirs use a combination of probability and giving up precision to generate result pixel color such that the image converges in near real time.
 
 ![](img/ReSTIR.png)
+
+### Vulkan Ray Tracing
+Vulkan is considered as the next-generation API for uniform graphics drivers. It is fast, efficient, light weight, but yet verbose. Vulkan users needs to explicitly set up every little details of the entire rendering pipeline, which is often quite problematic. In this project we provide an explicit example of setting up a working Vulkan rendering pipeline, and it generally involves the following procedures:
+1. Set up [glfw](https://github.com/glfw/glfw) to work with the latest version of Vulkan.
+2. Initialize Vulkan instance, Vulkan physical device, Vulkan logical device, Vulkan swapchain (for passing to frame buffer display), Vulkan graphics command queue.
+3. Create all buffers to be passed to device memory. This includes: frame buffer, rendering pipeline description buffer, data buffer (primitive vertices, indices, normals, materials, textures, etc.).
+4. Create descriptor set for all device buffers. Vulkan descriptor set defines the *stage* that GPU reads the data (either in vertex shader, fragment shader, or any stage in the ray tracing pipeline) and the *way* that GPU reads the data (either as uniform samplers, uniform images, storage buffers, uniform buffers, etc.).
+5. Bind the data buffer with the corresponding descriptor set.
+6. Create the graphics pipeline. Graphics pipelines are defined in `VkPipeline`, which specifies the actual procedures of an entire render pass. It can either be defined as a rasterization pipeline (vertex shader --> primitive assembly --> rasterization --> fragment shader), or a ray tracing pipeline (ray generation shader --> ray intersection shader --> ray closest hit shader/ray miss shader --> post processing fragment shader).
+7. Get the current command buffer, prepare the frame, and run the pre-defined pipeline with all device buffers passing in using descriptor sets. 
+
+Vulkan does not render objects directly. Instead, it uses multiple command queues to queue all commands to be passed onto device. This is actually very similar to CUDA as CUDA also uses multiple streams to send commands to the GPU. That's why the graphics command queue comes in.
+
+The ray tracing pipeline in Vulkan requires the usage of Vulkan Acceleration structures. 
+
+It is generally very hard to set up a complete Vulkan rendering pipeline from the lowest-level Vulkan libraries. Nowadays, there have been many different styles of Vulkan libraries wrappers for cleaner code production. In this project we took the advantage of [nvpro](https://github.com/nvpro-samples/nvpro_core) to set up a clean Vulkan pipeline for us.
 
 ## Pitch
 - [Project Pitch](https://github.com/TheSmokeyGuys/Volume-ReSTIR-Vulkan/blob/task/updateReadme/docs/finalProjectPitch.pdf)
