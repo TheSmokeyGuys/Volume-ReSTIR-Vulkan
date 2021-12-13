@@ -1,6 +1,11 @@
 # Volume-ReSTIR
 Vulkan implementation of Fast Volume Rendering with Spatiotemporal Reservoir Resampling.
 
+* Zhihao Ruan (ruanzh@seas.upenn.edu), Shubham Shaarma (sshubh@seas.upenn.edu), Raymond Yang (rayyang@seas.upenn.edu)
+* Tested on: Windows 10 Home 21H1 Build 19043.1288, Ryzen 7 3700X @ 3.59GHz 48GB, RTX 2060 Super 8GB
+
+**This project requires an RTX-compatible (Vulkan Ray Tracing KHR-compatible) graphics card to run.**
+
 ## Usage
 ### Building on Windows
 This project relies on [Vcpkg](https://github.com/microsoft/vcpkg) to provide Windows support. Before building the code, one should make sure a working Vcpkg is installed in the system.
