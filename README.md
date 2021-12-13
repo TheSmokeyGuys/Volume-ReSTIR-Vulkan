@@ -59,6 +59,10 @@ VDB is a special type of data structure for smokes, clouds, fire flames, etc. th
 ![](/img/VDB-diagram.jpeg)
 
 ### ReSTIR Algorithm 
+*Source:* 
+- [*Spatiotemporal reservoir resampling for real-time ray tracing with dynamic direct lighting*](https://research.nvidia.com/sites/default/files/pubs/2020-07_Spatiotemporal-reservoir-resampling/ReSTIR.pdf)
+- [*Fast Volume Rendering with Spatiotemporal Reservoir Resampling*](https://research.nvidia.com/publication/2021-11_Fast-Volume-Rendering)
+
 ReSTIR algorithm is a special ray tracing-based rendering algorithm that deals with large number of light source efficiently. It takes advantage of alias tables for Resampled Importance Sampling (RIS) and flexible reservoir data structures. RIS effectively culls images of low weight lights and constructs a PDF of lights for the scene. The reservoirs, allocated one for each pixel, map geometry collisions to light sources in the scene. The reservoirs are easily updated for every bounce, each time considering a candidate from a subset of all lights. If the candidate is chosen, the reservoir will map the geometry to the new light. As more samples are considered, it becomes less likely for any candidate to be placed into the reservoir. These reservoirs use a combination of probability and giving up precision to generate result pixel color such that the image converges in near real time.
 
 ![](img/ReSTIR.png)
