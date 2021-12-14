@@ -84,6 +84,7 @@ ReSTIR has been a very successful fast path tracing-based rendering algorithm in
 ### VDB Data Structures
 VDB is a special type of data structure for smokes, clouds, fire flames, etc. that is based on hierarchical voxel grids. It essentially holds a set of particles. It also uses a similar tree-like data structure as scene graphs for fast traversal and access that stores all transformations at intermediate nodes, and only the particle positions at leaf nodes.
 
+![](img/vdb-pot.png)
 ![](img/VDB.png)
 ![](/img/VDB-diagram.jpeg)
 
