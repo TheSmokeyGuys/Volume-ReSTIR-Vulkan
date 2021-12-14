@@ -20,7 +20,9 @@ void RestirPass::run(const VkCommandBuffer& cmdBuf,
                        0, nullptr);
 
   // Initializing push constant values
-  m_pcRestir.clearColor = clearColor;
+  m_pcRestir.clearColorRed   = clearColor.x;
+  m_pcRestir.clearColorGreen = clearColor.y;
+  m_pcRestir.clearColorBlue  = clearColor.z;
 
   vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_pipeline);
 

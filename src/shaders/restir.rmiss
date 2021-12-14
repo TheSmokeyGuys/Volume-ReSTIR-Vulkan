@@ -18,11 +18,8 @@ layout(set = 2, binding = eUniform) uniform _RestirUniforms {
 // environmentalTexture;
 
 layout(push_constant) uniform _PushConstantRestir {
-  int frame;
-  int initialize;
-  vec4 clearColor;
-}
-pushC;
+  PushConstantRestir pcRestir;
+};
 
 vec2 GetSphericalUv(vec3 v) {
   float gamma = asin(-v.y);
@@ -35,10 +32,12 @@ vec2 GetSphericalUv(vec3 v) {
 void main() {
   prd.worldPos.w = 0.0;
   prd.exist      = false;
-  prd.albedo.xyz = pushC.clearColor.xyz * 0.8;
-  // if ((uniforms.flags & USE_ENVIRONMENT_FLAG) != 0) {
-  //   vec2 uv      = GetSphericalUv(gl_WorldRayDirectionEXT.xyz);
-  //   prd.emissive = texture(environmentalTexture, uv).rgb;
-  //   prd.albedo   = vec4(1.0);
-  // }
+  // prd.albedo.xyz = vec3(pcRestir.clearColorRed, pcRestir.clearColorGreen,
+  //                       pcRestir.clearColorBlue) *
+  //                  0.8;
+  //  if ((uniforms.flags & USE_ENVIRONMENT_FLAG) != 0) {
+  //    vec2 uv      = GetSphericalUv(gl_WorldRayDirectionEXT.xyz);
+  //    prd.emissive = texture(environmentalTexture, uv).rgb;
+  //    prd.albedo   = vec4(1.0);
+  //  }
 }

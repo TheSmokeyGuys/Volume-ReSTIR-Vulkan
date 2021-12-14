@@ -13,6 +13,7 @@
 
 #include <nvmath/nvmath.h>
 #include <vulkan/vulkan.h>
+
 #include <array>
 
 namespace volume_restir {

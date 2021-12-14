@@ -1,0 +1,81 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_EXT_debug_printf : enable
+#include "wavefront.glsl"
+
+layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) buffer SphereAabb_ { Aabb aabb[]; }
+Aabbs;
+
+layout(set = 0, binding = 1) buffer Sphere_ { Sphere s[]; }
+Spheres;
+
+layout(set = 0, binding = 2) buffer Velocity_ { Velocity v[]; }
+velocities;
+
+// vec3  center;
+// float radius;
+// float density;
+// vec3  origin;
+// vec3  velocity;
+// vec3  acceleration;
+
+layout(push_constant) uniform shaderInformation {
+  float deltaTime;
+  int size;
+}
+pushc;
+float scalor = 0.05f;
+void main() {
+  // debugPrintfEXT("My float is %f", velocity);
+
+  uint currIdx = gl_GlobalInvocationID.x;
+  if (currIdx > pushc.size) return;
+
+  // ----------------- Testing Comp ----------------- //
+
+  // uint i = currIdx;
+  // for (uint i = currIdx; i <= pushc.Size; i += 1024) {
+
+  // Sphere currsphere = Spheres.s[i];
+  // Aabb old_aabb = Aabbs.aabb[i];
+
+  // vec3 moveSpeed = vec3( float(sin(pushc.time/ 1000.0)) * 0.3f,  0.0f, 0.0f);
+  // Spheres.s[i].center += moveSpeed;
+  // Aabbs.aabb[i].minimum_x += moveSpeed.x;
+  // Aabbs.aabb[i].minimum_y += moveSpeed.y;
+  // Aabbs.aabb[i].minimum_z += moveSpeed.z;
+  // Aabbs.aabb[i].maximum_x += moveSpeed.x;
+  // Aabbs.aabb[i].maximum_y += moveSpeed.y;
+  // Aabbs.aabb[i].maximum_z += moveSpeed.z;
+
+  //}
+
+  // ------------------- Bunny ------------------- //
+
+  // ----------------- Explosion ----------------- //
+
+  uint i = currIdx;
+  // Sphere currSphere = Spheres.s[i];
+  // vec3 deltaPos = vec3(0.1f, 0.1f, 0.1f) * scalor * pushc.deltaTime;
+
+  // vec3  velocity     = vec3( Spheres.s[i].velocity_x,
+  // Spheres.s[i].velocity_y,  Spheres.s[i].velocity_z);
+  vec3 deltaPos =
+      normalize(velocities.v[i].velocity) * scalor * pushc.deltaTime;
+
+  vec3 finalPos = Spheres.s[i].center + deltaPos;
+
+  Spheres.s[i].center = finalPos;
+  Aabbs.aabb[i].minimum_x += deltaPos.x;
+  Aabbs.aabb[i].minimum_y += deltaPos.y;
+  Aabbs.aabb[i].minimum_z += deltaPos.z;
+  Aabbs.aabb[i].maximum_x += deltaPos.x;
+  Aabbs.aabb[i].maximum_y += deltaPos.y;
+  Aabbs.aabb[i].maximum_z += deltaPos.z;
+
+  barrier();
+}

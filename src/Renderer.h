@@ -131,6 +131,13 @@ public:
   void updateGBufferFrameIdx();
   uint32_t getCurrentFrameIdx() { return m_currentGBufferFrameIdx; }
 
+  // Compute shaders
+  void createCompDescriptors();
+  void updateCompDescriptors(nvvk::Buffer& a_spheresAabbBuffer,
+                             nvvk::Buffer& a_spheres);
+  void createCompPipelines();
+  void animationObject(float time);
+
   // getters and setters
   std::vector<Sphere>& getSpheres() { return m_spheres; }
   PushConstantRaster& getPushConstant() { return m_pcRaster; }
@@ -147,6 +154,15 @@ public:
     return m_restirDescSets[getCurrentFrameIdx()];
   }
 
+  VkPipelineLayout getRestirPostPipelineLayout() {
+    return m_restirPostPipelineLayout;
+  }
+
+  PushConstantRestir* getRestirPostPipelinePC() { return &m_pcRestirPost; }
+
+  void updateFrame();
+  void resetFrame();
+
 private:
   // Information pushed at each draw call
   PushConstantRaster m_pcRaster{
@@ -156,6 +172,7 @@ private:
       1000.f,             // light intensity
       0                   // light type
   };
+  float t0 = 0.f;  // old time
 
   // Array of objects and instances in the scene
   std::vector<ObjModel> m_objModel;      // Model on host
@@ -165,6 +182,12 @@ private:
   // Graphic pipeline
   VkPipelineLayout m_pipelineLayout;
   VkPipeline m_graphicsPipeline;
+
+  // Acceleration structures
+  std::vector<VkAccelerationStructureInstanceKHR> tlas;
+  std::vector<nvvk::RaytracingBuilderKHR::BlasInput> allBlas;
+
+  int SphereBlasID;
 
   nvvk::Buffer m_bGlobals;  // Device-Host of the camera matrices
   nvvk::Buffer m_bObjDesc;  // Device buffer of the OBJ descriptions
@@ -191,7 +214,7 @@ private:
   VkPipelineLayout m_postPipelineLayout{VK_NULL_HANDLE};
   VkRenderPass m_offscreenRenderPass{VK_NULL_HANDLE};
   VkFramebuffer m_offscreenFramebuffer{VK_NULL_HANDLE};
-  nvvk::Texture m_offscreenColor;  // FIXME: output img buffer from RtPipeline
+  nvvk::Texture m_offscreenColor;  // output img buffer from RtPipeline
   nvvk::Texture m_offscreenDepth;
   VkFormat m_offscreenColorFormat{VK_FORMAT_R32G32B32A32_SFLOAT};
   VkFormat m_offscreenDepthFormat{VK_FORMAT_X8_D24_UNORM_PACK32};
@@ -229,7 +252,7 @@ private:
   std::vector<nvvk::Texture> m_reservoirWeightBuffers;
   nvvk::Texture m_reservoirTmpInfoBuffer;
   nvvk::Texture m_reservoirTmpWeightBuffer;
-  // FIXME: output img buffer from `Restir`Pipeline
+  // TODO: output img buffer from `Restir`Pipeline
   //  may have to combine it with m_offscreenColor
   nvvk::Texture m_storageImage;
 
@@ -282,6 +305,9 @@ private:
   // Push constant for ray tracer
   PushConstantRay m_pcRay{};
 
+  // Push constant for restir post pipeline
+  PushConstantRestir m_pcRestirPost{0.f, 0.f, 0.f, 0, 1};
+
   std::vector<Sphere> m_spheres;         // All spheres
   nvvk::Buffer m_spheresBuffer;          // Buffer holding the spheres
   nvvk::Buffer m_spheresAabbBuffer;      // Buffer of all Aabb
@@ -289,6 +315,19 @@ private:
   nvvk::Buffer
       m_spheresMatIndexBuffer;  // Define which sphere uses which material
 
+  //#VKCompute
+  std::vector<Velocity> m_spheresVelocity;  // All spheres
+  nvvk::Buffer m_spheresVelocityBuffer;
+  nvvk::DescriptorSetBindings m_compDescSetLayoutBind;
+  VkDescriptorPool m_compDescPool;
+  VkDescriptorSetLayout m_compDescSetLayout;
+  VkDescriptorSet m_compDescSet;
+  VkPipeline m_compPipeline;
+  VkPipelineLayout m_compPipelineLayout;
+
   nvvk::RaytracingBuilderKHR::BlasInput gltfToGeometryKHR(
       const VkDevice& device, const nvh::GltfPrimMesh& prim);
+
+  std::vector<GltfMaterials> m_sphereMaterials;
+  nvvk::Buffer m_sphereMaterialsBuffer;
 };

@@ -61,6 +61,18 @@ struct vDat {
   GLfloat x;
   GLfloat y;
   GLfloat z;
+
+  GLfloat vx;
+  GLfloat vy;
+  GLfloat vz;
+
+  GLfloat cx;
+  GLfloat cy;
+  GLfloat cz;
+
+  GLfloat d;
+
+  GLfloat temp;
 };
 
 /// @struct BBoxBare

@@ -123,7 +123,7 @@ void SceneSample(inout uint seed, vec3 worldPos, out vec3 lightSamplePos,
   } else {
     TriangleLight light = triangleLights.lights[selected_idx];
     lightSamplePos      = getTrianglePoint(rnd(seed), rnd(seed), light.p1.xyz,
-                                      light.p2.xyz, light.p3.xyz);
+                                           light.p2.xyz, light.p3.xyz);
     lightSampleLum      = light.emission_luminance.w;
     lightKind           = LIGHT_KIND_TRIANGLE;
     vec3 wi             = normalize(worldPos - lightSamplePos);
@@ -234,7 +234,7 @@ void main() {
     }
   }
 
-  if ((restirUniform.flags & RESTIR_TEMPORAL_REUSE_FLAG) != 0) {
+  /*if ((restirUniform.flags & RESTIR_TEMPORAL_REUSE_FLAG) != 0) {
     vec4 prevFramePos = restirUniform.prevFrameProjectionViewMatrix *
                         vec4(gInfo.worldPos, 1.0f);
     prevFramePos.xyz /= prevFramePos.w;
@@ -281,7 +281,7 @@ void main() {
         }
       }
     }
-  }
+  }*/
 
   vec4 reservoirInfo, reservoirWeight;
   packReservoirStruct(res, reservoirInfo, reservoirWeight);

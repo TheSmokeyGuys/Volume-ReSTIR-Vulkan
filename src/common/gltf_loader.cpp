@@ -33,8 +33,8 @@ void GLTFLoader::loadScene(const std::string filename) {
   ImGuiH::SetCameraJsonFile(fs::path(filename).stem().string());
   if (!m_gltfScene.m_cameras.empty()) {
     auto& c = m_gltfScene.m_cameras[0];
-    CameraManip.setCamera(
-        {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
+    //CameraManip.setCamera(
+    //    {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
     ImGuiH::SetHomeCamera(
         {c.eye, c.center, c.up, (float)rad2deg(c.cam.perspective.yfov)});
 
@@ -44,8 +44,8 @@ void GLTFLoader::loadScene(const std::string filename) {
     }
   } else {
     // Re-adjusting camera to fit the new scene
-    CameraManip.fit(m_gltfScene.m_dimensions.min, m_gltfScene.m_dimensions.max,
-                    true);
+    //CameraManip.fit(m_gltfScene.m_dimensions.min, m_gltfScene.m_dimensions.max,
+    //                true);
   }
 
   m_isSceneLoaded = true;

@@ -34,7 +34,7 @@ layout(set = 2, binding = eReservoirsInfo,
        rgba32f) uniform image2D reservoirInfoBuf;
 layout(set = 2, binding = eReservoirWeights,
        rgba32f) uniform image2D reservoirWeightBuf;
-layout(set = 3, binding = 0) uniform sampler2D resultImage;
+layout(set = 3, binding = 0, rgba32f) uniform image2D resultImage;
 
 layout(location = 0) in vec2 inUv;
 
@@ -45,11 +45,14 @@ layout(location = 0) out vec3 outColor;
 
 #define PI 3.1415926
 
-// layout(push_constant) uniform Constants {
-//   int frame;
-//   int initialize;
-// }
-// pushC;
+layout(push_constant) uniform Constants {
+  float clearColorRed;
+  float clearColorGreen;
+  float clearColorBlue;
+  int frame;
+  int initialize;
+}
+pushC;
 
 void main() {
   ivec2 coordImage = ivec2(gl_FragCoord.xy);
@@ -63,71 +66,40 @@ void main() {
   gInfo.metallic         = roughnessMetallic.y;
   gInfo.camPos           = uniforms.currCamPos.xyz;
 
-  outColor = normalize(gInfo.albedo.xyz);
+  outColor = vec3(0.0f);
 
-  /*   if (uniforms.debugMode == DEBUG_NONE) {
-      uvec2 pixelCoord = uvec2(gl_FragCoord.xy);
+  uvec2 pixelCoord = uvec2(gl_FragCoord.xy);
 
-      vec4 reservoirInfo   = imageLoad(reservoirInfoBuf, coordImage);
-      vec4 reservoirWeight = imageLoad(reservoirWeightBuf, coordImage);
-      Reservoir res    = unpackReservoirStruct(reservoirInfo, reservoirWeight);
-      gInfo.sampleSeed = res.sampleSeed;
+  vec4 reservoirInfo   = imageLoad(reservoirInfoBuf, coordImage);
+  vec4 reservoirWeight = imageLoad(reservoirWeightBuf, coordImage);
+  Reservoir res        = unpackReservoirStruct(reservoirInfo, reservoirWeight);
+  gInfo.sampleSeed     = res.sampleSeed;
 
-      uint lightIndex = res.lightIndex;
-      int lightKind   = res.lightKind;
-      vec3 pHat       = evaluatePHatFull(lightIndex, lightKind, gInfo);
-      outColor += pHat * res.w;
-      if (gInfo.albedo.w > 0.5f) {
-        outColor = gInfo.albedo.xyz;
-      }
-    } else if (uniforms.debugMode == DEBUG_ALBEDO) {
-      if (gInfo.albedo.a < 0.5f) {
-        outColor = gInfo.albedo.rgb;
-      } else {
-        outColor = vec3(0.0f);
-      }
-    } else if (uniforms.debugMode == DEBUG_EMISSION) {
-      if (gInfo.albedo.a > 0.5f) {
-        outColor = gInfo.albedo.rgb;
-      } else {
-        outColor = vec3(0.0f);
-      }
-    }  *//* else if (uniforms.debugMode == DEBUG_NORMAL) {
-    outColor = (vec3(gInfo.normal) + 1.0f) * 0.5f;
-  } else if (uniforms.debugMode == DEBUG_ROUGHNESS) {
-    outColor = vec3(roughnessMetallic.r);
-  } else if (uniforms.debugMode == DEBUG_METALLIC) {
-    outColor = vec3(roughnessMetallic.g);
-  } else if (uniforms.debugMode == DEBUG_WORLD_POSITION) {
-    outColor = gInfo.worldPos / 10.0f + 0.5f;
-  } else if (uniforms.debugMode == DEBUG_NAIVE_POINT_LIGHT_NO_SHADOW) {
-    float roughness = roughnessMetallic.r;
-    float metallic  = roughnessMetallic.g;
+  uint lightIndex = res.lightIndex;
+  int lightKind   = res.lightKind;
+  vec3 pHat       = evaluatePHatFull(lightIndex, lightKind, gInfo);
+  outColor += pHat * res.w;
+  if (gInfo.albedo.w > 0.5f) {
+    outColor = gInfo.albedo.xyz;
+  }
 
-    outColor = vec3(0.0f);
-    for (int i = 0; i < uniforms.pointLightCount; ++i) {
-      outColor += evaluatePHatFull(uint(i), LIGHT_KIND_POINT, gInfo);
-    }
-  } */
+  {
+    float lum = luminance(outColor);
+    if (lum > uniforms.fireflyClampThreshold)
+      outColor *= uniforms.fireflyClampThreshold / lum;
+  }
 
-  // {
-  //   float lum = luminance(outColor);
-  //   if (lum > uniforms.fireflyClampThreshold)
-  //     outColor *= uniforms.fireflyClampThreshold / lum;
-  // }
+  outColor = max(vec3(0.0), outColor);
 
-  // outColor = max(vec3(0.0), outColor);
-
-  // TODO: Uncomment this!
-  //
-  // if (pushC.frame < 1 || pushC.initialize == 1) {
-  //   imageStore(resultImage, ivec2(gl_FragCoord.xy), vec4(outColor, 1.f));
-  // } else {
-  //   float a        = 1.0f / float(pushC.frame);
-  //   vec3 old_color = imageLoad(resultImage, ivec2(gl_FragCoord.xy)).xyz;
-  //   imageStore(resultImage, ivec2(gl_FragCoord.xy),
-  //              vec4(mix(old_color, outColor, a), 1.f));
-  //   outColor = mix(old_color, outColor, a);
-  // }
+  if (pushC.frame < 1 || pushC.initialize == 1) {
+    imageStore(resultImage, ivec2(gl_FragCoord.xy), vec4(outColor, 1.f));
+  } else {
+    float a        = 1.0f / float(pushC.frame);
+    vec3 old_color = imageLoad(resultImage, ivec2(gl_FragCoord.xy)).xyz;
+    imageStore(resultImage, ivec2(gl_FragCoord.xy),
+               vec4(mix(old_color, outColor, a), 1.f));
+    outColor = mix(old_color, outColor, a);
+  }
   // outColor = pow(outColor, vec3(1.0f / uniforms.gamma));
+  outColor = pow(outColor, vec3(1.0f / 0.8f));
 }

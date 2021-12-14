@@ -54,12 +54,14 @@ float hitSphere(const Sphere s, const Ray r) {
 // Ray-AABB intersection
 float hitAabb(const Aabb aabb, const Ray r) {
   vec3 invDir = 1.0 / r.direction;
-  vec3 tbot   = invDir * (aabb.minimum - r.origin);
-  vec3 ttop   = invDir * (aabb.maximum - r.origin);
-  vec3 tmin   = min(ttop, tbot);
-  vec3 tmax   = max(ttop, tbot);
-  float t0    = max(tmin.x, max(tmin.y, tmin.z));
-  float t1    = min(tmax.x, min(tmax.y, tmax.z));
+  vec3 tbot   = invDir *
+              (vec3(aabb.minimum_x, aabb.minimum_y, aabb.minimum_z) - r.origin);
+  vec3 ttop = invDir *
+              (vec3(aabb.maximum_x, aabb.maximum_y, aabb.maximum_z) - r.origin);
+  vec3 tmin = min(ttop, tbot);
+  vec3 tmax = max(ttop, tbot);
+  float t0  = max(tmin.x, max(tmin.y, tmin.z));
+  float t1  = min(tmax.x, min(tmax.y, tmax.z));
   return t1 > max(t0, 0.0) ? t0 : -1.0;
 }
 

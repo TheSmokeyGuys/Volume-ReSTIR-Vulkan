@@ -127,7 +127,7 @@ ShadeState GetShadeState(in HitState hstate) {
   vec3 world_tangent =
       normalize(vec3(mat4(hstate.ObjectToWorld) * vec4(tangent.xyz, 0)));
   world_tangent       = normalize(world_tangent -
-                            dot(world_tangent, world_normal) * world_normal);
+                                  dot(world_tangent, world_normal) * world_normal);
   vec3 world_binormal = cross(world_normal, world_tangent) * tng0.w;
 
   // TexCoord
@@ -254,8 +254,8 @@ Material GetSpecularGlossiness(GltfMaterials material, ShadeState sstate) {
 
   if (material.khrSpecularGlossinessTexture > -1) {
     vec4 sgSample       = SRGBtoLINEAR(texture(
-        texturesMap[nonuniformEXT(material.khrSpecularGlossinessTexture)],
-        sstate.text_coords));
+              texturesMap[nonuniformEXT(material.khrSpecularGlossinessTexture)],
+              sstate.text_coords));
     perceptualRoughness = 1 - material.khrGlossinessFactor *
                                   sgSample.a;  // glossiness to roughness
     f0 *= sgSample.rgb;                        // specular

@@ -1,13 +1,13 @@
-#ifndef __VOLUME_RESTIR_CONFIG_STATIC_CONFIG_HPP__
-#define __VOLUME_RESTIR_CONFIG_STATIC_CONFIG_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#define VOLUME_RESTIR_USE_VDB
-#define USE_GLTF
-// #define USE_RT_PIPELINE
-#define USE_RESTIR_PIPELINE
+//#define USE_VDB
+ #define USE_GLTF
+//#define USE_RT_PIPELINE
+ #define USE_RESTIR_PIPELINE
+// #define USE_ANIMATION
 
 namespace static_config {
 
@@ -27,8 +27,6 @@ extern const uint32_t kNumPointLightGenerates;
 constexpr size_t kNumGBuffers = 2;
 
 }  // namespace static_config
-
-#endif /* __VOLUME_RESTIR_CONFIG_STATIC_CONFIG_HPP__ */
 
 // descSetLayout should also contain uniforms
 

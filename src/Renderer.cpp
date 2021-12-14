@@ -102,6 +102,7 @@ void Renderer::createGBuffers() {
     m_gBuffers[i].create(&m_alloc, m_device, m_graphicsQueueIndex, m_size,
                          m_renderPass);
   }
+  spdlog::info("Created GBuffers");
 }
 
 void Renderer::updateGBufferFrameIdx() {
@@ -187,6 +188,11 @@ void Renderer::createDescriptorSetLayout() {
                                  VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
                                      VK_SHADER_STAGE_INTERSECTION_BIT_KHR);
 
+  m_descSetLayoutBind.addBinding(SceneBindings::eSphereMaterial,
+                                 VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
+                                 VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                                     VK_SHADER_STAGE_INTERSECTION_BIT_KHR);
+
 #ifdef USE_GLTF
   m_descSetLayoutBind.addBinding(SceneBindings::eGLTFVertices,
                                  VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
@@ -225,6 +231,7 @@ void Renderer::createDescriptorSetLayout() {
   m_descPool      = m_descSetLayoutBind.createPool(m_device, 1);
   m_descSet =
       nvvk::allocateDescriptorSet(m_device, m_descPool, m_descSetLayout);
+  spdlog::info("Created global descriptor set layout");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -256,6 +263,12 @@ void Renderer::updateDescriptorSet() {
   VkDescriptorBufferInfo dbiSpheres{m_spheresBuffer.buffer, 0, VK_WHOLE_SIZE};
   writes.emplace_back(
       m_descSetLayoutBind.makeWrite(m_descSet, eImplicit, &dbiSpheres));
+
+  VkDescriptorBufferInfo spherematInfo{m_sphereMaterialsBuffer.buffer, 0,
+                                       VK_WHOLE_SIZE};
+
+  writes.emplace_back(m_descSetLayoutBind.makeWrite(
+      m_descSet, SceneBindings::eSphereMaterial, &spherematInfo));
 
 #ifdef USE_GLTF
   // GLTF stuff
@@ -302,6 +315,7 @@ void Renderer::updateDescriptorSet() {
   // Writing the information
   vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
                          writes.data(), 0, nullptr);
+  spdlog::info("Updated global descriptor set");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -344,6 +358,7 @@ void Renderer::createGraphicsPipeline() {
 
   m_graphicsPipeline = gpb.createPipeline();
   m_debug.setObjectName(m_graphicsPipeline, "Graphics");
+  spdlog::info("Created Graphics Pipeline");
 }
 
 void Renderer::loadGLTFModel(const std::string& filename) {
@@ -419,12 +434,12 @@ void Renderer::createGLTFBuffer() {
   // GLTF Scenes
   m_gltfVertices = m_alloc.createBuffer(
       cmdBuf, gltfScene.m_positions,
-      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
   m_gltfIndices = m_alloc.createBuffer(
       cmdBuf, gltfScene.m_indices,
-      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
   m_gltfNormals   = m_alloc.createBuffer(cmdBuf, gltfScene.m_normals,
@@ -649,6 +664,7 @@ void Renderer::createUniformBuffer() {
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   m_debug.setObjectName(m_bGlobals.buffer, "Globals");
+  spdlog::info("Allocated Global Uniform buffer");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -845,8 +861,10 @@ void Renderer::createTextureImages(const VkCommandBuffer& cmdBuf,
 // Destroying all allocations
 //
 void Renderer::destroyResources() {
+#ifdef USE_RT_PIPELINE
   vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
   vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+#endif
   vkDestroyDescriptorPool(m_device, m_descPool, nullptr);
   vkDestroyDescriptorSetLayout(m_device, m_descSetLayout, nullptr);
 
@@ -890,10 +908,21 @@ void Renderer::destroyResources() {
   vkDestroyRenderPass(m_device, m_offscreenRenderPass, nullptr);
   vkDestroyFramebuffer(m_device, m_offscreenFramebuffer, nullptr);
 
+#ifdef USE_ANIMATION
+  // Compute
+  m_alloc.destroy(m_spheresVelocityBuffer);
+  vkDestroyPipeline(m_device, m_compPipeline, nullptr);
+  vkDestroyPipelineLayout(m_device, m_compPipelineLayout, nullptr);
+  vkDestroyDescriptorPool(m_device, m_compDescPool, nullptr);
+  vkDestroyDescriptorSetLayout(m_device, m_compDescSetLayout, nullptr);
+#endif
+
   // #VKRay
   m_rtBuilder.destroy();
+#ifdef USE_RT_PIPELINE
   vkDestroyPipeline(m_device, m_rtPipeline, nullptr);
   vkDestroyPipelineLayout(m_device, m_rtPipelineLayout, nullptr);
+#endif
   vkDestroyDescriptorPool(m_device, m_rtDescPool, nullptr);
   vkDestroyDescriptorSetLayout(m_device, m_rtDescSetLayout, nullptr);
   m_alloc.destroy(m_rtSBTBuffer);
@@ -904,6 +933,7 @@ void Renderer::destroyResources() {
   m_alloc.destroy(m_spheresMatColorBuffer);
   m_alloc.destroy(m_spheresMatIndexBuffer);
 
+#ifdef USE_RESTIR_PIPELINE
   // restir uniform buffer
   vkDestroyDescriptorPool(m_device, m_restirUniformDescPool, nullptr);
   vkDestroyDescriptorSetLayout(m_device, m_restirUniformDescSetLayout, nullptr);
@@ -939,6 +969,7 @@ void Renderer::destroyResources() {
   // ReSTIR passes
   m_restirPass.destroy();
   m_spatialReusePass.destroy();
+#endif
 
   // GBuffers
   for (auto& gBuf : m_gBuffers) {
@@ -992,7 +1023,6 @@ void Renderer::onResize(int /*w*/, int /*h*/) {
   createOffscreenRender();
   updatePostDescriptorSet();
   updateRtDescriptorSet();
-  updateRestirDescriptorSet();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1136,9 +1166,8 @@ void Renderer::updatePostDescriptorSet() {
 // the vertex or the fragment program.
 //
 void Renderer::createRestirPostDescriptor() {
-  m_restirPostDescSetLayoutBind.addBinding(
-      0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
-      VK_SHADER_STAGE_FRAGMENT_BIT);
+  m_restirPostDescSetLayoutBind.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+                                           1, VK_SHADER_STAGE_FRAGMENT_BIT);
   m_restirPostDescSetLayout =
       m_restirPostDescSetLayoutBind.createLayout(m_device);
   m_restirPostDescPool = m_restirPostDescSetLayoutBind.createPool(m_device);
@@ -1161,13 +1190,19 @@ void Renderer::updateRestirPostDescriptorSet() {
 //
 void Renderer::createRestirPostPipeline() {
   // Creating the pipeline layout
+
+  // pushing time
+  VkPushConstantRange constants              = {VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                                   sizeof(PushConstantRestir)};
   std::vector<VkDescriptorSetLayout> layouts = {
       m_restirUniformDescSetLayout, m_lightDescSetLayout, m_restirDescSetLayout,
       m_restirPostDescSetLayout};
   VkPipelineLayoutCreateInfo createInfo{
       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-  createInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
-  createInfo.pSetLayouts    = layouts.data();
+  createInfo.setLayoutCount         = static_cast<uint32_t>(layouts.size());
+  createInfo.pSetLayouts            = layouts.data();
+  createInfo.pushConstantRangeCount = 1;
+  createInfo.pPushConstantRanges    = &constants;
   vkCreatePipelineLayout(m_device, &createInfo, nullptr,
                          &m_restirPostPipelineLayout);
 
@@ -1243,6 +1278,7 @@ void Renderer::initRayTracing() {
   vkGetPhysicalDeviceProperties2(m_physicalDevice, &prop2);
 
   m_rtBuilder.setup(m_device, &m_alloc, m_graphicsQueueIndex);
+  spdlog::info("Set up m_rtBuilder");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1381,30 +1417,63 @@ void Renderer::createVDBBuffer() {
     return;
   }
 
-  float scaleFactor         = 1;
+  float scaleFactor         = 0.05;
   nvmath::mat3f scaleMatrix = nvmath::mat3f(1.0);
   scaleMatrix *= scaleFactor;
-  nvmath::vec3f translation{0, 5.0f, 0};
+  nvmath::vec3f translation{-2.5, 0.5f, 0};
+  nvmath::vec3f translation2{1.0f, 0.0f, 0};
 
   uint32_t nbSpheres = static_cast<uint32_t>(vdb->AllPoints.size());
+  // nbSpheres = 1000;
   m_spheres.resize(nbSpheres);
-  for (uint32_t i = 0; i < nbSpheres; i++) {
+  for (size_t i = 0; i < nbSpheres; i++) {
     Sphere s;
     s.center =
         scaleMatrix * nvmath::vec3f(vdb->AllPoints[i].x, vdb->AllPoints[i].y,
                                     vdb->AllPoints[i].z);
     s.center += translation;
-    s.radius     = 0.1;
+    s.radius          = 0.005;
+    nvmath::vec3f vel = nvmath::vec3f(
+        vdb->AllPoints[i].vx, vdb->AllPoints[i].vy, vdb->AllPoints[i].vz);
     m_spheres[i] = std::move(s);
   }
+#ifdef USE_ANIMATION
+  int sphereAnimate = nbSpheres / 10;
+  m_spheresVelocity.resize(nbSpheres);
+  for (size_t i = 0; i < sphereAnimate; i++) {
+    Velocity v;
+    v.velocity = nvmath::vec3f(vdb->AllPoints[i].vx, vdb->AllPoints[i].vy,
+                               vdb->AllPoints[i].vz);
+
+    // s.acceleration = nvmath::vec3f(0.f, -9.8f, 0.f);  // gravity
+    m_spheresVelocity[i] = std::move(v);
+  }
+
+  for (int i = sphereAnimate; i < nbSpheres; i++) {
+    Velocity v;
+    v.velocity = nvmath::vec3f(0.0f, 0.0f, 0.0f);
+
+    // s.acceleration = nvmath::vec3f(0.f, -9.8f, 0.f);  // gravity
+    m_spheresVelocity[i] = std::move(v);
+  }
+
+#endif
 
   // Axis aligned bounding box of each sphere
   std::vector<Aabb> aabbs;
   aabbs.reserve(nbSpheres);
   for (const auto& s : m_spheres) {
     Aabb aabb;
-    aabb.minimum = s.center - nvmath::vec3f(s.radius);
-    aabb.maximum = s.center + nvmath::vec3f(s.radius);
+    nvmath::vec3f minimum = s.center - nvmath::vec3f(s.radius);
+    nvmath::vec3f maximum = s.center + nvmath::vec3f(s.radius);
+    aabb.minimum_x        = minimum.x;
+    aabb.minimum_y        = minimum.y;
+    aabb.minimum_z        = minimum.z;
+
+    aabb.maximum_x = maximum.x;
+    aabb.maximum_y = maximum.y;
+    aabb.maximum_z = maximum.z;
+
     aabbs.emplace_back(aabb);
   }
 
@@ -1413,9 +1482,38 @@ void Renderer::createVDBBuffer() {
   materials.reserve(nbSpheres);
   for (size_t i = 0; i < m_spheres.size(); ++i) {
     MaterialObj mat;
-    mat.diffuse = nvmath::vec3f(vdb->AllPoints[i].nx, vdb->AllPoints[i].ny,
-                                vdb->AllPoints[i].nz);
+    mat.diffuse = nvmath::vec3f(vdb->AllPoints[i].cx, vdb->AllPoints[i].cy,
+                                vdb->AllPoints[i].cz);
     materials.emplace_back(mat);
+  }
+
+  // create Sphere GLTF MAetrial
+  for (size_t i = 0; i < m_spheres.size(); ++i) {
+    // Create Material for Sphere
+    GltfMaterials spheremat;
+    spheremat.pbrBaseColorFactor = nvmath::normalize(
+        nvmath::vec4(vdb->AllPoints[i].cx, vdb->AllPoints[i].cy,
+                     vdb->AllPoints[i].cz, 1));       // Main Color
+    spheremat.pbrBaseColorTexture         = 0.0001f;  // For mettalic Color
+    spheremat.pbrMetallicFactor           = 0.0001f;  // For mettalic factor
+    spheremat.pbrRoughnessFactor          = 0.9;
+    spheremat.pbrMetallicRoughnessTexture = -1;
+    spheremat.khrDiffuseFactor =
+        nvmath::vec4(0.5, 0.1, 0.2, 1);  //// Main Color
+    spheremat.khrSpecularFactor   = nvmath::vec3(0.5, 0.5, 0.5);  // Specular
+    spheremat.khrDiffuseTexture   = -1;  // emissiveTexture make it -2
+    spheremat.shadingModel        = SHADING_MODEL_SPECULAR_GLOSSINESS;  //
+    spheremat.khrGlossinessFactor = 0.3;
+    spheremat.khrSpecularGlossinessTexture = -1;
+    spheremat.emissiveTexture              = -1;  // emissiveTexture make it -2
+    spheremat.emissiveFactor = nvmath::vec3(0.3, 0.3, 0.3);  // emmisiveFactor
+    // spheremat.alphaMode = m.alphaMode;
+    // spheremat.alphaCutoff = m.alphaCutoff;
+    // spheremat.doubleSided = m.doubleSided;
+    // spheremat.normalTexture = m.normalTexture;
+    // spheremat.normalTextureScale = m.normalTextureScale;
+    // spheremat.uvTransform = m.uvTransform;
+    m_sphereMaterials.emplace_back(spheremat);
   }
 
   // ORIGINAL -- Creating two materials
@@ -1435,31 +1533,37 @@ void Renderer::createVDBBuffer() {
   }
 
   // Creating all buffers
+  VkBufferUsageFlags flag = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+  VkBufferUsageFlags
+      rayTracingFlags =  // used also for building acceleration structures
+      flag |
+      VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
   using vkBU = VkBufferUsageFlagBits;
   nvvk::CommandPool genCmdBuf(m_device, m_graphicsQueueIndex);
   auto cmdBuf         = genCmdBuf.createCommandBuffer();
   m_spheresBuffer     = m_alloc.createBuffer(cmdBuf, m_spheres,
                                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-  m_spheresAabbBuffer = m_alloc.createBuffer(
-      cmdBuf, aabbs,
-      VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-          VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
-  m_spheresMatIndexBuffer =
-      m_alloc.createBuffer(cmdBuf, matIdx,
-                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                               VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
-  m_spheresMatColorBuffer =
-      m_alloc.createBuffer(cmdBuf, materials,
-                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                               VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+  m_spheresAabbBuffer = m_alloc.createBuffer(cmdBuf, aabbs, rayTracingFlags);
+  m_spheresMatIndexBuffer = m_alloc.createBuffer(
+      cmdBuf, matIdx, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | flag);
+  m_spheresMatColorBuffer = m_alloc.createBuffer(
+      cmdBuf, materials, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | flag);
+  m_sphereMaterialsBuffer = m_alloc.createBuffer(
+      cmdBuf, m_sphereMaterials, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | flag);
+
+#ifdef USE_ANIMATION
+  m_spheresVelocityBuffer = m_alloc.createBuffer(
+      cmdBuf, m_spheresVelocity, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | flag);
+#endif
   genCmdBuf.submitAndWait(cmdBuf);
-  m_alloc.finalizeAndReleaseStaging();
 
   // Debug information
   m_debug.setObjectName(m_spheresBuffer.buffer, "spheres");
   m_debug.setObjectName(m_spheresAabbBuffer.buffer, "spheresAabb");
   m_debug.setObjectName(m_spheresMatColorBuffer.buffer, "spheresMat");
   m_debug.setObjectName(m_spheresMatIndexBuffer.buffer, "spheresMatIdx");
+  m_debug.setObjectName(m_sphereMaterialsBuffer.buffer, "spheresMatIdx");
 
   // Adding an extra instance to get access to the material buffers
   ObjDesc objDesc{};
@@ -1470,8 +1574,11 @@ void Renderer::createVDBBuffer() {
   m_objDesc.emplace_back(objDesc);
 
   ObjInstance instance{};
-  instance.objIndex = static_cast<uint32_t>(m_objModel.size());
+  instance.transform = nvmath::mat4f(1.f);
+  instance.objIndex  = static_cast<uint32_t>(m_objModel.size());
   m_instances.emplace_back(instance);
+
+  spdlog::info("VDB Buffer created");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1485,10 +1592,52 @@ void Renderer::createRestirLights() {
 
   if (m_pointLights.empty()) {
     // generate random point lights
-    m_pointLights = generatePointLights(nvmath::vec3(-10, -10, -10),
-                                        nvmath::vec3(10, 10, 10));
-    spdlog::info("Generated point lights of size {}", m_pointLights.size());
+    nvmath::vec3f min_range, max_range;
+    if (SingletonManager::GetGLTFLoader().isSceneLoaded()) {
+      auto gltfScene = SingletonManager::GetGLTFLoader().getGLTFScene();
+      m_pointLights  = generatePointLights(gltfScene.m_dimensions.min,
+                                          gltfScene.m_dimensions.max);
+      min_range      = gltfScene.m_dimensions.min;
+      max_range      = gltfScene.m_dimensions.max;
+    } else {
+      m_pointLights = generatePointLights(nvmath::vec3f(-10, -10, -10),
+                                          nvmath::vec3f(10, 10, 10));
+      min_range     = nvmath::vec3f(-10, -10, -10);
+      max_range     = nvmath::vec3f(10, 10, 10);
+    }
+    spdlog::info("Generated point lights of size {} in range {}, {} :",
+                 m_pointLights.size(), min_range, max_range);
   }
+
+  m_pointLights = generatePointLights(nvmath::vec3f(-10, -10, -10),
+                                      nvmath::vec3f(10, 10, 10), false, 1000);
+
+  VDB* vdb         = nullptr;
+  int lightCounter = 0;
+  if (SingletonManager::GetVDBLoader().IsVDBLoaded()) {
+    vdb = SingletonManager::GetVDBLoader().GetPtr();
+
+    uint32_t nbSpheres = static_cast<uint32_t>(vdb->AllPoints.size());
+    for (int i = 0; i < nbSpheres; i++) {
+      if (lightCounter > 1000) {
+        break;
+      }
+      if (vdb->AllPoints[i].temp > 275) {
+        lightCounter++;
+        PointLight currLight;
+        currLight.pos                = m_spheres[i].center;
+        currLight.emission_luminance = nvmath::vec4f(0.6, 0.2, 0.1, 1.0);
+
+        currLight.emission_luminance.w = shader::luminance(
+            currLight.emission_luminance.x, currLight.emission_luminance.y,
+            currLight.emission_luminance.z);
+        m_pointLights.push_back(currLight);
+      }
+    }
+  }
+
+  // min_range     = nvmath::vec3f(-10, -10, -10);
+  // max_range     = nvmath::vec3f(10, 10, 10);
 
   if (m_triangleLights.empty()) {
     // triangle lights are only created with a GLTF scene
@@ -1546,11 +1695,10 @@ void Renderer::createRestirLights() {
 //
 void Renderer::createBottomLevelAS() {
   // BLAS - Storing each primitive in a geometry
-  std::vector<nvvk::RaytracingBuilderKHR::BlasInput> allBlas;
 
 #ifdef USE_GLTF
   const auto gltfScene = SingletonManager::GetGLTFLoader().getGLTFScene();
-  allBlas.resize(gltfScene.m_primMeshes.size() + 1);
+  allBlas.reserve(gltfScene.m_primMeshes.size() + 1);
   for (auto& primMesh : gltfScene.m_primMeshes) {
     auto geo = gltfToGeometryKHR(m_device, primMesh);
     allBlas.push_back({geo});
@@ -1566,32 +1714,30 @@ void Renderer::createBottomLevelAS() {
 #endif
 
   // Spheres
-#ifdef VOLUME_RESTIR_USE_VDB
+#ifdef USE_VDB
   {
     auto blas = sphereToVkGeometryKHR();
     allBlas.emplace_back(blas);
   }
-#endif  // VOLUME_RESTIR_USE_VDB
+#endif  // USE_VDB
 
   m_rtBuilder.buildBlas(
-      allBlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+      allBlas, VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR |
+                   VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR);
+  spdlog::info("Created BLAS for ray tracing");
 }
 
 //--------------------------------------------------------------------------------------------------
 //
 //
 void Renderer::createTopLevelAS() {
-  std::vector<VkAccelerationStructureInstanceKHR> tlas;
-#ifdef VOLUME_RESTIR_USE_VDB
-  auto nbObj = static_cast<uint32_t>(m_instances.size()) - 1;
-#else
-  auto nbObj = static_cast<uint32_t>(m_instances.size());
-#endif  // VOLUME_RESTIR_USE_VDB
-
 #ifdef USE_GLTF
   const auto gltfScene = SingletonManager::GetGLTFLoader().getGLTFScene();
+#ifdef USE_VDB
   tlas.reserve(gltfScene.m_nodes.size() + 1);
-  uint32_t instID = 0;
+#else
+  tlas.reserve(gltfScene.m_nodes.size());
+#endif  // USE_VDB
   for (auto& node : gltfScene.m_nodes) {
     VkAccelerationStructureInstanceKHR rayInst;
     rayInst.transform = nvvk::toTransformMatrixKHR(node.worldMatrix);
@@ -1606,8 +1752,12 @@ void Renderer::createTopLevelAS() {
     tlas.emplace_back(rayInst);
   }
 #else
-  tlas.reserve(nbObj + 1);
-  for (uint32_t i = 0; i < nbObj; i++) {
+#ifdef USE_VDB
+  tlas.reserve(m_objModel.size() + 1);
+#else
+  tlas.reserve(m_objModel.size());
+#endif
+  for (size_t i = 0; i < m_objModel.size(); i++) {
     const auto& inst = m_instances[i];
 
     VkAccelerationStructureInstanceKHR rayInst{};
@@ -1624,30 +1774,35 @@ void Renderer::createTopLevelAS() {
   }
 #endif
   // Add the blas containing all implicit objects
-#ifdef VOLUME_RESTIR_USE_VDB
+#ifdef USE_VDB
   {
+    SphereBlasID = gltfScene.m_primMeshes.size();
     VkAccelerationStructureInstanceKHR rayInst{};
     rayInst.transform =
         nvvk::toTransformMatrixKHR(nvmath::mat4f(1));  // (identity)
 #ifdef USE_GLTF
     rayInst.instanceCustomIndex =
         static_cast<uint32_t>(gltfScene.m_primMeshes.size());
+    rayInst.accelerationStructureReference = m_rtBuilder.getBlasDeviceAddress(
+        static_cast<uint32_t>(gltfScene.m_primMeshes.size()));
 #else
     rayInst.instanceCustomIndex = static_cast<uint32_t>(
-        m_instances.size());  // nbObj == last object == implicit
-#endif
+        m_objModel.size());  // nbObj == last object == implicit
     rayInst.accelerationStructureReference = m_rtBuilder.getBlasDeviceAddress(
         static_cast<uint32_t>(m_objModel.size()));
+#endif
     rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
     rayInst.mask  = 0xFF;  //  Only be hit if rayMask & instance.mask != 0
     rayInst.instanceShaderBindingTableRecordOffset =
         1;  // We will use the same hit group for all objects
     tlas.emplace_back(rayInst);
   }
-#endif  // VOLUME_RESTIR_USE_VDB
+#endif  // USE_VDB
 
   m_rtBuilder.buildTlas(
-      tlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+      tlas, VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR |
+                VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR);
+  spdlog::info("Created TLAS for ray tracing");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1689,6 +1844,7 @@ void Renderer::createRtDescriptorSet() {
       m_rtDescSet, RtxBindings::eOutImage, &imageInfo));
   vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
                          writes.data(), 0, nullptr);
+  spdlog::info("Created Ray Tracing AccelerationStructure descriptor set");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1733,6 +1889,7 @@ void Renderer::createLightDescriptorSet() {
 
   vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
                          writes.data(), 0, nullptr);
+  spdlog::info("Created ReSTIR Light descriptor set");
 }
 
 void Renderer::createRestirDescriptorSet() {
@@ -1814,6 +1971,7 @@ void Renderer::createRestirDescriptorSet() {
   nvvk::allocateDescriptorSets(m_device, m_restirDescPool,
                                m_restirDescSetLayout,
                                static_config::kNumGBuffers, m_restirDescSets);
+  spdlog::info("Created ReSTIR (reservoir) descriptor set");
 }
 
 void Renderer::updateRestirDescriptorSet() {
@@ -1848,10 +2006,10 @@ void Renderer::updateRestirDescriptorSet() {
         set, RestirBindings::ePrevFrameMaterialProps,
         &bufprev.getMaterialPropertiesTexture().descriptor));
 
-    VkDescriptorImageInfo imgInfo{
-        {}, m_storageImage.descriptor.imageView, VK_IMAGE_LAYOUT_GENERAL};
-    writes.emplace_back(m_restirDescSetLayoutBind.makeWrite(
-        set, RestirBindings::eStorageImage, &imgInfo));
+    // VkDescriptorImageInfo imgInfo{
+    //    {}, m_storageImage.descriptor.imageView, VK_IMAGE_LAYOUT_GENERAL};
+    // writes.emplace_back(m_restirDescSetLayoutBind.makeWrite(
+    //    set, RestirBindings::eStorageImage, &imgInfo));
 
     writes.emplace_back(m_restirDescSetLayoutBind.makeWrite(
         set, RestirBindings::eReservoirsInfo,
@@ -1878,6 +2036,7 @@ void Renderer::updateRestirDescriptorSet() {
   }
   vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
                          writes.data(), 0, nullptr);
+  spdlog::info("Updated ReSTIR (reservoir) descriptor set");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -2032,6 +2191,7 @@ void Renderer::createRtPipeline() {
                                  &m_rtPipeline);
 
   for (auto& s : stages) vkDestroyShaderModule(m_device, s.module, nullptr);
+  spdlog::info("Created ray tracing pipeline");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -2117,6 +2277,7 @@ void Renderer::createRtShaderBindingTable() {
 
   m_alloc.unmap(m_rtSBTBuffer);
   m_alloc.finalizeAndReleaseStaging();
+  spdlog::info("Created ray tracing SBT");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -2159,6 +2320,7 @@ void Renderer::createRestirPipeline() {
   m_restirPass.createPipeline(m_rtDescSetLayout, m_descSetLayout,
                               m_restirUniformDescSetLayout,
                               m_lightDescSetLayout, m_restirDescSetLayout);
+  spdlog::info("Created ReSTIR pass pipeline");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -2171,19 +2333,20 @@ void Renderer::createSpatialReusePipeline() {
   m_spatialReusePass.createPipeline(
       m_rtDescSetLayout, m_descSetLayout, m_restirUniformDescSetLayout,
       m_lightDescSetLayout, m_restirDescSetLayout);
+  spdlog::info("Created Spatial Reuse pass pipeline");
 }
 
 void Renderer::createRestirUniformBuffer() {
   const float aspectRatio    = m_size.width / static_cast<float>(m_size.height);
   m_restirUniforms.debugMode = 0;
-  m_restirUniforms.gamma     = 2.2;  // const but i think can be changed by UI
+  m_restirUniforms.gamma     = 4.0;  // const but i think can be changed by UI
   m_restirUniforms.screenSize = nvmath::vec2ui(m_size.width, m_size.height);
   m_restirUniforms.flags      = RESTIR_VISIBILITY_REUSE_FLAG |
                            RESTIR_TEMPORAL_REUSE_FLAG |
                            RESTIR_SPATIAL_REUSE_FLAG;   // const
   m_restirUniforms.spatialNeighbors        = 4;         // const
   m_restirUniforms.spatialRadius           = 30.0f;     // const
-  m_restirUniforms.initialLightSampleCount = (1 << 5);  // const
+  m_restirUniforms.initialLightSampleCount = (1 << 6);  // const
   m_restirUniforms.pointLightCount =
       static_cast<int>(m_pointLights.size());  // const
   m_restirUniforms.triangleLightCount =
@@ -2207,6 +2370,7 @@ void Renderer::createRestirUniformBuffer() {
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   m_debug.setObjectName(m_restirUniformBuffer.buffer, "restirUniformBuffer");
+  spdlog::info("Created ReSTIR uniform buffer");
 }
 
 void Renderer::updateRestirUniformBuffer(const VkCommandBuffer& cmdBuf) {
@@ -2286,4 +2450,141 @@ void Renderer::updateRestirUniformDescriptorSet() {
   // Writing the information
   vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
                          writes.data(), 0, nullptr);
+  spdlog::info("Created ReSTIR uniform descriptor set");
+}
+
+void Renderer::updateFrame() {
+  static nvmath::mat4f refCamMatrix;
+  static float refFov{CameraManip.getFov()};
+
+  const auto& m  = CameraManip.getMatrix();
+  const auto fov = CameraManip.getFov();
+
+  if (memcmp(&refCamMatrix.a00, &m.a00, sizeof(nvmath::mat4f)) != 0 ||
+      refFov != fov) {
+    resetFrame();
+    refCamMatrix = m;
+    refFov       = fov;
+  }
+  m_pcRestirPost.frame++;
+}
+
+void Renderer::resetFrame() { m_pcRestirPost.frame = -1; }
+//////////////////////////////////////////////////////////////////////////
+// #VK_compute
+void Renderer::createCompDescriptors() {
+  m_compDescSetLayoutBind.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
+                                     VK_SHADER_STAGE_COMPUTE_BIT);
+  m_compDescSetLayoutBind.addBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
+                                     VK_SHADER_STAGE_COMPUTE_BIT);
+  m_compDescSetLayoutBind.addBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
+                                     VK_SHADER_STAGE_COMPUTE_BIT);
+
+  m_compDescSetLayout = m_compDescSetLayoutBind.createLayout(m_device);
+  m_compDescPool      = m_compDescSetLayoutBind.createPool(m_device, 1);
+  m_compDescSet       = nvvk::allocateDescriptorSet(m_device, m_compDescPool,
+                                              m_compDescSetLayout);
+}
+
+void Renderer::updateCompDescriptors(nvvk::Buffer& a_spheresAabbBuffer,
+                                     nvvk::Buffer& a_spheres) {
+  std::vector<VkWriteDescriptorSet> writes;
+
+  VkDescriptorBufferInfo dbiUnifAabb{a_spheresAabbBuffer.buffer, 0,
+                                     VK_WHOLE_SIZE};
+  writes.emplace_back(
+      m_compDescSetLayoutBind.makeWrite(m_compDescSet, 0, &dbiUnifAabb));
+
+  VkDescriptorBufferInfo dbiUnifSphere{a_spheres.buffer, 0, VK_WHOLE_SIZE};
+  writes.emplace_back(
+      m_compDescSetLayoutBind.makeWrite(m_compDescSet, 1, &dbiUnifSphere));
+
+  VkDescriptorBufferInfo dbiUnifVelocity{m_spheresVelocityBuffer.buffer, 0,
+                                         VK_WHOLE_SIZE};
+  writes.emplace_back(
+      m_compDescSetLayoutBind.makeWrite(m_compDescSet, 2, &dbiUnifVelocity));
+
+  vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writes.size()),
+                         writes.data(), 0, nullptr);
+}
+
+void Renderer::createCompPipelines() {
+  // pushing time
+  VkPushConstantRange push_constants = {VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                                        sizeof(CompPushConstant)};
+
+  VkPipelineLayoutCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+  createInfo.setLayoutCount         = 1;
+  createInfo.pSetLayouts            = &m_compDescSetLayout;
+  createInfo.pushConstantRangeCount = 1;
+  createInfo.pPushConstantRanges    = &push_constants;
+  vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_compPipelineLayout);
+
+  VkComputePipelineCreateInfo computePipelineCreateInfo{
+      VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+  computePipelineCreateInfo.layout = m_compPipelineLayout;
+
+  computePipelineCreateInfo.stage = nvvk::createShaderStageInfo(
+      m_device,
+      nvh::loadFile("spv/anim.comp.spv", true, defaultSearchPaths, true),
+      VK_SHADER_STAGE_COMPUTE_BIT);
+
+  vkCreateComputePipelines(m_device, {}, 1, &computePipelineCreateInfo, nullptr,
+                           &m_compPipeline);
+
+  updateCompDescriptors(m_spheresAabbBuffer, m_spheresBuffer);
+
+  vkDestroyShaderModule(m_device, computePipelineCreateInfo.stage.module,
+                        nullptr);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Animating the sphere vertices using a compute shader
+//
+void Renderer::animationObject(float t1) {
+  // const uint32_t sphereId =
+  //    1;  // Get from where we are loading spheres, HArd code for now
+
+  nvvk::CommandPool genCmdBuf(m_device, m_graphicsQueueIndex);
+  VkCommandBuffer cmdBuf = genCmdBuf.createCommandBuffer();
+
+  vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, m_compPipeline);
+  vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE,
+                          m_compPipelineLayout, 0, 1, &m_compDescSet, 0,
+                          nullptr);
+  float deltaT;
+  if (t1 < t0) {
+    deltaT = t1;
+  } else {
+    deltaT = t1 - t0;
+  }
+  t0 = t1;
+  CompPushConstant abc{deltaT, m_spheres.size()};
+  // CompPushConstant abc{t1, 9920};
+  vkCmdPushConstants(cmdBuf, m_compPipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT,
+                     0, sizeof(CompPushConstant), &abc);
+
+  // int height = WORKGROUP_SIZE;
+  // int width = m_spheres.size()/ (1024 * 512) + 1;
+
+  int total = m_spheres.size();
+  int width = std::ceil(total / 1024);
+
+  vkCmdDispatch(cmdBuf, width, 1,
+                1);  // size of sphere is the size we need
+
+  genCmdBuf.submitAndWait(cmdBuf);
+  m_rtBuilder.updateBlas(
+      SphereBlasID, allBlas[SphereBlasID],
+      VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR |
+          VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR);
+
+  VkAccelerationStructureInstanceKHR& tinst = tlas[SphereBlasID];
+  tinst.transform = nvvk::toTransformMatrixKHR(nvmath::mat4f(1));
+  m_rtBuilder.buildTlas(
+      tlas,
+      VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR |
+          VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR,
+      true);
 }

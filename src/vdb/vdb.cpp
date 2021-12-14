@@ -760,6 +760,10 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   /*if (pointChannel() >0) {
     pointStore = AllPoints;
   }*/
+  bool Creategrid = false;
+  if (AllPoints.size() == 0) {
+    Creategrid = true;
+  }
 
   vDat point;
 
@@ -792,20 +796,28 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
     point.u = j;
     j++;  // incremenet point count
 
+    if (channelName(pointChannel()) == "density") {
+      point.d = (float)vec;
+    }
+
     if (channelName(pointChannel()) == "temperature") {
+      float tempVal = log((float)vec) + 273.15;
+      point.temp    = tempVal;
       nvmath::vec3f flameColor =
-          nvmath::normalize(nvmath::vec3f(300, 88, 34)) * (float)vec * 1000.0f;
-      point.nx =
+          nvmath::normalize(nvmath::vec3f(200, 88, 34)) * (float)vec * 1000.f;
+      point.cx =
           flameColor[0];  // set colour to normal for rendering on the shader
-      point.ny = flameColor[1];
-      point.nz = flameColor[2];
-    } else {
+      point.cy = flameColor[1];
+      point.cz = flameColor[2];
+    }
+    // Give Every Particle color of Smoke
+    else {
       nvmath::vec3f smokeColor =
-          nvmath::normalize(nvmath::vec3f(50, 54, 50)) * (float)vec;
-      point.nx =
+          nvmath::normalize(nvmath::vec3f(100, 100, 100)) * (float)vec * 1000.f;
+      point.cx =
           smokeColor[0];  // set colour to normal for rendering on the shader
-      point.ny = smokeColor[1];
-      point.nz = smokeColor[2];
+      point.cy = smokeColor[1];
+      point.cz = smokeColor[2];
     }
 
     channelTemp[0] = vec;  // store value for texture buffer
@@ -857,7 +869,20 @@ void VDB::getMeshValuesScalar(typename GridType::ConstPtr _grid) {
   // else {
   //  AllPoints = pointStore;
   //}
-  AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
+  if (Creategrid) {
+    AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
+  } else {
+    int size = AllPoints.size() > pointStore.size() ? pointStore.size()
+                                                    : AllPoints.size();
+    for (int i = 0; i < size; i++) {
+      if (channelName(pointChannel()) == "temperature") {
+        AllPoints[i].cx   = pointStore[i].cx;
+        AllPoints[i].cy   = pointStore[i].cy;
+        AllPoints[i].cz   = pointStore[i].cz;
+        AllPoints[i].temp = pointStore[i].temp;
+      }
+    }
+  }
   //// create VAO for this grid
   // temp.bind();
   // temp.setIndicesCount(j);
@@ -903,10 +928,15 @@ void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
   vDat point;
 
   openvdb::Coord coord;
-
+  bool Creategrid = false;
+  if (AllPoints.size() == 0) {
+    Creategrid = true;
+  }
   BBoxBare channelExtremes;
   channelExtremes.minx = channelExtremes.miny = channelExtremes.minz = 0.0f;
   channelExtremes.maxx = channelExtremes.maxy = channelExtremes.maxz = 0.0f;
+
+  std::string channelname = channelName(pointChannel());
 
   for (typename GridType::ValueOnCIter it = _grid->cbeginValueOn(); it; ++it) {
     // will always be a rounding issue here as must be an integer step
@@ -926,6 +956,12 @@ void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
     j++;
 
     vec.normalize();  // normalize vector before setting
+
+    if (channelName(pointChannel()) == "v") {
+      point.vx = vec[0];
+      point.vy = vec[1];
+      point.vz = vec[2];
+    }
 
     point.nx = vec[0];
     point.ny = vec[1];
@@ -967,6 +1003,21 @@ void VDB::getMeshValuesVector(typename GridType::ConstPtr _grid) {
       }
       if (point.nz > channelExtremes.maxz) {
         channelExtremes.maxz = point.nz;
+      }
+    }
+  }
+  if (Creategrid) {
+    AllPoints.insert(AllPoints.end(), pointStore.begin(), pointStore.end());
+  } else {
+    // Since Grid has already been created for density channelwe will just fetch
+    // all points
+    int size = AllPoints.size() > pointStore.size() ? pointStore.size()
+                                                    : AllPoints.size();
+    for (int i = 0; i < size; i++) {
+      if (channelName(pointChannel()) == "v") {
+        AllPoints[i].vx = pointStore[i].vx;
+        AllPoints[i].vy = pointStore[i].vy;
+        AllPoints[i].vz = pointStore[i].vz;
       }
     }
   }

@@ -48,6 +48,11 @@ layout(set = 1, binding = eGLTFMatrices) buffer _Matrices {
   GLTFModelMatrices matrices[];
 };
 
+layout(set     = 1,
+       binding = eSphereMaterial) readonly buffer _SphereMaterialBuffer {
+  GltfMaterials sphereMaterials[];
+};
+
 layout(set = 1, binding = eGLTFPrimLookup) readonly buffer _InstanceInfo {
   RestirPrimitiveLookup primInfo[];
 };
@@ -98,40 +103,15 @@ void main() {
   material.normalTextureScale           = 1.0;
   material.uvTransform                  = mat4(1.0);
 
-  sstate.text_coords =
-      (vec4(sstate.text_coords.xy, 1, 1) * material.uvTransform).xy;
-  if (material.normalTexture > -1) {
-    mat3 TBN = mat3(sstate.tangent_u, sstate.tangent_v, sstate.normal);
-    vec3 normalVector =
-        texture(texturesMap[nonuniformEXT(material.normalTexture)],
-                sstate.text_coords)
-            .xyz;
-    normalVector = normalize(normalVector * 2.0 - 1.0);
-    normalVector *=
-        vec3(material.normalTextureScale, material.normalTextureScale, 1.0);
-    sstate.normal = normalize(TBN * normalVector);
-  }
-  vec3 emissive = material.emissiveFactor;
-  if (material.emissiveTexture > -1)
-    emissive *=
-        SRGBtoLINEAR(
-            texture(texturesMap[nonuniformEXT(material.emissiveTexture)],
-                    sstate.text_coords))
-            .rgb;
-
-  Material bsdfMat;
-  if (material.shadingModel == SHADING_MODEL_METALLIC_ROUGHNESS)
-    bsdfMat = GetMetallicRoughness(material, sstate);
-  else
-    bsdfMat = GetSpecularGlossiness(material, sstate);
+  GltfMaterials currSphereMaterials = sphereMaterials[gl_PrimitiveID];
 
   prd.worldPos.xyz = worldPos;
   prd.worldNormal  = worldNrm;
-  prd.albedo.xyz   = vec3(instance.center);
+  prd.albedo       = currSphereMaterials.pbrBaseColorFactor;
   prd.worldPos.w   = 1.0;
-  prd.roughness    = 0.8;
-  prd.metallic     = 0.8;
-  prd.emissive     = vec3(0.5, 0, 0);
+  prd.roughness    = currSphereMaterials.pbrRoughnessFactor;
+  prd.metallic     = currSphereMaterials.pbrMetallicFactor;
+  prd.emissive     = currSphereMaterials.emissiveFactor;
   prd.exist        = true;
 
   // prd.worldPos.xyz = sstate.position;

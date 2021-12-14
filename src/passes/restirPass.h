@@ -52,7 +52,7 @@ private:
   const nvh::GltfScene* m_scene = nullptr;
 
   // push constant for restir
-  PushConstantRestir m_pcRestir{0, 1};
+  PushConstantRestir m_pcRestir{0.f, 0.f, 0.f, 0, 1};
 
   nvvk::Buffer m_SBTBuffer;
   VkStridedDeviceAddressRegionKHR m_rgenRegion{};

@@ -54,7 +54,8 @@ START_BINDING(SceneBindings)
  eGLTFMaterials   = 10,
  eGLTFTextures    = 11,
  eGLTFMatrices    = 12,
- eGLTFPrimLookup  = 13
+ eGLTFPrimLookup  = 13,
+ eSphereMaterial  = 14
 END_BINDING();
 
 START_BINDING(RtxBindings)
@@ -100,7 +101,132 @@ END_BINDING();
 #define ALPHA_MODE_MASK   1
 #define ALPHA_MODE_BLEND  2
 
+#ifdef __cplusplus
 // Information of a obj model when referenced in a shader
+struct ObjDesc {
+  alignas(4) int txtOffset;  // Texture index offset in the array of textures
+  alignas(8) uint64_t vertexAddress;    // Address of the Vertex buffer
+  alignas(8) uint64_t indexAddress;     // Address of the index buffer
+  alignas(8) uint64_t materialAddress;  // Address of the material buffer
+  alignas(8) uint64_t
+      materialIndexAddress;  // Address of the triangle material index buffer
+};
+
+// Uniform buffer set at each frame
+struct GlobalUniforms {
+  alignas(64) mat4 viewProj;     // Camera view * projection
+  alignas(64) mat4 viewInverse;  // Camera inverse view matrix
+  alignas(64) mat4 projInverse;  // Camera inverse projection matrix
+};
+
+// Push constant structure for the raster
+struct PushConstantRaster {
+  alignas(64) mat4 modelMatrix;  // matrix of the instance
+  alignas(16) vec3 lightPosition;
+  alignas(4) uint objIndex;
+  alignas(4) float lightIntensity;
+  alignas(4) int lightType;
+};
+
+// Push constant structure for the ray tracer
+struct PushConstantRay {
+  alignas(16) vec4 clearColor;
+  alignas(16) vec3 lightPosition;
+  alignas(4) float lightIntensity;
+  alignas(4) int lightType;
+};
+
+struct PushConstantRestir {
+  alignas(4) float clearColorRed;
+  alignas(4) float clearColorGreen;
+  alignas(4) float clearColorBlue;
+  alignas(4) int frame;
+  alignas(4) int initialize;
+};
+
+struct Vertex  // See ObjLoader, copy of VertexObj, could be compressed for
+               // device
+{
+  alignas(16) vec3 pos;
+  alignas(16) vec3 nrm;
+  alignas(16) vec3 color;
+  alignas(8) vec2 texCoord;
+};
+
+struct WaveFrontMaterial  // See ObjLoader, copy of MaterialObj, could be
+                          // compressed for device
+{
+  alignas(16) vec3 ambient;
+  alignas(16) vec3 diffuse;
+  alignas(16) vec3 specular;
+  alignas(16) vec3 transmittance;
+  alignas(16) vec3 emission;
+  alignas(4) float shininess;
+  alignas(4) float ior;       // index of refraction
+  alignas(4) float dissolve;  // 1 == opaque; 0 == fully transparent
+  alignas(4) int illum;       // illumination model (see
+                              // http://www.fileformat.info/format/material/)
+  alignas(4) int textureId;
+};
+
+struct GLTFModelMatrices {
+  alignas(64) mat4 transform;
+  alignas(64) mat4 transformInverseTransposed;
+};
+
+struct RestirPrimitiveLookup {
+  alignas(4) uint indexOffset;
+  alignas(4) uint vertexOffset;
+  alignas(4) int materialIndex;
+};
+
+// ReSTIR params
+struct PointLight {  // m_lightDescSetLayoutBind
+  alignas(16) vec4 pos;
+  alignas(16) vec4 emission_luminance;  // w is luminance
+};
+
+struct TriangleLight {  // m_lightDescSetLayoutBind
+  alignas(16) vec4 p1;
+  alignas(16) vec4 p2;
+  alignas(16) vec4 p3;
+  alignas(16) vec4 emission_luminance;  // w is luminance
+  alignas(16) vec4 normalArea;
+};
+
+struct AliasTableCell {  // m_lightDescSetLayoutBind
+  alignas(4) int alias;
+  alignas(4) float prob;
+  alignas(4) float pdf;
+  alignas(4) float aliasPdf;
+};
+
+struct RestirUniforms {  // m_restirUniformDescSetLayoutBind
+  alignas(4) int pointLightCount;
+  alignas(4) int triangleLightCount;
+  alignas(4) int aliasTableCount;
+
+  alignas(4) float environmentalPower;
+  alignas(4) float fireflyClampThreshold;
+
+  alignas(4) uint spatialNeighbors;
+  alignas(4) float spatialRadius;
+
+  alignas(4) uint initialLightSampleCount;
+  alignas(4) int temporalSampleCountMultiplier;
+
+  alignas(8) uvec2 screenSize;
+  alignas(16) vec4 currCamPos;
+  alignas(64) mat4 currFrameProjectionViewMatrix;
+  alignas(16) vec4 prevCamPos;
+  alignas(64) mat4 prevFrameProjectionViewMatrix;
+
+  alignas(4) int flags;
+  alignas(4) int debugMode;
+  alignas(4) float gamma;
+};
+
+#else
 struct ObjDesc {
   int txtOffset;             // Texture index offset in the array of textures
   uint64_t vertexAddress;    // Address of the Vertex buffer
@@ -135,9 +261,11 @@ struct PushConstantRay {
 };
 
 struct PushConstantRestir {
+  float clearColorRed;
+  float clearColorGreen;
+  float clearColorBlue;
   int frame;
   int initialize;
-  vec4 clearColor;
 };
 
 struct Vertex  // See ObjLoader, copy of VertexObj, could be compressed for
@@ -165,33 +293,6 @@ struct WaveFrontMaterial  // See ObjLoader, copy of MaterialObj, could be
   int textureId;
 };
 
-struct GltfMaterials {
-  int shadingModel;
-  vec4 pbrBaseColorFactor;
-
-  int pbrBaseColorTexture;
-  float pbrMetallicFactor;
-  float pbrRoughnessFactor;
-  int pbrMetallicRoughnessTexture;
-
-  // KHR_materials_pbrSpecularGlossiness
-  vec4 khrDiffuseFactor;
-  vec3 khrSpecularFactor;
-  int khrDiffuseTexture;
-  float khrGlossinessFactor;
-  int khrSpecularGlossinessTexture;
-
-  int emissiveTexture;
-  vec3 emissiveFactor;
-  int alphaMode;
-
-  float alphaCutoff;
-  int doubleSided;
-  int normalTexture;
-  float normalTextureScale;
-  mat4 uvTransform;
-};
-
 struct GLTFModelMatrices {
   mat4 transform;
   mat4 transformInverseTransposed;
@@ -201,16 +302,6 @@ struct RestirPrimitiveLookup {
   uint indexOffset;
   uint vertexOffset;
   int materialIndex;
-};
-
-struct Sphere {
-  vec3 center;
-  float radius;
-};
-
-struct Aabb {
-  vec3 minimum;
-  vec3 maximum;
 };
 
 // ReSTIR params
@@ -258,6 +349,77 @@ struct RestirUniforms {  // m_restirUniformDescSetLayoutBind
   int debugMode;
   float gamma;
 };
+
+#endif
+
+struct Sphere {
+  vec3 center;
+  float radius;
+};
+
+struct Velocity {
+  vec3 velocity;
+};
+
+struct Aabb {
+  float minimum_x;
+  float minimum_y;
+  float minimum_z;
+  float maximum_x;
+  float maximum_y;
+  float maximum_z;
+};
+
+struct CompPushConstant {
+  float time;
+  int size;
+};
+
+#ifdef __cplusplus
+struct GltfMaterials {
+  alignas(4) int shadingModel;
+  alignas(4) int pbrBaseColorTexture;
+  alignas(4) float pbrMetallicFactor;
+  alignas(4) float pbrRoughnessFactor;
+  alignas(4) int pbrMetallicRoughnessTexture;
+  alignas(4) int khrDiffuseTexture;
+  alignas(4) float khrGlossinessFactor;
+  alignas(4) int khrSpecularGlossinessTexture;
+  alignas(4) int emissiveTexture;
+  alignas(4) int alphaMode;
+  alignas(4) float alphaCutoff;
+  alignas(4) int doubleSided;
+  alignas(4) int normalTexture;
+  alignas(4) float normalTextureScale;
+  alignas(16) vec4 pbrBaseColorFactor;
+  alignas(16) vec4 khrDiffuseFactor;
+  alignas(16) vec3 khrSpecularFactor;
+  alignas(16) vec3 emissiveFactor;
+  alignas(64) mat4 uvTransform;
+};
+#else
+struct GltfMaterials {
+  int shadingModel;
+  int pbrBaseColorTexture;
+  float pbrMetallicFactor;
+  float pbrRoughnessFactor;
+  int pbrMetallicRoughnessTexture;
+  int khrDiffuseTexture;
+  float khrGlossinessFactor;
+  int khrSpecularGlossinessTexture;
+  int emissiveTexture;
+  int alphaMode;
+  float alphaCutoff;
+  int doubleSided;
+  int normalTexture;
+  float normalTextureScale;
+  vec4 pbrBaseColorFactor;
+  vec4 khrDiffuseFactor;
+  vec3 khrSpecularFactor;
+  vec3 emissiveFactor;
+  mat4 uvTransform;
+};
+#endif
 
 #define KIND_SPHERE 0
 #define KIND_CUBE   1

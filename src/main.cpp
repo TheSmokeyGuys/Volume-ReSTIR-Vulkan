@@ -46,7 +46,7 @@ namespace fs = std::filesystem;
 // Default search path for shaders
 std::vector<std::string> defaultSearchPaths;
 
-const std::string vdb_filename = "cube.vdb";
+const std::string vdb_filename = "fire.vdb";
 const fs::path asset_dir = fs::path(PROJECT_DIRECTORY) / fs::path("assets");
 const std::string file   = (asset_dir / vdb_filename).string();
 
@@ -86,10 +86,6 @@ static int const SAMPLE_HEIGHT = 720;
 int main(int argc, char** argv) {
   UNUSED(argc);
 
-#ifdef VOLUME_RESTIR_USE_VDB
-  SingletonManager::GetVDBLoader().Load(file);
-#endif  // VOLUME_RESTIR_USE_VDB
-
   // Setup GLFW window
   glfwSetErrorCallback(onErrorCallback);
   if (!glfwInit()) {
@@ -101,7 +97,7 @@ int main(int argc, char** argv) {
 
   // Setup camera
   CameraManip.setWindowSize(SAMPLE_WIDTH, SAMPLE_HEIGHT);
-  CameraManip.setLookat(nvmath::vec3f(20, 20, 20), nvmath::vec3f(0, 1, 0),
+  CameraManip.setLookat(nvmath::vec3f(1, 1, 1), nvmath::vec3f(0, 1, 0),
                         nvmath::vec3f(0, 1, 0));
 
   // Setup Vulkan
@@ -189,6 +185,9 @@ int main(int argc, char** argv) {
   // Use a compatible device
   vkctx.initDevice(compatibleDevices[0], contextInfo);
 
+  // clear one line
+  std::cout << "\n";
+
   // Create example
   Renderer renderer;
 
@@ -208,7 +207,7 @@ int main(int argc, char** argv) {
   renderer.initGUI(0);  // Using sub-pass 0
 
 #ifdef USE_GLTF
-  renderer.loadGLTFModel(nvh::findFile(gltf_cornell, defaultSearchPaths, true));
+  renderer.loadGLTFModel(nvh::findFile(gltf_sponza, defaultSearchPaths, true));
   renderer.createGLTFBuffer();
 #else
   // Creation of the example
@@ -219,13 +218,16 @@ int main(int argc, char** argv) {
   renderer.createObjDescriptionBuffer();
 #endif
 
-#ifdef VOLUME_RESTIR_USE_VDB
+#ifdef USE_VDB
+  SingletonManager::GetVDBLoader().Load(file);
   renderer.createVDBBuffer();
-#endif  // VOLUME_RESTIR_USE_VDB
+#endif  // USE_VDB
 
   renderer.createOffscreenRender();
   renderer.createDescriptorSetLayout();
+#ifdef USE_RT_PIPELINE
   renderer.createGraphicsPipeline();
+#endif
   renderer.createUniformBuffer();
   renderer.updateDescriptorSet();
 
@@ -237,14 +239,17 @@ int main(int argc, char** argv) {
   renderer.createBottomLevelAS();
   renderer.createTopLevelAS();
   renderer.createRtDescriptorSet();
+#ifdef USE_RT_PIPELINE
   renderer.createRtPipeline();  // Binding m_rtDescSetLayout, m_descSetLayout
   renderer.createRtShaderBindingTable();
+#endif
 
   renderer.createPostDescriptor();
   renderer.createPostPipeline();  // Push Constant float // Binding
                                   // m_postDescSetLayout
   renderer.updatePostDescriptorSet();
 
+#ifdef USE_RESTIR_PIPELINE
   // # ReSTIR pipeline toggle
   // restir lights
   renderer.createRestirLights();
@@ -276,12 +281,21 @@ int main(int argc, char** argv) {
                                         // m_restirDescSetLayout,
                                         // m_restirPostDescSetLayout
   renderer.updateRestirDescriptorSet();
+#endif
 
   nvmath::vec4f clearColor = nvmath::vec4f(1, 1, 1, 1.00f);
   bool useRaytracer        = true;
 
   renderer.setupGlfwCallbacks(window);
   ImGui_ImplGlfw_InitForVulkan(window, true);
+
+#ifdef USE_ANIMATION
+  // #VK_compute
+  renderer.createCompDescriptors();
+  renderer.createCompPipelines();
+#endif
+
+  auto start = std::chrono::system_clock::now();
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {
@@ -307,6 +321,14 @@ int main(int argc, char** argv) {
       ImGuiH::Panel::End();
     }
 
+    std::chrono::duration<float> diff =
+        std::chrono::system_clock::now() - start;
+
+#ifdef USE_ANIMATION
+    renderer.animationObject(diff.count());
+
+#endif
+
     // Start rendering the scene
     renderer.prepareFrame();
 
@@ -328,6 +350,8 @@ int main(int argc, char** argv) {
     clearValues[0].color = {
         {clearColor[0], clearColor[1], clearColor[2], clearColor[3]}};
     clearValues[1].depthStencil = {1.0f, 0};
+
+    renderer.updateFrame();
 
 #ifdef USE_RT_PIPELINE
     // Offscreen render pass
@@ -382,10 +406,10 @@ int main(int argc, char** argv) {
           cmdBuf, renderer.getRtDescSet(), renderer.getDescSet(),
           renderer.getRestirUniformDescSet(), renderer.getLightDescSet(),
           renderer.getRestirDescSet(), clearColor);
-      // renderer.getSpatialReusePass().run(
-      //     cmdBuf, renderer.getRtDescSet(), renderer.getDescSet(),
-      //     renderer.getRestirUniformDescSet(), renderer.getLightDescSet(),
-      //     renderer.getRestirDescSet());
+      renderer.getSpatialReusePass().run(
+          cmdBuf, renderer.getRtDescSet(), renderer.getDescSet(),
+          renderer.getRestirUniformDescSet(), renderer.getLightDescSet(),
+          renderer.getRestirDescSet());
     }
 
     // Restir Pipeline post processing
@@ -402,6 +426,10 @@ int main(int argc, char** argv) {
       // Rendering tonemapper
       vkCmdBeginRenderPass(cmdBuf, &restirPostRenderPassBeginInfo,
                            VK_SUBPASS_CONTENTS_INLINE);
+      vkCmdPushConstants(cmdBuf, renderer.getRestirPostPipelineLayout(),
+                         VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                         sizeof(PushConstantRestir),
+                         renderer.getRestirPostPipelinePC());
       renderer.restirDrawPost(cmdBuf);
       // Rendering UI
       ImGui::Render();
@@ -409,6 +437,10 @@ int main(int argc, char** argv) {
       vkCmdEndRenderPass(cmdBuf);
     }
 #endif
+
+    if (renderer.getRestirPostPipelinePC()->frame > 10) {
+      renderer.getRestirPostPipelinePC()->initialize = 0;
+    }
 
     // Submit for display
     vkEndCommandBuffer(cmdBuf);
