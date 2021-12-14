@@ -148,6 +148,9 @@ By milestone 3, we have set up a pipeline for path tracing volumetric data and a
 <img src="img/sceneRestir.gif" alt="Scene ReSTIR" width="800" />
 </p>
 
+## Final Presentation
+- [Final Presentation](docs/CIS%20565%20Final%20Presentation.pptx)
+- [Final Presentation (Google Slides)](https://docs.google.com/presentation/d/1YQTHkFpSIRymycidxC1GObsmGOXMHhoXjf-lCS8hesI/edit?usp=sharing)
 
 
 ## References
