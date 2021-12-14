@@ -108,7 +108,12 @@ Vulkan is considered as the next-generation API for uniform graphics drivers. It
 
 Vulkan does not render objects directly. Instead, it uses multiple command queues to queue all commands to be passed onto device. This is actually very similar to CUDA as CUDA also uses multiple streams to send commands to the GPU. That's why the graphics command queue comes in.
 
-The ray tracing pipeline in Vulkan requires the usage of Vulkan Acceleration structures. 
+The ray tracing pipeline in Vulkan requires the usage of Vulkan Acceleration structures. The acceleration structure are divided into two levels to allow shared usage of geometry resources. For example, if you have a high poly model of sphere mesh formed with 30000 triangles, a great optimisation on the memory side would be to create the acceleration structure only once and transform it two detect intersection of rays with it. 
+
+The structure is stored in form of AABBs and can be controlled by
+1. Bottom Level Acceleration Structure (BLAS) - Used for creating the the Axis Aligned bounding box for a geometry. Vulkan Provides built in feature to build the AABBs for the triangle primitives but we have to specify the AABBs ourselves for non primitive geometry such as Sphere in our case. 
+2. Top Level Acceleration structure - Points to an instance of BLAS, this allows easy transformations of an exisiting instance of BLAS across the scene.
+Note - BLAS requires the AABBs to be passed as 4 bit floating point. So if you see any un intended behaviour do look at memory padding in C++.
 
 It is generally very hard to set up a complete Vulkan rendering pipeline from the lowest-level Vulkan libraries. Nowadays, there have been many different styles of Vulkan libraries wrappers for cleaner code production. In this project we took the advantage of [nvpro](https://github.com/nvpro-samples/nvpro_core) to set up a clean Vulkan pipeline for us.
 
