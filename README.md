@@ -152,7 +152,15 @@ By milestone 3, we have set up a pipeline for path tracing volumetric data and a
 
 ## References
 1. Daqi Lin, Chris Wyman, Cem Yuksel. [Fast Volume Rendering with Spatiotemporal Reservoir Resampling](https://research.nvidia.com/publication/2021-11_Fast-Volume-Rendering). ACM Transactions on Graphics (Proceedings of SIGGRAPH Asia 2021), 40, 6, 2021.
-2. [OpenVDB](https://www.openvdb.org/) for VDB data loading.
-3. [nvpro](https://github.com/nvpro-samples/nvpro_core) for Vulkan Ray Tracing KHR setup.
-4. [spdlog](https://github.com/gabime/spdlog) for fast C++ logging.
-5. Common graphics utilities [glfw](https://github.com/glfw/glfw), [glm](https://github.com/g-truc/glm), [stb](https://github.com/nothings/stb). These are all included in the [nvpro](https://github.com/nvpro-samples/nvpro_core).
+2. Benedikt Bitterli, Chris Wyman, Matt Pharr, Peter Shirley, Aaron Lefohn, and Wojciech Jarosz. 2020. [Spatiotemporal reservoir resampling for real-time ray tracing with dynamic direct lighting.](https://research.nvidia.com/sites/default/files/pubs/2020-07_Spatiotemporal-reservoir-resampling/ReSTIR.pdf) <i>ACM Trans. Graph.</i> 39, 4, Article 148 (July 2020), 17 pages. DOI:https://doi.org/10.1145/3386569.3392481
+3. [Volume Rendering](https://www.omnisci.com/technical-glossary/volume-rendering)
+4. [Volume Rendering (Nvidia)](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-39-volume-rendering-techniques)
+5. [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html)
+6. [Vulkan Ray Tracing Tutorial](https://developer.nvidia.com/rtx/raytracing/vkray)
+7. [OpenVDB](https://www.openvdb.org/) for VDB data loading.
+8. [nvpro](https://github.com/nvpro-samples/nvpro_core) for Vulkan Ray Tracing KHR setup.
+9. [spdlog](https://github.com/gabime/spdlog) for fast C++ logging.
+10. [nvpro-samples/vk_mini_path_tracer](https://github.com/nvpro-samples/vk_mini_path_tracer)
+11. [nvpro-samples/vk_raytracing_tutorial_KHR](https://github.com/nvpro-samples/vk_raytracing_tutorial_KHR)
+12. [dipmizu914/ReSTIR_on_Vulkan](https://github.com/dipmizu914/ReSTIR_on_Vulkan)
+13. Common graphics utilities [glfw](https://github.com/glfw/glfw), [glm](https://github.com/g-truc/glm), [stb](https://github.com/nothings/stb). These are all included in the [nvpro](https://github.com/nvpro-samples/nvpro_core).
